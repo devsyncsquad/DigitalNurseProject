@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum SubscriptionPlanType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PENDING
+}
+
+enum PaymentProvider {
+  STRIPE
+  EASYPAISA
+  JAZZCASH
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// Models
+model User {
+  id                  String         @id @default(uuid())
+  email               String         @unique
+  password            String?        // Nullable for Google OAuth users
+  name                String?
+  emailVerified       Boolean        @default(false)
+  verificationToken   String?        @unique
+  googleId            String?        @unique
+  profileCompleted    Boolean        @default(false)
+  
+  // Profile details
+  phoneNumber         String?
+  dateOfBirth         DateTime?
+  address             String?
+  city                String?
+  country             String?
+  
+  // Timestamps
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // Relations
+  subscriptions       Subscription[]
+  payments            Payment[]
+  
+  @@index([email])
+  @@index([googleId])
+}
+
+model Subscription {
+  id                    String                 @id @default(uuid())
+  userId                String
+  planType              SubscriptionPlanType   @default(FREE)
+  status                SubscriptionStatus     @default(ACTIVE)
+  
+  // Stripe integration
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?                @unique
+  stripePriceId         String?
+  
+  // Subscription period
+  startDate             DateTime               @default(now())
+  endDate               DateTime?
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  
+  // Billing
+  cancelAtPeriodEnd     Boolean                @default(false)
+  canceledAt            DateTime?
+  
+  // Timestamps
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  
+  // Relations
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments              Payment[]
+  
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  userId          String
+  subscriptionId  String?
+  
+  amount          Float
+  currency        String          @default("USD")
+  provider        PaymentProvider
+  status          PaymentStatus   @default(PENDING)
+  
+  // Provider-specific IDs
+  stripePaymentIntentId  String?  @unique
+  providerTransactionId  String?
+  
+  // Payment metadata
+  description     String?
+  failureReason   String?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([stripePaymentIntentId])
+}
