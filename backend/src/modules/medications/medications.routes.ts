@@ -220,16 +220,8 @@ router.delete('/schedules/:id', medicationController.deleteMedSchedule);
  *         description: Intakes retrieved successfully
  */
 router.get('/intakes/all', medicationController.getMedIntakes);
-router.post(
-  '/intakes',
-  validate(createMedIntakeSchema),
-  medicationController.createMedIntake
-);
-router.put(
-  '/intakes/:id',
-  validate(updateMedIntakeSchema),
-  medicationController.updateMedIntake
-);
+router.post('/intakes', validate(createMedIntakeSchema), medicationController.createMedIntake);
+router.put('/intakes/:id', validate(updateMedIntakeSchema), medicationController.updateMedIntake);
 router.delete('/intakes/:id', medicationController.deleteMedIntake);
 
 /**

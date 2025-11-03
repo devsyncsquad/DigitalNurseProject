@@ -1,10 +1,7 @@
 import { Router } from 'express';
 import { vitalController } from './vitals.controller';
 import { validate } from '../../middleware/validate.middleware';
-import {
-  createVitalMeasurementSchema,
-  updateVitalMeasurementSchema,
-} from './vitals.schemas';
+import { createVitalMeasurementSchema, updateVitalMeasurementSchema } from './vitals.schemas';
 
 const router = Router();
 

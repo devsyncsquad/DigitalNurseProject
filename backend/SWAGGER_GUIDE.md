@@ -3,6 +3,7 @@
 ## 🎯 Access Swagger UI
 
 **Open in your browser:**
+
 ```
 http://localhost:3000/api-docs
 ```
@@ -13,7 +14,7 @@ http://localhost:3000/api-docs
 
 1. **Health** - Server health check
 2. **Medications** - Full medication management with examples
-3. **Vitals** - Vital measurements with trend analysis  
+3. **Vitals** - Vital measurements with trend analysis
 4. **Elder Assignments** - Caregiver-elder relationships
 5. **Notifications** - Notification system
 6. **Lookups** - Reference data (domains, types, units)
@@ -21,10 +22,12 @@ http://localhost:3000/api-docs
 ## 🚀 How to Use Swagger UI
 
 ### 1. View Endpoints
+
 - Click on any endpoint to expand details
 - See request parameters, body schemas, and response formats
 
 ### 2. Test APIs Directly
+
 - Click "Try it out" button on any endpoint
 - Fill in the parameters
 - Click "Execute" to test
@@ -33,6 +36,7 @@ http://localhost:3000/api-docs
 ### 3. Example Workflow
 
 #### Get All Lookup Domains
+
 1. Open Swagger: `http://localhost:3000/api-docs`
 2. Find **Lookups** section
 3. Click on `GET /api/lookups/domains`
@@ -41,6 +45,7 @@ http://localhost:3000/api-docs
 6. See the response with all domains
 
 #### Get Vital Types
+
 1. Click on `GET /api/lookups/domain/{domain}`
 2. Click "Try it out"
 3. Enter `vital_kinds` in the domain parameter
@@ -48,9 +53,11 @@ http://localhost:3000/api-docs
 5. See blood pressure, glucose, weight, pulse types
 
 #### Create a Vital Measurement
+
 1. Click on `POST /api/vitals`
 2. Click "Try it out"
 3. Fill in the request body:
+
 ```json
 {
   "elderUserId": "6",
@@ -61,6 +68,7 @@ http://localhost:3000/api-docs
   "recordedAt": "2025-10-13T10:00:00Z"
 }
 ```
+
 4. Click "Execute"
 5. See the created vital measurement
 
@@ -79,6 +87,7 @@ Based on your database, these lookup domains are available:
 ## 🔍 Testing Scenarios in Swagger
 
 ### Scenario 1: Create and Track Medication
+
 1. `POST /api/medications` - Create medication for elder
 2. `GET /api/medications?elderUserId=6` - View elder's medications
 3. `POST /api/medications/schedules` - Add schedule
@@ -86,6 +95,7 @@ Based on your database, these lookup domains are available:
 5. `GET /api/medications/adherence/6` - Check adherence
 
 ### Scenario 2: Record and Monitor Vitals
+
 1. `GET /api/lookups/domain/vital_kinds` - Get vital types
 2. `POST /api/vitals` - Record blood pressure
 3. `POST /api/vitals` - Record glucose
@@ -94,6 +104,7 @@ Based on your database, these lookup domains are available:
 6. `GET /api/vitals/summary/6` - Get statistics
 
 ### Scenario 3: Manage Caregivers
+
 1. `POST /api/elder-assignments` - Assign caregiver to elder
 2. `GET /api/elder-assignments/caregiver/7/elders` - View caregiver's elders
 3. `GET /api/elder-assignments/elder/6/caregivers` - View elder's caregivers
@@ -102,12 +113,15 @@ Based on your database, these lookup domains are available:
 ## 💡 Tips
 
 ### Request Bodies
+
 Swagger auto-generates sample request bodies from schemas. You can:
+
 - Edit the JSON directly
 - Use the "Example Value" button
 - See required vs optional fields
 
 ### Response Codes
+
 - `200` - Success
 - `201` - Created
 - `400` - Validation error
@@ -115,7 +129,9 @@ Swagger auto-generates sample request bodies from schemas. You can:
 - `500` - Server error
 
 ### Query Parameters
+
 Use query parameters for filtering:
+
 - `?elderUserId=6` - Filter by elder
 - `?status=pending` - Filter by status
 - `?days=7` - Set time range
@@ -132,6 +148,7 @@ Use query parameters for filtering:
 ## 📱 Mobile Testing
 
 You can also access Swagger from your mobile device:
+
 ```
 http://<your-computer-ip>:3000/api-docs
 ```
@@ -139,6 +156,7 @@ http://<your-computer-ip>:3000/api-docs
 ## 🔧 Customization
 
 To add more documentation:
+
 1. Add `@openapi` JSDoc comments to route files
 2. Define schemas in `src/config/swagger.ts`
 3. Server auto-restarts on changes
@@ -167,4 +185,3 @@ router.get('/yourEndpoint', controller.method);
 **Health Check**: http://localhost:3000/health
 
 🎉 **Happy Testing!**
-
