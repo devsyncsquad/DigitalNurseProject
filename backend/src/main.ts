@@ -35,6 +35,14 @@ async function bootstrap() {
     .addTag('Authentication', 'Authentication endpoints')
     .addTag('Users', 'User management endpoints')
     .addTag('Subscriptions', 'Subscription management endpoints')
+    .addTag('Medications', 'Medication management endpoints')
+    .addTag('Vitals', 'Health vital measurements endpoints')
+    .addTag('Caregivers', 'Caregiver management endpoints')
+    .addTag('Lifestyle', 'Diet and exercise logging endpoints')
+    .addTag('Documents', 'Document management endpoints')
+    .addTag('Notifications', 'Notification management endpoints')
+    .addTag('Lookups', 'Lookup values endpoints')
+    .addTag('Devices', 'Device management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

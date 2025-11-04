@@ -1,0 +1,30 @@
+import { IsEnum, IsDateString, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export enum IntakeStatus {
+  PENDING = 'pending',
+  TAKEN = 'taken',
+  MISSED = 'missed',
+  SKIPPED = 'skipped',
+}
+
+export class LogIntakeDto {
+  @ApiProperty({ enum: IntakeStatus, example: IntakeStatus.TAKEN })
+  @IsEnum(IntakeStatus)
+  status!: IntakeStatus;
+
+  @ApiProperty({ example: '2024-01-15T08:00:00Z', description: 'Scheduled time' })
+  @IsDateString()
+  scheduledTime!: string;
+
+  @ApiPropertyOptional({ example: '2024-01-15T08:15:00Z', description: 'Actual taken time' })
+  @IsDateString()
+  @IsOptional()
+  takenTime?: string;
+
+  @ApiPropertyOptional({ example: 'Forgot to take earlier' })
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+

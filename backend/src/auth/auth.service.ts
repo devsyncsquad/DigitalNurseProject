@@ -11,7 +11,6 @@ import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { User } from '@prisma/client';
-import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -36,25 +35,21 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate verification token
-    const verificationToken = randomBytes(32).toString('hex');
-
     // Create user
     const user = await this.prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
-        name,
-        verificationToken,
+        passwordHash: hashedPassword,
+        full_name: name || '',
       },
     });
 
-    // Create default FREE subscription
+    // Create default FREE subscription (planId is null for FREE plan)
     await this.prisma.subscription.create({
       data: {
-        userId: user.id,
-        planType: 'FREE',
-        status: 'ACTIVE',
+        userId: user.userId,
+        planId: null,
+        status: 'active',
       },
     });
 
@@ -63,7 +58,7 @@ export class AuthService {
 
     return {
       message: 'Registration successful. Please verify your email.',
-      userId: user.id,
+      userId: user.userId.toString(),
     };
   }
 
@@ -79,11 +74,9 @@ export class AuthService {
     return {
       ...tokens,
       user: {
-        id: user.id,
+        id: user.userId.toString(),
         email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        profileCompleted: user.profileCompleted,
+        name: user.full_name,
       },
     };
   }
@@ -93,11 +86,11 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user || !user.password) {
+    if (!user || !user.passwordHash) {
       return null;
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
       return null;
@@ -111,68 +104,38 @@ export class AuthService {
     email: string;
     name: string;
   }): Promise<User> {
+    // Note: googleId field doesn't exist in current schema, using email for lookup
     let user = await this.prisma.user.findUnique({
-      where: { googleId: profile.googleId },
+      where: { email: profile.email },
     });
 
     if (!user) {
-      // Check if user exists with this email
-      user = await this.prisma.user.findUnique({
-        where: { email: profile.email },
+      // Create new user for Google OAuth
+      user = await this.prisma.user.create({
+        data: {
+          email: profile.email,
+          full_name: profile.name,
+          authProvider: 'google',
+        },
       });
 
-      if (user) {
-        // Link Google account to existing user
-        user = await this.prisma.user.update({
-          where: { id: user.id },
-          data: {
-            googleId: profile.googleId,
-            emailVerified: true,
-          },
-        });
-      } else {
-        // Create new user
-        user = await this.prisma.user.create({
-          data: {
-            googleId: profile.googleId,
-            email: profile.email,
-            name: profile.name,
-            emailVerified: true,
-          },
-        });
-
-        // Create default FREE subscription
-        await this.prisma.subscription.create({
-          data: {
-            userId: user.id,
-            planType: 'FREE',
-            status: 'ACTIVE',
-          },
-        });
-      }
+      // Create default FREE subscription
+      await this.prisma.subscription.create({
+        data: {
+          userId: user.userId,
+          planId: null,
+          status: 'active',
+        },
+      });
     }
 
     return user;
   }
 
   async verifyEmail(token: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { verificationToken: token },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Invalid verification token');
-    }
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verificationToken: null,
-      },
-    });
-
-    return { message: 'Email verified successfully' };
+    // Note: verificationToken field doesn't exist in current schema
+    // This functionality needs to be implemented with a separate table or added to schema
+    throw new NotFoundException('Email verification not implemented in current schema');
   }
 
   async refreshToken(refreshToken: string) {
@@ -182,7 +145,7 @@ export class AuthService {
       });
 
       const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
+        where: { userId: BigInt(payload.sub) },
       });
 
       if (!user) {
@@ -196,7 +159,7 @@ export class AuthService {
   }
 
   private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.userId.toString(), email: user.email || '' };
 
     const jwtSecret =
       this.configService.get<string>('JWT_SECRET') || 'default-secret';

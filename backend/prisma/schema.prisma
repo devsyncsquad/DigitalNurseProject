@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,123 +10,431 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
-enum SubscriptionPlanType {
-  FREE
-  BASIC
-  PREMIUM
-}
+// ============================================
+// Core Models
+// ============================================
 
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELLED
-  EXPIRED
-  PENDING
-}
-
-enum PaymentProvider {
-  STRIPE
-  EASYPAISA
-  JAZZCASH
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-// Models
 model User {
-  id                  String         @id @default(uuid())
-  email               String         @unique
-  password            String?        // Nullable for Google OAuth users
-  name                String?
-  emailVerified       Boolean        @default(false)
-  verificationToken   String?        @unique
-  googleId            String?        @unique
-  profileCompleted    Boolean        @default(false)
-  
-  // Profile details
-  phoneNumber         String?
-  dateOfBirth         DateTime?
-  address             String?
-  city                String?
-  country             String?
-  
-  // Timestamps
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  
+  userId            BigInt    @id @default(autoincrement()) @map("userId")
+  authProvider      String    @default("password") @map("authProvider")
+  email             String?   @unique @map("email")
+  phone             String?   @map("phone")
+  passwordHash      String?   @map("passwordHash")
+  full_name         String    @map("full_name")
+  dob               DateTime? @map("dob") @db.Date
+  gender            String?   @map("gender")
+  address           String?   @map("address")
+  avatarUrl         String?   @map("avatarUrl")
+  localeCode        String    @default("en") @map("localeCode")
+  timezone          String    @default("Asia/Karachi") @map("timezone")
+  status            String    @default("active") @map("status")
+  username          String?   @map("username")
+  medicalConditions String?   @map("medicalConditions")
+  emergencyContact  String?   @map("emergencyContact")
+  createdAt         DateTime  @default(now()) @map("createdAt")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updatedAt")
+
   // Relations
-  subscriptions       Subscription[]
-  payments            Payment[]
-  
+  elderAssignmentsAsElder     ElderAssignment[]  @relation("ElderUser")
+  elderAssignmentsAsCaregiver ElderAssignment[]  @relation("CaregiverUser")
+  userRoles                   UserRole[]
+  userDevices                 UserDevice[]
+  userDocuments               UserDocument[]
+  userInvitationsAsInviter    UserInvitation[]   @relation("InviterUser")
+  userInvitationsAsElder      UserInvitation[]   @relation("ElderUserInvitation")
+  userInvitationsAsAccepted   UserInvitation[]   @relation("AcceptedUser")
+  medications                 Medication[]
+  vitalMeasurements           VitalMeasurement[]
+  dietLogs                    DietLog[]
+  exerciseLogs                ExerciseLog[]
+  notifications               Notification[]
+  subscriptions               Subscription[]
+  loginEvents                 UserLoginEvent[]
+
   @@index([email])
-  @@index([googleId])
+  @@index([phone])
+  @@map("users")
+}
+
+model Role {
+  roleId    BigInt   @id @default(autoincrement()) @map("roleId")
+  roleCode  String   @unique @map("roleCode")
+  roleName  String   @map("roleName")
+  isActive  Boolean  @default(true) @map("isActive")
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userRoleId BigInt   @id @default(autoincrement()) @map("userRoleId")
+  userId     BigInt   @map("userId")
+  roleId     BigInt   @map("roleId")
+  createdAt  DateTime @default(now()) @map("createdAt")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ============================================
+// Medication Models
+// ============================================
+
+model Medication {
+  medicationId    BigInt   @id @default(autoincrement()) @map("medicationId")
+  elderUserId     BigInt   @map("elderUserId")
+  medicationName  String   @map("medicationName")
+  doseValue       Decimal? @map("doseValue") @db.Decimal
+  doseUnitCode    String?  @map("doseUnitCode")
+  formCode        String?  @map("formCode")
+  instructions    String?  @map("instructions")
+  notes           String?  @map("notes")
+  createdByUserId BigInt?  @map("createdByUserId")
+  createdAt       DateTime @default(now()) @map("createdAt")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  elderUser User          @relation(fields: [elderUserId], references: [userId], onDelete: Cascade)
+  schedules MedSchedule[]
+  intakes   MedIntake[]
+
+  @@index([elderUserId])
+  @@map("medications")
+}
+
+model MedSchedule {
+  medScheduleId        BigInt    @id @default(autoincrement()) @map("medScheduleId")
+  medicationId         BigInt    @map("medicationId")
+  timezone             String    @default("Asia/Karachi") @map("timezone")
+  startDate            DateTime  @map("startDate") @db.Date
+  endDate              DateTime? @map("endDate") @db.Date
+  daysMask             Int       @default(127) @map("daysMask")
+  timesLocal           Json      @map("timesLocal")
+  isPrn                Boolean   @default(false) @map("isPrn")
+  snoozeMinutesDefault Int?      @map("snoozeMinutesDefault")
+  createdAt            DateTime  @default(now()) @map("createdAt")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  medication Medication  @relation(fields: [medicationId], references: [medicationId], onDelete: Cascade)
+  intakes    MedIntake[]
+
+  @@index([medicationId])
+  @@map("med_schedules")
+}
+
+model MedIntake {
+  intakeId         BigInt    @id @default(autoincrement()) @map("intakeId")
+  medScheduleId    BigInt    @map("medScheduleId")
+  dueAt            DateTime  @map("dueAt")
+  status           String    @default("due") @map("status")
+  takenAt          DateTime? @map("takenAt")
+  snoozedUntilAt   DateTime? @map("snoozedUntilAt")
+  skipReasonCode   String?   @map("skipReasonCode")
+  recordedByUserId BigInt?   @map("recordedByUserId")
+  notes            String?   @map("notes")
+  createdAt        DateTime  @default(now()) @map("createdAt")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  schedule               MedSchedule @relation(fields: [medScheduleId], references: [medScheduleId], onDelete: Cascade)
+  Medication             Medication? @relation(fields: [medicationMedicationId], references: [medicationId])
+  medicationMedicationId BigInt?
+
+  @@index([medScheduleId])
+  @@map("med_intakes")
+}
+
+// ============================================
+// Health/Vitals Models
+// ============================================
+
+model VitalMeasurement {
+  vitalMeasurementId BigInt   @id @default(autoincrement()) @map("vitalMeasurementId")
+  elderUserId        BigInt   @map("elderUserId")
+  kindCode           String   @map("kindCode")
+  unitCode           String?  @map("unitCode")
+  value1             Decimal? @map("value1") @db.Decimal
+  value2             Decimal? @map("value2") @db.Decimal
+  valueText          String?  @map("valueText")
+  recordedAt         DateTime @map("recordedAt")
+  source             String   @default("manual") @map("source")
+  deviceInfo         Json?    @map("deviceInfo")
+  recordedByUserId   BigInt?  @map("recordedByUserId")
+  notes              String?  @map("notes")
+  createdAt          DateTime @default(now()) @map("createdAt")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  elderUser User @relation(fields: [elderUserId], references: [userId], onDelete: Cascade)
+
+  @@index([elderUserId])
+  @@index([kindCode])
+  @@index([recordedAt])
+  @@map("vital_measurements")
+}
+
+// ============================================
+// Caregiver Models
+// ============================================
+
+model ElderAssignment {
+  elderAssignmentId  BigInt   @id @default(autoincrement()) @map("elderAssignmentId")
+  elderUserId        BigInt   @map("elderUserId")
+  caregiverUserId    BigInt   @map("caregiverUserId")
+  relationshipDomain String   @default("relationships") @map("relationshipDomain")
+  relationshipCode   String   @map("relationshipCode")
+  isPrimary          Boolean  @default(false) @map("isPrimary")
+  notifyPrefs        Json?    @map("notifyPrefs")
+  createdAt          DateTime @default(now()) @map("createdAt")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  elderUser     User @relation("ElderUser", fields: [elderUserId], references: [userId], onDelete: Cascade)
+  caregiverUser User @relation("CaregiverUser", fields: [caregiverUserId], references: [userId], onDelete: Cascade)
+
+  @@index([elderUserId])
+  @@index([caregiverUserId])
+  @@map("elder_assignments")
+}
+
+model UserInvitation {
+  invitationId       BigInt    @id @default(autoincrement()) @map("invitationId")
+  inviterUserId      BigInt    @map("inviterUserId")
+  elderUserId        BigInt    @map("elderUserId")
+  targetRoleCode     String    @default("caregiver") @map("targetRoleCode")
+  relationshipDomain String    @default("relationships") @map("relationshipDomain")
+  relationshipCode   String    @map("relationshipCode")
+  invitePhone        String    @map("invitePhone")
+  inviteCode         String    @unique @map("inviteCode")
+  status             String    @default("pending") @map("status")
+  expiresAt          DateTime  @map("expiresAt")
+  acceptedUserId     BigInt?   @map("acceptedUserId")
+  acceptedAt         DateTime? @map("acceptedAt")
+  createdAt          DateTime  @default(now()) @map("createdAt")
+
+  // Relations
+  inviterUser  User  @relation("InviterUser", fields: [inviterUserId], references: [userId], onDelete: Cascade)
+  elderUser    User  @relation("ElderUserInvitation", fields: [elderUserId], references: [userId], onDelete: Cascade)
+  acceptedUser User? @relation("AcceptedUser", fields: [acceptedUserId], references: [userId], onDelete: SetNull)
+
+  @@index([inviterUserId])
+  @@index([elderUserId])
+  @@index([inviteCode])
+  @@map("user_invitations")
+}
+
+// ============================================
+// Lifestyle Models
+// ============================================
+
+model DietLog {
+  dietId    BigInt    @id @default(autoincrement()) @map("diet_id")
+  userId    BigInt    @map("user_id")
+  logDate   DateTime  @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
+  mealType  String    @map("meal_type")
+  foodItems String?   @map("food_items")
+  calories  Int?      @map("calories")
+  notes     String?   @map("notes")
+  createdAt DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([logDate])
+  @@map("diet_logs")
+}
+
+model ExerciseLog {
+  exerciseId      BigInt    @id @default(autoincrement()) @map("exercise_id")
+  userId          BigInt    @map("user_id")
+  logDate         DateTime  @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
+  exerciseType    String    @map("exercise_type")
+  durationMinutes Int?      @map("duration_minutes")
+  caloriesBurned  Int?      @map("calories_burned")
+  intensity       String?   @map("intensity")
+  description     String?   @map("description")
+  notes           String?   @map("notes")
+  createdAt       DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([logDate])
+  @@map("exercise_logs")
+}
+
+// ============================================
+// Document Models
+// ============================================
+
+model UserDocument {
+  documentId   BigInt   @id @default(autoincrement()) @map("documentId")
+  userId       BigInt   @map("userId")
+  documentType String   @map("documentType")
+  title        String   @map("title")
+  description  String?  @map("description")
+  filePath     String   @map("filePath")
+  fileType     String?  @map("fileType")
+  uploadedAt   DateTime @default(now()) @map("uploadedAt")
+  uploadedBy   BigInt?  @map("uploadedBy")
+  visibility   String   @default("private") @map("visibility")
+  isActive     Boolean  @default(true) @map("isActive")
+  createdAt    DateTime @default(now()) @map("createdAt")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([documentType])
+  @@map("user_documents")
+}
+
+// ============================================
+// Notification Models
+// ============================================
+
+model Notification {
+  notificationId   BigInt    @id @default(autoincrement()) @map("notificationId")
+  userId           BigInt    @map("userId")
+  title            String    @map("title")
+  message          String    @map("message")
+  notificationType String    @map("notificationType")
+  scheduledTime    DateTime? @map("scheduledTime")
+  sentTime         DateTime? @map("sentTime")
+  isRead           Boolean   @default(false) @map("isRead")
+  isSent           Boolean   @default(false) @map("isSent")
+  status           String    @default("pending") @map("status")
+  actionData       Json?     @map("actionData")
+  createdAt        DateTime? @default(now()) @map("createdAt")
+  updatedAt        DateTime? @default(now()) @updatedAt @map("updatedAt")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([status])
+  @@map("notifications")
+}
+
+// ============================================
+// Subscription Models
+// ============================================
+
+model SubscriptionPlan {
+  planId       BigInt   @id @default(autoincrement()) @map("planId")
+  planCode     String   @unique @map("planCode")
+  planName     String   @map("planName")
+  currency     String   @default("PKR") @map("currency")
+  monthlyPrice Decimal? @map("monthlyPrice") @db.Decimal
+  annualPrice  Decimal? @map("annualPrice") @db.Decimal
+  limits       Json     @map("limits")
+  isActive     Boolean  @default(true) @map("isActive")
+  createdAt    DateTime @default(now()) @map("createdAt")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  @@map("subscription_plans")
 }
 
 model Subscription {
-  id                    String                 @id @default(uuid())
-  userId                String
-  planType              SubscriptionPlanType   @default(FREE)
-  status                SubscriptionStatus     @default(ACTIVE)
-  
-  // Stripe integration
-  stripeCustomerId      String?
-  stripeSubscriptionId  String?                @unique
-  stripePriceId         String?
-  
-  // Subscription period
-  startDate             DateTime               @default(now())
-  endDate               DateTime?
-  currentPeriodStart    DateTime?
-  currentPeriodEnd      DateTime?
-  
-  // Billing
-  cancelAtPeriodEnd     Boolean                @default(false)
-  canceledAt            DateTime?
-  
-  // Timestamps
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  
+  subscriptionId BigInt    @id @default(autoincrement()) @map("subscriptionId")
+  userId         BigInt    @map("userId")
+  planId         BigInt?   @map("planId")
+  status         String    @default("active") @map("status")
+  startDate      DateTime  @default(now()) @map("startDate")
+  endDate        DateTime? @map("endDate")
+  createdAt      DateTime  @default(now()) @map("createdAt")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updatedAt")
+
   // Relations
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payments              Payment[]
-  
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
   @@index([userId])
-  @@index([stripeSubscriptionId])
+  @@map("subscriptions")
 }
 
-model Payment {
-  id              String          @id @default(uuid())
-  userId          String
-  subscriptionId  String?
-  
-  amount          Float
-  currency        String          @default("USD")
-  provider        PaymentProvider
-  status          PaymentStatus   @default(PENDING)
-  
-  // Provider-specific IDs
-  stripePaymentIntentId  String?  @unique
-  providerTransactionId  String?
-  
-  // Payment metadata
-  description     String?
-  failureReason   String?
-  
-  // Timestamps
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
+// ============================================
+// Supporting Models
+// ============================================
+
+model UserDevice {
+  deviceId    BigInt    @id @default(autoincrement()) @map("deviceId")
+  userId      BigInt    @map("userId")
+  platform    String    @map("platform")
+  deviceModel String?   @map("deviceModel")
+  osName      String?   @map("osName")
+  osVersion   String?   @map("osVersion")
+  appVersion  String?   @map("appVersion")
+  pushToken   String?   @map("pushToken")
+  lastLoginAt DateTime? @map("lastLoginAt")
+  lastSeenAt  DateTime? @map("lastSeenAt")
+  ipAddress   String?   @map("ipAddress")
+  userAgent   String?   @map("userAgent")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+
   // Relations
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
   @@index([userId])
-  @@index([subscriptionId])
-  @@index([stripePaymentIntentId])
+  @@index([pushToken])
+  @@map("user_devices")
+}
+
+model UserLoginEvent {
+  loginEventId BigInt   @id @default(autoincrement()) @map("loginEventId")
+  userId       BigInt   @map("userId")
+  ipAddress    String?  @map("ipAddress")
+  userAgent    String?  @map("userAgent")
+  deviceId     BigInt?  @map("deviceId")
+  loginAt      DateTime @default(now()) @map("loginAt")
+
+  // Relations
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([loginAt])
+  @@map("user_login_events")
+}
+
+model Lookup {
+  lookupId     BigInt   @id @default(autoincrement()) @map("lookupId")
+  lookupDomain String   @map("lookupDomain")
+  lookupCode   String   @map("lookupCode")
+  lookupLabel  String   @map("lookupLabel")
+  sortOrder    Int      @default(0) @map("sortOrder")
+  isActive     Boolean  @default(true) @map("isActive")
+  createdAt    DateTime @default(now()) @map("createdAt")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updatedAt")
+
+  @@index([lookupDomain, lookupCode])
+  @@map("lookups")
+}
+
+model Translation {
+  translationId  BigInt    @id @default(autoincrement()) @map("translationId")
+  entityType     String    @map("entityType")
+  entityId       BigInt    @map("entityId")
+  languageCode   String    @map("languageCode")
+  translatedText String    @map("translatedText")
+  createdAt      DateTime? @default(now()) @map("createdAt")
+  updatedAt      DateTime? @default(now()) @updatedAt @map("updatedAt")
+
+  @@index([entityType, entityId])
+  @@index([languageCode])
+  @@map("translations")
 }

@@ -10,11 +10,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private configService: ConfigService,
     private authService: AuthService,
   ) {
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET');
+    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL');
+
+    // Only initialize if credentials are provided, otherwise use placeholder values
+    // that won't cause OAuth2Strategy to throw an error
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID') || '',
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL') || '',
+      clientID: clientID || 'placeholder-client-id',
+      clientSecret: clientSecret || 'placeholder-client-secret',
+      callbackURL: callbackURL || 'http://localhost:3000/api/auth/google/callback',
       scope: ['email', 'profile'],
+      passReqToCallback: false,
     });
   }
 

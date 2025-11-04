@@ -1,9 +1,14 @@
 import { IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { SubscriptionPlanType } from '@prisma/client';
+
+export enum SubscriptionPlanType {
+  FREE = 'FREE',
+  BASIC = 'BASIC',
+  PREMIUM = 'PREMIUM',
+}
 
 export class CreateSubscriptionDto {
-  @ApiProperty({ enum: ['BASIC', 'PREMIUM'] })
+  @ApiProperty({ enum: SubscriptionPlanType, example: SubscriptionPlanType.BASIC })
   @IsEnum(SubscriptionPlanType)
   planType!: SubscriptionPlanType;
 }

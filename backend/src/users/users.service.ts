@@ -7,26 +7,19 @@ import { CompleteProfileDto } from './dto/complete-profile.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async getProfile(userId: string) {
+  async getProfile(userId: bigint) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        emailVerified: true,
-        profileCompleted: true,
-        phoneNumber: true,
-        dateOfBirth: true,
-        address: true,
-        city: true,
-        country: true,
-        createdAt: true,
-        updatedAt: true,
+      where: { userId },
+      include: {
         subscriptions: {
-          where: { status: 'ACTIVE' },
+          where: { status: 'active' },
           orderBy: { createdAt: 'desc' },
           take: 1,
+        },
+        userRoles: {
+          include: {
+            role: true,
+          },
         },
       },
     });
@@ -35,55 +28,71 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // Calculate age from dob
+    const age = user.dob
+      ? Math.floor((new Date().getTime() - new Date(user.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : null;
+
+    // Get subscription tier
+    const subscriptionTier = user.subscriptions[0]?.planId
+      ? await this.prisma.subscriptionPlan.findUnique({
+          where: { planId: user.subscriptions[0].planId },
+        })
+      : null;
+
+    return {
+      id: user.userId.toString(),
+      email: user.email || '',
+      name: user.full_name,
+      role: user.userRoles[0]?.role?.roleCode || 'patient',
+      subscriptionTier: subscriptionTier?.planCode || 'free',
+      age: age?.toString() || null,
+      medicalConditions: user.medicalConditions || null,
+      emergencyContact: user.emergencyContact || null,
+      phone: user.phone || null,
+    };
   }
 
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+  async updateProfile(userId: bigint, updateProfileDto: UpdateProfileDto) {
+    const updateData: any = {};
+    if (updateProfileDto.name) updateData.full_name = updateProfileDto.name;
+    if (updateProfileDto.phoneNumber) updateData.phone = updateProfileDto.phoneNumber;
+    if (updateProfileDto.dateOfBirth) updateData.dob = new Date(updateProfileDto.dateOfBirth);
+    if (updateProfileDto.address) updateData.address = updateProfileDto.address;
+    // Note: Database schema doesn't have separate city/country fields, combining into address
+    if (updateProfileDto.city || updateProfileDto.country) {
+      const parts = [updateProfileDto.address || updateData.address, updateProfileDto.city, updateProfileDto.country].filter(Boolean);
+      updateData.address = parts.join(', ');
+    }
+    if (updateProfileDto.medicalConditions !== undefined)
+      updateData.medicalConditions = updateProfileDto.medicalConditions;
+    if (updateProfileDto.emergencyContact !== undefined)
+      updateData.emergencyContact = updateProfileDto.emergencyContact;
+
     const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: updateProfileDto,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phoneNumber: true,
-        dateOfBirth: true,
-        address: true,
-        city: true,
-        country: true,
-        profileCompleted: true,
-      },
+      where: { userId },
+      data: updateData,
     });
 
-    return user;
+    return this.getProfile(userId);
   }
 
-  async completeProfile(
-    userId: string,
-    completeProfileDto: CompleteProfileDto,
-  ) {
+  async completeProfile(userId: bigint, completeProfileDto: CompleteProfileDto) {
+    const updateData: any = {
+      full_name: completeProfileDto.name,
+      phone: completeProfileDto.phoneNumber,
+      dob: completeProfileDto.dateOfBirth ? new Date(completeProfileDto.dateOfBirth) : null,
+      address: completeProfileDto.address || null,
+    };
+
     const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...completeProfileDto,
-        profileCompleted: true,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phoneNumber: true,
-        dateOfBirth: true,
-        address: true,
-        city: true,
-        country: true,
-        profileCompleted: true,
-      },
+      where: { userId },
+      data: updateData,
     });
 
     return {
       message: 'Profile completed successfully',
-      user,
+      user: await this.getProfile(userId),
     };
   }
 }

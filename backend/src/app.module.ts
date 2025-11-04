@@ -7,6 +7,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { MedicationsModule } from './medications/medications.module';
+import { VitalsModule } from './vitals/vitals.module';
+import { CaregiversModule } from './caregivers/caregivers.module';
+import { LifestyleModule } from './lifestyle/lifestyle.module';
+import { DocumentsModule } from './documents/documents.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { LookupsModule } from './lookups/lookups.module';
+import { DevicesModule } from './devices/devices.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -19,6 +27,14 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AuthModule,
     UsersModule,
     SubscriptionsModule,
+    MedicationsModule,
+    VitalsModule,
+    CaregiversModule,
+    LifestyleModule,
+    DocumentsModule,
+    NotificationsModule,
+    LookupsModule,
+    DevicesModule,
   ],
   controllers: [AppController],
   providers: [

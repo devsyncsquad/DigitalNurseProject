@@ -54,7 +54,7 @@ export class SubscriptionsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'No active subscription found' })
   async getCurrentSubscription(@CurrentUser() user: User) {
-    return this.subscriptionsService.getCurrentSubscription(user.id);
+    return this.subscriptionsService.getCurrentSubscription(user.userId.toString());
   }
 
   @ApiBearerAuth()
@@ -72,7 +72,7 @@ export class SubscriptionsController {
     @Body() createSubscriptionDto: CreateSubscriptionDto,
   ) {
     return this.subscriptionsService.createSubscription(
-      user.id,
+      user.userId.toString(),
       createSubscriptionDto,
     );
   }
@@ -92,7 +92,7 @@ export class SubscriptionsController {
     @Body() upgradeSubscriptionDto: UpgradeSubscriptionDto,
   ) {
     return this.subscriptionsService.upgradeSubscription(
-      user.id,
+      user.userId.toString(),
       upgradeSubscriptionDto,
     );
   }
@@ -105,7 +105,7 @@ export class SubscriptionsController {
   @ApiResponse({ status: 200, description: 'Continuing with existing plan' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async continueWithExistingPlan(@CurrentUser() user: User) {
-    return this.subscriptionsService.continueWithExistingPlan(user.id);
+    return this.subscriptionsService.continueWithExistingPlan(user.userId.toString());
   }
 
   @ApiBearerAuth()
@@ -119,7 +119,7 @@ export class SubscriptionsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async cancelSubscription(@CurrentUser() user: User) {
-    return this.subscriptionsService.cancelSubscription(user.id);
+    return this.subscriptionsService.cancelSubscription(user.userId.toString());
   }
 
   @Public()

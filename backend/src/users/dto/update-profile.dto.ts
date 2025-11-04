@@ -31,4 +31,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   country?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  medicalConditions?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  emergencyContact?: string;
 }

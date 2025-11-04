@@ -23,8 +23,9 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@CurrentUser() user: User) {
-    return this.usersService.getProfile(user.id);
+  async getProfile(@CurrentUser() user: any) {
+    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    return this.usersService.getProfile(userId);
   }
 
   @Patch('profile')
@@ -32,10 +33,11 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(
-    @CurrentUser() user: User,
+    @CurrentUser() user: any,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.usersService.updateProfile(user.id, updateProfileDto);
+    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    return this.usersService.updateProfile(userId, updateProfileDto);
   }
 
   @Post('complete-profile')
@@ -43,9 +45,10 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile completed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeProfile(
-    @CurrentUser() user: User,
+    @CurrentUser() user: any,
     @Body() completeProfileDto: CompleteProfileDto,
   ) {
-    return this.usersService.completeProfile(user.id, completeProfileDto);
+    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    return this.usersService.completeProfile(userId, completeProfileDto);
   }
 }
