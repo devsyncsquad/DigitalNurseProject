@@ -295,16 +295,28 @@ class ProfileViewScreen extends StatelessWidget {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(color: context.theme.colors.foreground),
+                    ),
+                    content: Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(color: context.theme.colors.foreground),
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('Cancel'),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: context.theme.colors.foreground),
+                        ),
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Logout'),
+                        child: Text(
+                          'Logout',
+                          style: TextStyle(color: context.theme.colors.primary),
+                        ),
                       ),
                     ],
                   ),
