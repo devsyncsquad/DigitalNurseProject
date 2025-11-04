@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "175192714305",
+    "project_id": "mydigitalnurse-5ffcd",
+    "storage_bucket": "mydigitalnurse-5ffcd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:175192714305:android:3202687f7c71c91a73eac0",
+        "android_client_info": {
+          "package_name": "com.example.digital_nurse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUrxZvhofg0o7OK-pbjwXySW3bA--vPyA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
