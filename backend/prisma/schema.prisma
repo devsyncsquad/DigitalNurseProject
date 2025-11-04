@@ -42,94 +42,107 @@ enum PaymentStatus {
 
 // Models
 model User {
-  id                  String         @id @default(uuid())
-  email               String         @unique
-  password            String?        // Nullable for Google OAuth users
-  name                String?
-  emailVerified       Boolean        @default(false)
-  verificationToken   String?        @unique
-  googleId            String?        @unique
-  profileCompleted    Boolean        @default(false)
-  
+  id                Int     @id @default(autoincrement()) @map("userId")
+  email             String? @unique
+  password          String? @map("passwordHash") // Nullable for Google OAuth users
+  name              String? @map("full_name")
+  emailVerified     Boolean @default(false) @map("emailVerified")
+  verificationToken String? @unique @map("verificationToken")
+  googleId          String? @unique @map("googleId")
+  profileCompleted  Boolean @default(false) @map("profileCompleted")
+
   // Profile details
-  phoneNumber         String?
-  dateOfBirth         DateTime?
-  address             String?
-  city                String?
-  country             String?
-  
+  phoneNumber String? @map("phone")
+  dateOfBirth DateTime? @map("dob")
+  address     String?
+  city        String? @map("city")
+  country     String? @map("country")
+
+  // Additional fields from database
+  authProvider      String? @default("password") @map("authProvider")
+  avatarUrl         String? @map("avatarUrl")
+  localeCode        String  @default("en") @map("localeCode")
+  timezone          String  @default("Asia/Karachi") @map("timezone")
+  status            String  @default("active") @map("status")
+  username          String? @map("username")
+  medicalConditions String? @map("medicalConditions")
+  emergencyContact  String? @map("emergencyContact")
+  gender            String? @map("gender")
+
   // Timestamps
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  subscriptions       Subscription[]
-  payments            Payment[]
-  
+  subscriptions Subscription[]
+  payments      Payment[]
+
   @@index([email])
   @@index([googleId])
+  @@map("users")
 }
 
 model Subscription {
-  id                    String                 @id @default(uuid())
-  userId                String
-  planType              SubscriptionPlanType   @default(FREE)
-  status                SubscriptionStatus     @default(ACTIVE)
-  
+  id       String               @id @default(uuid())
+  userId   Int
+  planType SubscriptionPlanType @default(FREE)
+  status   SubscriptionStatus   @default(ACTIVE)
+
   // Stripe integration
-  stripeCustomerId      String?
-  stripeSubscriptionId  String?                @unique
-  stripePriceId         String?
-  
+  stripeCustomerId     String?
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+
   // Subscription period
-  startDate             DateTime               @default(now())
-  endDate               DateTime?
-  currentPeriodStart    DateTime?
-  currentPeriodEnd      DateTime?
-  
+  startDate          DateTime  @default(now())
+  endDate            DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
   // Billing
-  cancelAtPeriodEnd     Boolean                @default(false)
-  canceledAt            DateTime?
-  
+  cancelAtPeriodEnd Boolean   @default(false)
+  canceledAt        DateTime?
+
   // Timestamps
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  payments              Payment[]
-  
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
   @@index([userId])
   @@index([stripeSubscriptionId])
 }
 
 model Payment {
-  id              String          @id @default(uuid())
-  userId          String
-  subscriptionId  String?
-  
-  amount          Float
-  currency        String          @default("USD")
-  provider        PaymentProvider
-  status          PaymentStatus   @default(PENDING)
-  
+  id             String  @id @default(uuid())
+  userId         Int
+  subscriptionId String?
+
+  amount   Float
+  currency String          @default("USD")
+  provider PaymentProvider
+  status   PaymentStatus   @default(PENDING)
+
   // Provider-specific IDs
-  stripePaymentIntentId  String?  @unique
-  providerTransactionId  String?
-  
+  stripePaymentIntentId String? @unique
+  providerTransactionId String?
+
   // Payment metadata
-  description     String?
-  failureReason   String?
-  
+  description   String?
+  failureReason String?
+
   // Timestamps
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([subscriptionId])
   @@index([stripePaymentIntentId])
+  @@map("payments")
 }

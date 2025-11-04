@@ -7,7 +7,7 @@ import { CompleteProfileDto } from './dto/complete-profile.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async getProfile(userId: string) {
+  async getProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -38,7 +38,7 @@ export class UsersService {
     return user;
   }
 
-  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+  async updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: updateProfileDto,
@@ -59,7 +59,7 @@ export class UsersService {
   }
 
   async completeProfile(
-    userId: string,
+    userId: number,
     completeProfileDto: CompleteProfileDto,
   ) {
     const user = await this.prisma.user.update({

@@ -8,13 +8,15 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  // ServiceUnavailableException, // TODO: Uncomment when Google OAuth is enabled
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { GoogleAuthGuard } from '../common/guards/google-auth.guard';
+// TODO: Uncomment when Google OAuth credentials are available
+// import { GoogleAuthGuard } from '../common/guards/google-auth.guard';
 import { LocalAuthGuard } from '../common/guards/local-auth.guard';
 import { Public } from '../common/decorators/public.decorator';
 import { ConfigService } from '@nestjs/config';
@@ -49,27 +51,56 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @Public()
-  @Get('google')
-  @UseGuards(GoogleAuthGuard)
-  @ApiOperation({ summary: 'Initiate Google OAuth login' })
-  async googleAuth() {
-    // Guard redirects to Google
-  }
+  // TODO: Uncomment when Google OAuth credentials are available
+  // @Public()
+  // @Get('google')
+  // @UseGuards(GoogleAuthGuard)
+  // @ApiOperation({ summary: 'Initiate Google OAuth login' })
+  // @ApiResponse({
+  //   status: 503,
+  //   description: 'Google OAuth is not configured',
+  // })
+  // async googleAuth() {
+  //   // Check if Google OAuth is configured
+  //   const clientID = this.configService.get<string>('GOOGLE_CLIENT_ID');
+  //   if (!clientID || clientID === 'placeholder') {
+  //     throw new ServiceUnavailableException(
+  //       'Google OAuth is not configured. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL environment variables.',
+  //     );
+  //   }
+  //   // Guard redirects to Google
+  // }
 
-  @Public()
-  @Get('google/callback')
-  @UseGuards(GoogleAuthGuard)
-  @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleAuthRedirect(@Req() req: any, @Res() res: any) {
-    const tokens = await this.authService['generateTokens'](req.user);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+  // TODO: Uncomment when Google OAuth credentials are available
+  // @Public()
+  // @Get('google/callback')
+  // @UseGuards(GoogleAuthGuard)
+  // @ApiOperation({ summary: 'Google OAuth callback' })
+  // @ApiResponse({
+  //   status: 503,
+  //   description: 'Google OAuth is not configured',
+  // })
+  // async googleAuthRedirect(@Req() req: any, @Res() res: any) {
+  //   // Check if Google OAuth is configured
+  //   const clientID = this.configService.get<string>('GOOGLE_CLIENT_ID');
+  //   if (!clientID || clientID === 'placeholder') {
+  //     throw new ServiceUnavailableException(
+  //       'Google OAuth is not configured. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL environment variables.',
+  //     );
+  //   }
 
-    // Redirect to frontend with tokens
-    res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
-    );
-  }
+  //   if (!req.user) {
+  //     throw new ServiceUnavailableException('Google OAuth authentication failed');
+  //   }
+
+  //   const tokens = await this.authService['generateTokens'](req.user);
+  //   const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+
+  //   // Redirect to frontend with tokens
+  //   res.redirect(
+  //     `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+  //   );
+  // }
 
   @Public()
   @Post('verify-email')

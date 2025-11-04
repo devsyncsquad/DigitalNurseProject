@@ -181,8 +181,11 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
+      // Convert string ID to number if needed (for backward compatibility)
+      const userId = typeof payload.sub === 'string' ? parseInt(payload.sub, 10) : payload.sub;
+
       const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
+        where: { id: userId },
       });
 
       if (!user) {

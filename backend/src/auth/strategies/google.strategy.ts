@@ -10,12 +10,28 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private configService: ConfigService,
     private authService: AuthService,
   ) {
-    super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID') || '',
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || '',
-      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL') || '',
-      scope: ['email', 'profile'],
-    });
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET');
+    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL');
+
+    // Only initialize if all required credentials are provided
+    if (!clientID || !clientSecret || !callbackURL) {
+      // Use placeholder values to prevent OAuth2Strategy error
+      // The strategy won't be used if credentials are missing
+      super({
+        clientID: 'placeholder',
+        clientSecret: 'placeholder',
+        callbackURL: 'placeholder',
+        scope: ['email', 'profile'],
+      });
+    } else {
+      super({
+        clientID,
+        clientSecret,
+        callbackURL,
+        scope: ['email', 'profile'],
+      });
+    }
   }
 
   async validate(
@@ -24,6 +40,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
+    // Check if credentials are configured
+    const clientID = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    if (!clientID || clientID === 'placeholder') {
+      return done(new Error('Google OAuth is not configured'), undefined);
+    }
+
     const { id, emails, displayName } = profile;
 
     const user = await this.authService.validateGoogleUser({
