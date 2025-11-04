@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -54,12 +55,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Registration Failed'),
+        title: Text('auth.register.failed'.tr()),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text('common.ok'.tr()),
           ),
         ],
       ),
@@ -92,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     // Title
                     Text(
-                      'Create Account',
+                      'auth.register.title'.tr(),
                       style: context.theme.typography.xl4.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -100,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Sign up to get started',
+                      'auth.register.subtitle'.tr(),
                       style: context.theme.typography.base,
                       textAlign: TextAlign.center,
                     ),
@@ -109,16 +110,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Name field
                     FTextField(
                       controller: _nameController,
-                      label: const Text('Full Name'),
-                      hint: 'Enter your name',
+                      label: Text('auth.register.fullName'.tr()),
+                      hint: 'auth.register.nameHint'.tr(),
                     ),
                     SizedBox(height: 16.h),
 
                     // Email field
                     FTextField(
                       controller: _emailController,
-                      label: const Text('Email'),
-                      hint: 'Enter your email',
+                      label: Text('auth.register.email'.tr()),
+                      hint: 'auth.register.emailHint'.tr(),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 16.h),
@@ -126,8 +127,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Password field
                     FTextField(
                       controller: _passwordController,
-                      label: const Text('Password'),
-                      hint: 'Enter your password',
+                      label: Text('auth.register.password'.tr()),
+                      hint: 'auth.register.passwordHint'.tr(),
                       obscureText: _obscurePassword,
                     ),
                     SizedBox(height: 16.h),
@@ -135,8 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Confirm Password field
                     FTextField(
                       controller: _confirmPasswordController,
-                      label: const Text('Confirm Password'),
-                      hint: 'Confirm your password',
+                      label: Text('auth.register.confirmPassword'.tr()),
+                      hint: 'auth.register.confirmPasswordHint'.tr(),
                       obscureText: _obscureConfirmPassword,
                     ),
                     SizedBox(height: 24.h),
@@ -155,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                             )
-                          : const Text('Create Account'),
+                          : Text('auth.register.createAccount'.tr()),
                     ),
                     SizedBox(height: 16.h),
 
@@ -164,12 +165,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Already have an account? ',
+                          'auth.register.hasAccount'.tr(),
                           style: context.theme.typography.sm,
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),
-                          child: const Text('Login'),
+                          child: Text('auth.register.loginLink'.tr()),
                         ),
                       ],
                     ),

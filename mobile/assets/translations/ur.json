@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "میرا ڈیجیٹل نرس",
+    "tagline": "آپ کا ذاتی صحت کا ساتھی",
+    "description": "دوائیوں کا انتظام کریں، حیاتیات کو ٹریک کریں، دیکھ بھال کو مربوط کریں، اور اپنی صحت کے سفر پر کنٹرول حاصل کریں۔"
+  },
+  "auth": {
+    "login": {
+      "title": "لاگ ان",
+      "welcomeBack": "خوش آمدید! جاری رکھنے کے لیے لاگ ان کریں",
+      "email": "ای میل",
+      "emailHint": "اپنا ای میل داخل کریں",
+      "password": "پاس ورڈ",
+      "passwordHint": "اپنا پاس ورڈ داخل کریں",
+      "loginButton": "لاگ ان",
+      "noAccount": "اکاؤنٹ نہیں ہے؟ ",
+      "registerLink": "رجسٹر کریں",
+      "failed": "لاگ ان ناکام",
+      "ok": "ٹھیک ہے"
+    },
+    "register": {
+      "title": "اکاؤنٹ بنائیں",
+      "subtitle": "شروع کرنے کے لیے سائن اپ کریں",
+      "fullName": "پورا نام",
+      "nameHint": "اپنا نام داخل کریں",
+      "email": "ای میل",
+      "emailHint": "اپنا ای میل داخل کریں",
+      "password": "پاس ورڈ",
+      "passwordHint": "اپنا پاس ورڈ داخل کریں",
+      "confirmPassword": "پاس ورڈ کی تصدیق کریں",
+      "confirmPasswordHint": "اپنے پاس ورڈ کی تصدیق کریں",
+      "createAccount": "اکاؤنٹ بنائیں",
+      "hasAccount": "پہلے سے اکاؤنٹ ہے؟ ",
+      "loginLink": "لاگ ان",
+      "failed": "رجسٹریشن ناکام"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "getStarted": "شروع کریں",
+      "hasAccount": "میرے پاس پہلے سے اکاؤنٹ ہے",
+      "features": {
+        "medicineReminders": {
+          "title": "دوائی کی یاددہانیاں",
+          "description": "کبھی خوراک نہ چھوڑیں"
+        },
+        "healthTracking": {
+          "title": "صحت کی نگرانی",
+          "description": "اپنے حیاتیات کی نگرانی کریں"
+        },
+        "caregiverCoordination": {
+          "title": "دیکھ بھال کرنے والے کا تعاون",
+          "description": "دیکھ بھال کی ٹیم کے ساتھ جڑے رہیں"
+        },
+        "documentManagement": {
+          "title": "دستاویز کا انتظام",
+          "description": "تمام ریکارڈز کو منظم رکھیں"
+        }
+      }
+    }
+  },
+  "navigation": {
+    "home": "ہوم",
+    "medicines": "دوائیاں",
+    "health": "صحت",
+    "documents": "دستاویزات",
+    "profile": "پروفائل"
+  },
+  "dashboard": {
+    "hello": "ہیلو، {name}!",
+    "helloParam": "ہیلو، {name}!",
+    "notifications": "اطلاعات",
+    "markAllRead": "سب کو پڑھا ہوا نشان زد کریں",
+    "noNotifications": "کوئی اطلاع نہیں",
+    "user": "صارف",
+    "adherenceStreak": "پابندی کی لگاتار",
+    "day": "دن",
+    "days": "دن",
+    "medicineReminder": "دوائی کی یاددہانی",
+    "viewDetails": "تفصیلات دیکھیں",
+    "viewDetailsTitle": "تفصیلات دیکھیں",
+    "noRemindersToday": "آج کے لیے کوئی یاددہانی نہیں",
+    "todaysReminders": "آج کی یاددہانیاں",
+    "moreReminders": "+{count} مزید یاددہانیاں",
+    "vitals": "حیاتیات",
+    "noRecentVitals": "کوئی حالیہ حیاتیات ریکارڈ نہیں",
+    "recentVitals": "حالیہ حیاتیات",
+    "documents": "دستاویزات",
+    "noDocuments": "کوئی دستاویزات اپ لوڈ نہیں",
+    "recentDocuments": "حالیہ دستاویزات",
+    "moreDocuments": "+{count} مزید دستاویزات",
+    "dietExercise": "میرا غذا اور ورزش",
+    "noDietExercise": "آج غذا یا ورزش لاگ نہیں کی گئی",
+    "todaysActivity": "آج کی سرگرمی",
+    "meals": "کھانے",
+    "exercise": "ورزش",
+    "moreActivities": "+{count} مزید سرگرمیاں"
+  },
+  "settings": {
+    "title": "ترتیبات",
+    "notifications": {
+      "title": "اطلاعات",
+      "medicineReminders": {
+        "title": "دوائی کی یاددہانیاں",
+        "description": "دوائی کے اوقات کے لیے مطلع کیا جائے"
+      },
+      "healthAlerts": {
+        "title": "صحت کی انتباہات",
+        "description": "غیر معمولی حیاتیات کے لیے انتباہات"
+      },
+      "caregiverUpdates": {
+        "title": "دیکھ بھال کرنے والے کی اپ ڈیٹس",
+        "description": "دیکھ بھال کرنے والوں سے اطلاعات"
+      }
+    },
+    "privacy": {
+      "title": "پرائیویسی اور سیکیورٹی",
+      "changePassword": "پاس ورڈ تبدیل کریں",
+      "privacyPolicy": "پرائیویسی پالیسی",
+      "termsOfService": "سروس کی شرائط"
+    },
+    "about": {
+      "title": "کے بارے میں",
+      "appVersion": "ایپ کی ورژن",
+      "helpSupport": "مدد اور سپورٹ",
+      "sendFeedback": "فیڈ بیک بھیجیں"
+    },
+    "debug": {
+      "title": "ڈیبگ",
+      "testNotifications": {
+        "title": "اطلاعات کی جانچ",
+        "description": "پش اطلاعات کی فعالیت کی جانچ"
+      }
+    },
+    "language": {
+      "title": "زبان",
+      "english": "English",
+      "urdu": "اردو",
+      "selectLanguage": "زبان منتخب کریں"
+    }
+  },
+  "common": {
+    "cancel": "منسوخ",
+    "ok": "ٹھیک ہے",
+    "save": "محفوظ کریں",
+    "delete": "حذف کریں",
+    "edit": "ترمیم",
+    "add": "شامل کریں",
+    "back": "واپس",
+    "next": "اگلا",
+    "done": "ہو گیا",
+    "exit": "باہر نکلیں",
+    "exitApp": "ایپ سے باہر نکلیں",
+    "exitConfirm": "کیا آپ واقعی ایپ سے باہر نکلنا چاہتے ہیں؟",
+    "user": "صارف"
+  }
+}
+

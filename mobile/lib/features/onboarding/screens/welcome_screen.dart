@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -27,7 +28,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // App name
               Text(
-                'My Digital Nurse',
+                'app.name'.tr(),
                 style: context.theme.typography.xl3.copyWith(
                   fontWeight: FontWeight.bold,
                   color: context.theme.colors.foreground,
@@ -38,7 +39,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // Tagline
               Text(
-                'Your Personal Health Companion',
+                'app.tagline'.tr(),
                 style: context.theme.typography.lg.copyWith(
                   color: context.theme.colors.foreground,
                 ),
@@ -48,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // Description
               Text(
-                'Manage medications, track vitals, coordinate care, and take control of your health journey.',
+                'app.description'.tr(),
                 style: context.theme.typography.sm.copyWith(
                   color: context.theme.colors.mutedForeground,
                 ),
@@ -69,23 +70,23 @@ class WelcomeScreen extends StatelessWidget {
                       children: [
                         _FeatureItem(
                           icon: FIcons.pill,
-                          title: 'Medicine Reminders',
-                          description: 'Never miss a dose',
+                          title: 'onboarding.welcome.features.medicineReminders.title'.tr(),
+                          description: 'onboarding.welcome.features.medicineReminders.description'.tr(),
                         ),
                         _FeatureItem(
                           icon: FIcons.activity,
-                          title: 'Health Tracking',
-                          description: 'Monitor your vitals',
+                          title: 'onboarding.welcome.features.healthTracking.title'.tr(),
+                          description: 'onboarding.welcome.features.healthTracking.description'.tr(),
                         ),
                         _FeatureItem(
                           icon: FIcons.users,
-                          title: 'Caregiver Coordination',
-                          description: 'Stay connected with care team',
+                          title: 'onboarding.welcome.features.caregiverCoordination.title'.tr(),
+                          description: 'onboarding.welcome.features.caregiverCoordination.description'.tr(),
                         ),
                         _FeatureItem(
                           icon: FIcons.fileText,
-                          title: 'Document Management',
-                          description: 'Keep all records organized',
+                          title: 'onboarding.welcome.features.documentManagement.title'.tr(),
+                          description: 'onboarding.welcome.features.documentManagement.description'.tr(),
                         ),
                       ],
                     ),
@@ -98,7 +99,7 @@ class WelcomeScreen extends StatelessWidget {
               // Get started button
               FButton(
                 onPress: () => context.go('/register'),
-                child: const Text('Get Started'),
+                child: Text('onboarding.welcome.getStarted'.tr()),
               ),
               SizedBox(height: 8.h),
 
@@ -106,7 +107,7 @@ class WelcomeScreen extends StatelessWidget {
               TextButton(
                 onPressed: () => context.go('/login'),
                 child: Text(
-                  'I already have an account',
+                  'onboarding.welcome.hasAccount'.tr(),
                   style: TextStyle(color: context.theme.colors.primary),
                 ),
               ),

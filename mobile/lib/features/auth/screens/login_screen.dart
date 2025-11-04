@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -47,12 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Login Failed'),
+        title: Text('auth.login.failed'.tr()),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text('common.ok'.tr()),
           ),
         ],
       ),
@@ -84,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Title
                   Text(
-                    'My Digital Nurse',
+                    'app.name'.tr(),
                     style: context.theme.typography.xl4.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -92,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Welcome back! Login to continue',
+                    'auth.login.welcomeBack'.tr(),
                     style: context.theme.typography.base,
                     textAlign: TextAlign.center,
                   ),
@@ -101,8 +102,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Email field
                   FTextField(
                     controller: _emailController,
-                    label: const Text('Email'),
-                    hint: 'Enter your email',
+                    label: Text('auth.login.email'.tr()),
+                    hint: 'auth.login.emailHint'.tr(),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   SizedBox(height: 16.h),
@@ -110,8 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Password field
                   FTextField(
                     controller: _passwordController,
-                    label: const Text('Password'),
-                    hint: 'Enter your password',
+                    label: Text('auth.login.password'.tr()),
+                    hint: 'auth.login.passwordHint'.tr(),
                     obscureText: _obscurePassword,
                   ),
                   SizedBox(height: 24.h),
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           )
-                        : const Text('Login'),
+                        : Text('auth.login.loginButton'.tr()),
                   ),
                   SizedBox(height: 16.h),
 
@@ -139,12 +140,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Don\'t have an account? ',
+                        'auth.login.noAccount'.tr(),
                         style: context.theme.typography.sm,
                       ),
                       TextButton(
                         onPressed: () => context.go('/register'),
-                        child: const Text('Register'),
+                        child: Text('auth.login.registerLink'.tr()),
                       ),
                     ],
                   ),

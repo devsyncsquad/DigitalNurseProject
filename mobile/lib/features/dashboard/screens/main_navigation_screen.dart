@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'home_dashboard_screen.dart';
 import '../../medication/screens/medicine_list_screen.dart';
 import '../../health/screens/vitals_list_screen.dart';
@@ -69,23 +70,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             children: [
               FBottomNavigationBarItem(
                 icon: const Icon(FIcons.house),
-                label: const Text('Home'),
+                label: Text('navigation.home'.tr()),
               ),
               FBottomNavigationBarItem(
                 icon: const Icon(FIcons.pill),
-                label: const Text('Medicines'),
+                label: Text('navigation.medicines'.tr()),
               ),
               FBottomNavigationBarItem(
                 icon: const Icon(FIcons.activity),
-                label: const Text('Health'),
+                label: Text('navigation.health'.tr()),
               ),
               FBottomNavigationBarItem(
                 icon: const Icon(FIcons.fileText),
-                label: const Text('Documents'),
+                label: Text('navigation.documents'.tr()),
               ),
               FBottomNavigationBarItem(
                 icon: const Icon(FIcons.user),
-                label: const Text('Profile'),
+                label: Text('navigation.profile'.tr()),
               ),
             ],
           ),
@@ -99,16 +100,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Exit App'),
-          content: const Text('Are you sure you want to exit the app?'),
+          title: Text('common.exitApp'.tr()),
+          content: Text('common.exitConfirm'.tr()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text('common.cancel'.tr()),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Exit'),
+              child: Text('common.exit'.tr()),
             ),
           ],
         );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/document_provider.dart';
 import '../../../core/models/document_model.dart';
 import '../../../core/theme/app_theme.dart';
@@ -19,8 +20,8 @@ class DocumentsSection extends StatelessWidget {
 
         return ExpandableSectionTile(
           icon: Icons.article, // Document icon with horizontal lines
-          title: 'Documents',
-          subtitle: 'View Details',
+          title: 'dashboard.documents'.tr(),
+          subtitle: 'dashboard.viewDetailsTitle'.tr(),
           count: '${documents.length}',
           titleColor: context.theme.colors.primary,
           routeForViewDetails: '/documents',
@@ -33,7 +34,7 @@ class DocumentsSection extends StatelessWidget {
                 if (documents.isEmpty) ...[
                   Center(
                     child: Text(
-                      'No documents uploaded',
+                      'dashboard.noDocuments'.tr(),
                       style: TextStyle(
                         color: context.theme.colors.mutedForeground,
                         fontSize: 14,
@@ -42,7 +43,7 @@ class DocumentsSection extends StatelessWidget {
                   ),
                 ] else ...[
                   Text(
-                    'Recent Documents',
+                    'dashboard.recentDocuments'.tr(),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -108,7 +109,9 @@ class DocumentsSection extends StatelessWidget {
                     const SizedBox(height: 8),
                     Center(
                       child: Text(
-                        '+${documents.length - 3} more documents',
+                        'dashboard.moreDocuments'.tr(namedArgs: {
+                          'count': '${documents.length - 3}'
+                        }),
                         style: TextStyle(
                           color: context.theme.colors.mutedForeground,
                           fontSize: 12,

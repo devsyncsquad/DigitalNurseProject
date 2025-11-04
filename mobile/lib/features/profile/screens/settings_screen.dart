@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/locale_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return FScaffold(
       header: FHeader.nested(
-        title: const Text('Settings'),
+        title: Text('settings.title'.tr()),
         prefixes: [FHeaderAction.back(onPress: () => context.pop())],
       ),
       child: ListView(
@@ -19,7 +22,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           // Notifications section
           Text(
-            'Notifications',
+            'settings.notifications.title'.tr(),
             style: context.theme.typography.lg.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -33,13 +36,13 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   SwitchListTile(
                     title: Text(
-                      'Medicine Reminders',
+                      'settings.notifications.medicineReminders.title'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
                     ),
                     subtitle: Text(
-                      'Get notified for medicine times',
+                      'settings.notifications.medicineReminders.description'.tr(),
                       style: context.theme.typography.xs.copyWith(
                         color: context.theme.colors.mutedForeground,
                       ),
@@ -52,13 +55,13 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 1),
                   SwitchListTile(
                     title: Text(
-                      'Health Alerts',
+                      'settings.notifications.healthAlerts.title'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
                     ),
                     subtitle: Text(
-                      'Alerts for abnormal vitals',
+                      'settings.notifications.healthAlerts.description'.tr(),
                       style: context.theme.typography.xs.copyWith(
                         color: context.theme.colors.mutedForeground,
                       ),
@@ -71,13 +74,13 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 1),
                   SwitchListTile(
                     title: Text(
-                      'Caregiver Updates',
+                      'settings.notifications.caregiverUpdates.title'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
                     ),
                     subtitle: Text(
-                      'Notifications from caregivers',
+                      'settings.notifications.caregiverUpdates.description'.tr(),
                       style: context.theme.typography.xs.copyWith(
                         color: context.theme.colors.mutedForeground,
                       ),
@@ -93,9 +96,66 @@ class SettingsScreen extends StatelessWidget {
           ),
           SizedBox(height: 24.h),
 
+          // Language section
+          Text(
+            'settings.language.title'.tr(),
+            style: context.theme.typography.lg.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          FCard(
+            child: Material(
+              color: Colors.transparent,
+              child: Consumer<LocaleProvider>(
+                builder: (context, localeProvider, child) {
+                  return Column(
+                    children: localeProvider.localeOptions.map((option) {
+                      final isSelected = localeProvider.locale == option.locale;
+                      return Column(
+                        children: [
+                          ListTile(
+                            leading: Icon(
+                              FIcons.languages,
+                              color: context.theme.colors.mutedForeground,
+                            ),
+                            title: Text(
+                              option.name,
+                              style: context.theme.typography.sm.copyWith(
+                                color: context.theme.colors.foreground,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? Icon(
+                                    FIcons.check,
+                                    color: context.theme.colors.primary,
+                                  )
+                                : null,
+                            onTap: () async {
+                              await localeProvider.setLocale(option.locale);
+                              // Sync EasyLocalization with LocaleProvider
+                              context.setLocale(option.locale);
+                            },
+                          ),
+                          if (option != localeProvider.localeOptions.last)
+                            const Divider(height: 1),
+                        ],
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+
           // Privacy section
           Text(
-            'Privacy & Security',
+            'settings.privacy.title'.tr(),
             style: context.theme.typography.lg.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -114,7 +174,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'Change Password',
+                      'settings.privacy.changePassword'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -137,7 +197,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'Privacy Policy',
+                      'settings.privacy.privacyPolicy'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -157,7 +217,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'Terms of Service',
+                      'settings.privacy.termsOfService'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -178,7 +238,7 @@ class SettingsScreen extends StatelessWidget {
 
           // App section
           Text(
-            'About',
+            'settings.about.title'.tr(),
             style: context.theme.typography.lg.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -196,7 +256,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'App Version',
+                      'settings.about.appVersion'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -215,7 +275,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'Help & Support',
+                      'settings.about.helpSupport'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -235,7 +295,7 @@ class SettingsScreen extends StatelessWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     title: Text(
-                      'Send Feedback',
+                      'settings.about.sendFeedback'.tr(),
                       style: context.theme.typography.sm.copyWith(
                         color: context.theme.colors.foreground,
                       ),
@@ -257,7 +317,7 @@ class SettingsScreen extends StatelessWidget {
           // Debug section (only in debug mode)
           if (const bool.fromEnvironment('dart.vm.product') == false) ...[
             Text(
-              'Debug',
+              'settings.debug.title'.tr(),
               style: context.theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.getWarningColor(context),
@@ -270,13 +330,13 @@ class SettingsScreen extends StatelessWidget {
                 child: ListTile(
                   leading: Icon(FIcons.bell, color: AppTheme.getWarningColor(context)),
                   title: Text(
-                    'Test Notifications',
+                    'settings.debug.testNotifications.title'.tr(),
                     style: context.theme.typography.sm.copyWith(
                       color: context.theme.colors.foreground,
                     ),
                   ),
                   subtitle: Text(
-                    'Test push notification functionality',
+                    'settings.debug.testNotifications.description'.tr(),
                     style: context.theme.typography.xs.copyWith(
                       color: context.theme.colors.mutedForeground,
                     ),

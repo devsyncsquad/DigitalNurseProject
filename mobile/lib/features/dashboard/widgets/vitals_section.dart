@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/extensions/vital_type_extensions.dart';
 import '../../../core/theme/app_theme.dart';
@@ -18,8 +19,8 @@ class VitalsSection extends StatelessWidget {
 
         return ExpandableSectionTile(
           icon: Icons.monitor_heart, // ECG/heartbeat waveform icon
-          title: 'Vitals',
-          subtitle: 'View details',
+          title: 'dashboard.vitals'.tr(),
+          subtitle: 'dashboard.viewDetails'.tr(),
           count: '${recentVitals.length}',
           titleColor: context.theme.colors.primary,
           routeForViewDetails: '/health',
@@ -32,7 +33,7 @@ class VitalsSection extends StatelessWidget {
                 if (recentVitals.isEmpty) ...[
                   Center(
                     child: Text(
-                      'No recent vitals recorded',
+                      'dashboard.noRecentVitals'.tr(),
                       style: TextStyle(
                         color: context.theme.colors.mutedForeground,
                         fontSize: 14,
@@ -41,7 +42,7 @@ class VitalsSection extends StatelessWidget {
                   ),
                 ] else ...[
                   Text(
-                    'Recent Vitals',
+                    'dashboard.recentVitals'.tr(),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

@@ -1,0 +1,158 @@
+{
+  "app": {
+    "name": "My Digital Nurse",
+    "tagline": "Your Personal Health Companion",
+    "description": "Manage medications, track vitals, coordinate care, and take control of your health journey."
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "welcomeBack": "Welcome back! Login to continue",
+      "email": "Email",
+      "emailHint": "Enter your email",
+      "password": "Password",
+      "passwordHint": "Enter your password",
+      "loginButton": "Login",
+      "noAccount": "Don't have an account? ",
+      "registerLink": "Register",
+      "failed": "Login Failed",
+      "ok": "OK"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Sign up to get started",
+      "fullName": "Full Name",
+      "nameHint": "Enter your name",
+      "email": "Email",
+      "emailHint": "Enter your email",
+      "password": "Password",
+      "passwordHint": "Enter your password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordHint": "Confirm your password",
+      "createAccount": "Create Account",
+      "hasAccount": "Already have an account? ",
+      "loginLink": "Login",
+      "failed": "Registration Failed"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "getStarted": "Get Started",
+      "hasAccount": "I already have an account",
+      "features": {
+        "medicineReminders": {
+          "title": "Medicine Reminders",
+          "description": "Never miss a dose"
+        },
+        "healthTracking": {
+          "title": "Health Tracking",
+          "description": "Monitor your vitals"
+        },
+        "caregiverCoordination": {
+          "title": "Caregiver Coordination",
+          "description": "Stay connected with care team"
+        },
+        "documentManagement": {
+          "title": "Document Management",
+          "description": "Keep all records organized"
+        }
+      }
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "medicines": "Medicines",
+    "health": "Health",
+    "documents": "Documents",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "hello": "Hello, {name}!",
+    "helloParam": "Hello, {name}!",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications",
+    "user": "User",
+    "adherenceStreak": "Adherence Streak",
+    "day": "day",
+    "days": "days",
+    "medicineReminder": "Medicine Reminder",
+    "viewDetails": "View details",
+    "viewDetailsTitle": "View Details",
+    "noRemindersToday": "No reminders for today",
+    "todaysReminders": "Today's Reminders",
+    "moreReminders": "+{count} more reminders",
+    "vitals": "Vitals",
+    "noRecentVitals": "No recent vitals recorded",
+    "recentVitals": "Recent Vitals",
+    "documents": "Documents",
+    "noDocuments": "No documents uploaded",
+    "recentDocuments": "Recent Documents",
+    "moreDocuments": "+{count} more documents",
+    "dietExercise": "My Diet and Exercise",
+    "noDietExercise": "No diet or exercise logged today",
+    "todaysActivity": "Today's Activity",
+    "meals": "Meals",
+    "exercise": "Exercise",
+    "moreActivities": "+{count} more activities"
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": {
+      "title": "Notifications",
+      "medicineReminders": {
+        "title": "Medicine Reminders",
+        "description": "Get notified for medicine times"
+      },
+      "healthAlerts": {
+        "title": "Health Alerts",
+        "description": "Alerts for abnormal vitals"
+      },
+      "caregiverUpdates": {
+        "title": "Caregiver Updates",
+        "description": "Notifications from caregivers"
+      }
+    },
+    "privacy": {
+      "title": "Privacy & Security",
+      "changePassword": "Change Password",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service"
+    },
+    "about": {
+      "title": "About",
+      "appVersion": "App Version",
+      "helpSupport": "Help & Support",
+      "sendFeedback": "Send Feedback"
+    },
+    "debug": {
+      "title": "Debug",
+      "testNotifications": {
+        "title": "Test Notifications",
+        "description": "Test push notification functionality"
+      }
+    },
+    "language": {
+      "title": "Language",
+      "english": "English",
+      "urdu": "اردو",
+      "selectLanguage": "Select Language"
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "ok": "OK",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "exit": "Exit",
+    "exitApp": "Exit App",
+    "exitConfirm": "Are you sure you want to exit the app?",
+    "user": "User"
+  }
+}
+

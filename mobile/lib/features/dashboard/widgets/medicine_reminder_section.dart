@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/medication_provider.dart';
 import 'expandable_section_tile.dart';
 
@@ -23,8 +24,8 @@ class MedicineReminderSection extends StatelessWidget {
 
         return ExpandableSectionTile(
           icon: Icons.medication_liquid, // More similar to pill capsule icon
-          title: 'Medicine Reminder',
-          subtitle: 'View details',
+          title: 'dashboard.medicineReminder'.tr(),
+          subtitle: 'dashboard.viewDetails'.tr(),
           count: '${todayReminders.length}',
           titleColor: context.theme.colors.primary,
           routeForViewDetails: '/medications',
@@ -37,7 +38,7 @@ class MedicineReminderSection extends StatelessWidget {
                 if (todayReminders.isEmpty) ...[
                   Center(
                     child: Text(
-                      'No reminders for today',
+                      'dashboard.noRemindersToday'.tr(),
                       style: TextStyle(
                         color: context.theme.colors.mutedForeground,
                         fontSize: 14,
@@ -46,7 +47,7 @@ class MedicineReminderSection extends StatelessWidget {
                   ),
                 ] else ...[
                   Text(
-                    'Today\'s Reminders',
+                    'dashboard.todaysReminders'.tr(),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -110,7 +111,9 @@ class MedicineReminderSection extends StatelessWidget {
                     const SizedBox(height: 8),
                     Center(
                       child: Text(
-                        '+${todayReminders.length - 3} more reminders',
+                        'dashboard.moreReminders'.tr(namedArgs: {
+                          'count': '${todayReminders.length - 3}'
+                        }),
                         style: TextStyle(
                           color: context.theme.colors.mutedForeground,
                           fontSize: 12,

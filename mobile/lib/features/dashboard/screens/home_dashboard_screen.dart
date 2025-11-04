@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/health_provider.dart';
@@ -11,6 +12,7 @@ import '../../../core/providers/caregiver_provider.dart';
 import '../../../core/providers/notification_provider.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/document_provider.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/adherence_streak_card.dart';
 import '../widgets/medicine_reminder_section.dart';
@@ -51,6 +53,58 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     }
   }
 
+  void _showLanguageDialog(BuildContext buildContext) {
+    showDialog(
+      context: buildContext,
+      builder: (BuildContext dialogContext) {
+        return Consumer<LocaleProvider>(
+          builder: (context, localeProvider, child) {
+            return AlertDialog(
+              title: Text('settings.language.title'.tr()),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: localeProvider.localeOptions.map((option) {
+                  final isSelected = localeProvider.locale == option.locale;
+                  return ListTile(
+                    leading: Icon(
+                      FIcons.languages,
+                      color: isSelected
+                          ? context.theme.colors.primary
+                          : context.theme.colors.mutedForeground,
+                    ),
+                    title: Text(
+                      option.name,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? context.theme.colors.primary
+                            : context.theme.colors.foreground,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? Icon(
+                            FIcons.check,
+                            color: context.theme.colors.primary,
+                          )
+                        : null,
+                    onTap: () async {
+                      await localeProvider.setLocale(option.locale);
+                      // Use the outer buildContext which is in the EasyLocalization widget tree
+                      buildContext.setLocale(option.locale);
+                      if (dialogContext.mounted) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -61,8 +115,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
     return FScaffold(
       header: FHeader(
-        title: Text('Hello, ${user?.name ?? "User"}!'),
+        title: Text('dashboard.hello'.tr(namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()})),
         suffixes: [
+          // Language switcher
+          FHeaderAction(
+            icon: const Icon(FIcons.languages),
+            onPress: () => _showLanguageDialog(context),
+          ),
+          // Notifications
           FHeaderAction(
             icon: Stack(
               clipBehavior: Clip.none,
@@ -156,7 +216,7 @@ class _NotificationsSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Notifications',
+                    'dashboard.notifications'.tr(),
                     style: context.theme.typography.xl.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -166,7 +226,7 @@ class _NotificationsSheet extends StatelessWidget {
                       onPressed: () {
                         notificationProvider.markAllAsRead();
                       },
-                      child: const Text('Mark all read'),
+                      child: Text('dashboard.markAllRead'.tr()),
                     ),
                 ],
               ),
@@ -184,7 +244,7 @@ class _NotificationsSheet extends StatelessWidget {
                             ),
                             SizedBox(height: 16.h),
                             Text(
-                              'No notifications',
+                              'dashboard.noNotifications'.tr(),
                               style: context.theme.typography.base,
                             ),
                           ],

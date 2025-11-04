@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import 'animated_heart_icon.dart';
 
@@ -40,7 +41,7 @@ class AdherenceStreakCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          'Adherence Streak',
+                          'dashboard.adherenceStreak'.tr(),
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
@@ -95,7 +96,9 @@ class AdherenceStreakCard extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.only(bottom: 3.h),
                         child: Text(
-                          streakDays == 1 ? 'day' : 'days',
+                          streakDays == 1 
+                              ? 'dashboard.day'.tr() 
+                              : 'dashboard.days'.tr(),
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: Colors.white, fontSize: 14.sp),
                         ),
