@@ -18,8 +18,7 @@ class MedicineFormData {
         medicineForm != null &&
         frequency != null &&
         reminderTimes.isNotEmpty &&
-        doseAmount.trim().isNotEmpty &&
-        strength.trim().isNotEmpty;
+        doseAmount.trim().isNotEmpty;
   }
 }
 
@@ -81,10 +80,7 @@ class MedicineFormProvider extends ChangeNotifier {
           _errorMessage = 'Please enter dose amount';
           return false;
         }
-        if (_formData.strength.trim().isEmpty) {
-          _errorMessage = 'Please enter strength';
-          return false;
-        }
+        // Strength is optional, no validation needed
         break;
       case 6: // Summary - final validation
         if (!_formData.isValid) {
@@ -249,10 +245,14 @@ class MedicineFormProvider extends ChangeNotifier {
   MedicineModel? generateMedicineModel(String userId) {
     if (!_formData.isValid) return null;
 
+    final dosage = _formData.strength.trim().isNotEmpty
+        ? '${_formData.doseAmount.trim()} of ${_formData.strength.trim()}'
+        : _formData.doseAmount.trim();
+    
     return MedicineModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _formData.name.trim(),
-      dosage: '${_formData.doseAmount.trim()} of ${_formData.strength.trim()}',
+      dosage: dosage,
       frequency: _formData.frequency!,
       startDate: _formData.startDate,
       endDate: _formData.endDate,

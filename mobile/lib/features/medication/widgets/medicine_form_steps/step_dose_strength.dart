@@ -26,16 +26,34 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
     final provider = context.read<MedicineFormProvider>();
 
     _doseController.text = provider.formData.doseAmount;
-    _strengthController.text = provider.formData.strength;
+    
+    // Parse existing strength to extract numeric part and unit
+    final strength = provider.formData.strength;
+    if (strength.isNotEmpty) {
+      // Try to extract unit from end of string
+      String? extractedUnit;
+      String numericPart = strength;
+      
+      for (final unit in _commonUnits) {
+        if (strength.endsWith(unit)) {
+          extractedUnit = unit;
+          numericPart = strength.substring(0, strength.length - unit.length).trim();
+          break;
+        }
+      }
+      
+      if (extractedUnit != null) {
+        _selectedUnit = extractedUnit;
+      }
+      _strengthController.text = numericPart;
+    }
 
     _doseController.addListener(() {
       provider.setDoseAmount(_doseController.text);
     });
 
     _strengthController.addListener(() {
-      if (_strengthController.text.isNotEmpty) {
-        provider.setStrength('${_strengthController.text}$_selectedUnit');
-      }
+      _updateStrength(provider);
     });
   }
 
@@ -160,66 +178,72 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
         ),
         SizedBox(height: 12.h),
 
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: FTextField(
-                controller: _strengthController,
-                label: const Text('Amount'),
-                hint: 'e.g., 500',
-                keyboardType: TextInputType.number,
+        // Unit chips
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: _commonUnits.map((unit) {
+            final isSelected = _selectedUnit == unit;
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedUnit = unit;
+                  });
+                  _updateStrength(provider);
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? context.theme.colors.primary
+                        : context.theme.colors.muted,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? context.theme.colors.primary
+                          : context.theme.colors.border,
+                    ),
+                  ),
+                  child: Text(
+                    unit,
+                    style: context.theme.typography.sm.copyWith(
+                      color: isSelected
+                          ? context.theme.colors.primaryForeground
+                          : context.theme.colors.foreground,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(flex: 1, child: _buildUnitSelector(context, provider)),
-          ],
+            );
+          }).toList(),
+        ),
+
+        SizedBox(height: 16.h),
+
+        // Amount input
+        FTextField(
+          controller: _strengthController,
+          label: const Text('Amount'),
+          hint: 'e.g., 500',
+          keyboardType: TextInputType.number,
         ),
       ],
     );
   }
 
-  Widget _buildUnitSelector(
-    BuildContext context,
-    MedicineFormProvider provider,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: PopupMenuButton<String>(
-        initialValue: _selectedUnit,
-        onSelected: (unit) {
-          setState(() {
-            _selectedUnit = unit;
-          });
-          // Update the strength in provider
-          provider.setStrength('$_strengthController.text$unit');
-        },
-        child: FCard(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _selectedUnit,
-                    style: context.theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Icon(
-                  FIcons.chevronDown,
-                  size: 16.r,
-                  color: context.theme.colors.mutedForeground,
-                ),
-              ],
-            ),
-          ),
-        ),
-        itemBuilder: (context) => _commonUnits.map((unit) {
-          return PopupMenuItem<String>(value: unit, child: Text(unit));
-        }).toList(),
-      ),
-    );
+  void _updateStrength(MedicineFormProvider provider) {
+    if (_strengthController.text.trim().isNotEmpty) {
+      provider.setStrength('${_strengthController.text.trim()}$_selectedUnit');
+    } else {
+      provider.setStrength('');
+    }
   }
+
 }

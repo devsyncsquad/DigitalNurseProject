@@ -121,7 +121,12 @@ class _StepSummaryState extends State<StepSummary> {
                 FButton(
                   style: FButtonStyle.outline(),
                   onPress: onEdit,
-                  child: const Text('Edit'),
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(
+                      color: context.theme.colors.foreground,
+                    ),
+                  ),
                 ),
               ],
             ),
