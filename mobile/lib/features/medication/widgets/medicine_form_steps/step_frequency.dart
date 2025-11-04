@@ -61,6 +61,18 @@ class StepFrequency extends StatelessWidget {
         FIcons.sunset,
       ),
       _FrequencyOption(
+        MedicineFrequency.beforeMeal,
+        'Before Meal',
+        'Take medicine before meals',
+        FIcons.utensils,
+      ),
+      _FrequencyOption(
+        MedicineFrequency.afterMeal,
+        'After Meal',
+        'Take medicine after meals',
+        FIcons.utensils,
+      ),
+      _FrequencyOption(
         MedicineFrequency.periodic,
         'Periodic',
         'Choose specific days',
@@ -94,12 +106,12 @@ class StepFrequency extends StatelessWidget {
                       : context.theme.colors.muted,
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(16.w),
+                  padding: EdgeInsets.all(12.w),
                   child: Row(
                     children: [
                       Container(
-                        width: 48.w,
-                        height: 48.h,
+                        width: 40.w,
+                        height: 40.h,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.theme.colors.primary
@@ -111,38 +123,26 @@ class StepFrequency extends StatelessWidget {
                           color: isSelected
                               ? context.theme.colors.primaryForeground
                               : context.theme.colors.mutedForeground,
-                          size: 24.r,
+                          size: 20.r,
                         ),
                       ),
-                      SizedBox(width: 16.w),
+                      SizedBox(width: 12.w),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              option.title,
-                              style: context.theme.typography.lg.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? context.theme.colors.primary
-                                    : context.theme.colors.foreground,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              option.description,
-                              style: context.theme.typography.sm.copyWith(
-                                color: context.theme.colors.mutedForeground,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          option.title,
+                          style: context.theme.typography.base.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? context.theme.colors.primary
+                                : context.theme.colors.foreground,
+                          ),
                         ),
                       ),
                       if (isSelected)
                         Icon(
                           FIcons.check,
                           color: context.theme.colors.primary,
-                          size: 24.r,
+                          size: 20.r,
                         ),
                     ],
                   ),

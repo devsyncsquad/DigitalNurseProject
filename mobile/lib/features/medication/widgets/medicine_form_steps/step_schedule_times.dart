@@ -49,6 +49,10 @@ class StepScheduleTimes extends StatelessWidget {
         return 'Set your morning, afternoon, and evening times';
       case MedicineFrequency.periodic:
         return 'Set the time for your selected days';
+      case MedicineFrequency.beforeMeal:
+        return 'Set times to take medicine before meals';
+      case MedicineFrequency.afterMeal:
+        return 'Set times to take medicine after meals';
       default:
         return 'Set your reminder times';
     }
@@ -147,7 +151,12 @@ class StepScheduleTimes extends StatelessWidget {
           children: [
             Icon(FIcons.plus, size: 20),
             const SizedBox(width: 8),
-            const Text('Add Another Time'),
+            Text(
+              'Add Another Time',
+              style: TextStyle(
+                color: context.theme.colors.foreground,
+              ),
+            ),
           ],
         ),
       ),

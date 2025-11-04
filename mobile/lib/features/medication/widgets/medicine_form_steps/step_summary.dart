@@ -227,6 +227,10 @@ class _StepSummaryState extends State<StepSummary> {
         return 'Weekly';
       case MedicineFrequency.asNeeded:
         return 'As Needed';
+      case MedicineFrequency.beforeMeal:
+        return 'Before Meal';
+      case MedicineFrequency.afterMeal:
+        return 'After Meal';
     }
   }
 

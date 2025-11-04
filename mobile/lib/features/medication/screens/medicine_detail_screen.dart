@@ -300,6 +300,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         return 'As Needed';
       case MedicineFrequency.periodic:
         return 'Periodic';
+      case MedicineFrequency.beforeMeal:
+        return 'Before Meal';
+      case MedicineFrequency.afterMeal:
+        return 'After Meal';
     }
   }
 

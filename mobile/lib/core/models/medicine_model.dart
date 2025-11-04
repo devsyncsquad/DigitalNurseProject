@@ -149,6 +149,8 @@ enum MedicineFrequency {
   weekly,
   asNeeded,
   periodic,
+  beforeMeal,
+  afterMeal,
 }
 
 enum IntakeStatus { pending, taken, missed, skipped }

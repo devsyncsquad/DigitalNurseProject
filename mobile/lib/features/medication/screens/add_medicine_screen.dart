@@ -187,7 +187,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 child: FButton(
                   style: FButtonStyle.outline(),
                   onPress: () => formProvider.previousStep(),
-                  child: const Text('Back'),
+                  child: Text(
+                    'Back',
+                    style: TextStyle(
+                      color: context.theme.colors.foreground,
+                    ),
+                  ),
                 ),
               ),
 

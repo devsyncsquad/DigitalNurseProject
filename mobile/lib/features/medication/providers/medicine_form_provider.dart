@@ -152,6 +152,16 @@ class MedicineFormProvider extends ChangeNotifier {
             _formData.reminderTimes = [const TimeOfDay(hour: 9, minute: 0)];
           }
           break;
+        case MedicineFrequency.beforeMeal:
+          if (_formData.reminderTimes.isEmpty) {
+            _formData.reminderTimes = [const TimeOfDay(hour: 8, minute: 0)];
+          }
+          break;
+        case MedicineFrequency.afterMeal:
+          if (_formData.reminderTimes.isEmpty) {
+            _formData.reminderTimes = [const TimeOfDay(hour: 9, minute: 0)];
+          }
+          break;
         default:
           if (_formData.reminderTimes.isEmpty) {
             _formData.reminderTimes = [const TimeOfDay(hour: 9, minute: 0)];
