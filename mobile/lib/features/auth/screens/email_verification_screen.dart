@@ -18,16 +18,29 @@ class EmailVerificationScreen extends StatelessWidget {
   }
 
   Future<void> _handleResend(BuildContext context) async {
+    // Note: Backend doesn't have a resend endpoint yet
+    // This will show an error, but handled gracefully
     final authProvider = context.read<AuthProvider>();
-    await authProvider.verifyEmail(email);
+    final success = await authProvider.verifyEmail('');
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Verification email sent!'),
-          backgroundColor: AppTheme.getSuccessColor(context),
-        ),
-      );
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Verification email sent!'),
+            backgroundColor: AppTheme.getSuccessColor(context),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authProvider.error ?? 'Resend verification email not available yet',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 

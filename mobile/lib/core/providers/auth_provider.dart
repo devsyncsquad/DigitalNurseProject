@@ -40,7 +40,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -59,7 +59,9 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentUser = await _authService.register(
+      // Register returns user but doesn't log them in
+      // User needs to verify email first
+      await _authService.register(
         name: name,
         email: email,
         password: password,
@@ -69,7 +71,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -77,17 +79,18 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Verify email
-  Future<bool> verifyEmail(String email) async {
+  Future<bool> verifyEmail(String token) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      await _authService.verifyEmail(email);
+      await _authService.verifyEmail(token);
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -104,6 +107,7 @@ class AuthProvider with ChangeNotifier {
     if (_currentUser == null) return false;
 
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -118,7 +122,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -130,6 +134,7 @@ class AuthProvider with ChangeNotifier {
     if (_currentUser == null) return false;
 
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -138,7 +143,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = _extractErrorMessage(e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -156,5 +161,28 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Extract user-friendly error message
+  String _extractErrorMessage(dynamic error) {
+    final errorString = error.toString();
+    
+    // Remove "Exception: " prefix if present
+    if (errorString.startsWith('Exception: ')) {
+      return errorString.substring(11);
+    }
+    
+    // Handle common error patterns
+    if (errorString.contains('Conflict:')) {
+      return errorString.split('Conflict:').last.trim();
+    }
+    if (errorString.contains('Unauthorized:')) {
+      return errorString.split('Unauthorized:').last.trim();
+    }
+    if (errorString.contains('Bad request:')) {
+      return errorString.split('Bad request:').last.trim();
+    }
+    
+    return errorString;
   }
 }

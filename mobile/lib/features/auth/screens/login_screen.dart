@@ -53,6 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: context.theme.colors.primary,
+            ),
             child: Text('common.ok'.tr()),
           ),
         ],
@@ -141,10 +144,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'auth.login.noAccount'.tr(),
-                        style: context.theme.typography.sm,
+                        style: context.theme.typography.sm.copyWith(
+                          color: context.theme.colors.foreground,
+                        ),
                       ),
                       TextButton(
                         onPressed: () => context.go('/register'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: context.theme.colors.primary,
+                        ),
                         child: Text('auth.login.registerLink'.tr()),
                       ),
                     ],

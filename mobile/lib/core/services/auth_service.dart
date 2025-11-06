@@ -1,37 +1,64 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import 'api_service.dart';
+import 'token_service.dart';
 
 class AuthService {
+  final ApiService _apiService = ApiService();
+  final TokenService _tokenService = TokenService();
   static const String _userKey = 'current_user';
   static const String _isLoggedInKey = 'is_logged_in';
 
-  // Mock delay to simulate network request
-  Future<void> _mockDelay() async {
-    await Future.delayed(const Duration(seconds: 1));
+  void _log(String message) {
+    print('🔍 [AUTH] $message');
   }
 
   // Login with email and password
   Future<UserModel> login(String email, String password) async {
-    await _mockDelay();
+    _log('🔐 [AUTH] Attempting login for: $email');
+    try {
+      final response = await _apiService.post(
+        '/auth/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-    // Mock validation
-    if (email.isEmpty || password.isEmpty) {
-      throw Exception('Email and password are required');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        _log('✅ [AUTH] Login successful');
+        
+        // Save tokens
+        await _tokenService.saveTokens(
+          accessToken: data['accessToken'],
+          refreshToken: data['refreshToken'],
+        );
+        _log('💾 [AUTH] Tokens saved');
+
+        // Create user model from response
+        final userData = data['user'];
+        final user = UserModel(
+          id: userData['id'].toString(),
+          email: userData['email'] ?? email,
+          name: userData['name'] ?? '',
+          role: UserRole.patient, // Default, can be fetched from profile later
+          subscriptionTier: SubscriptionTier.free, // Default, can be fetched from profile later
+        );
+
+        // Save user to shared preferences
+        await _saveUser(user);
+        _log('💾 [AUTH] User saved: ${user.email} (${user.id})');
+        return user;
+      } else {
+        _log('❌ [AUTH] Login failed: ${response.statusMessage}');
+        throw Exception('Login failed: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ [AUTH] Login error: $e');
+      throw Exception(e.toString());
     }
-
-    // Create mock user
-    final user = UserModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      email: email,
-      name: email.split('@')[0],
-      role: UserRole.patient,
-      subscriptionTier: SubscriptionTier.free,
-    );
-
-    // Save to shared preferences
-    await _saveUser(user);
-    return user;
   }
 
   // Register new user
@@ -41,45 +68,123 @@ class AuthService {
     required String password,
     required String confirmPassword,
   }) async {
-    await _mockDelay();
-
-    // Mock validation
+    _log('📝 [AUTH] Attempting registration for: $email');
+    
+    // Client-side validation
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _log('❌ [AUTH] Registration validation failed: All fields are required');
       throw Exception('All fields are required');
     }
 
     if (password != confirmPassword) {
+      _log('❌ [AUTH] Registration validation failed: Passwords do not match');
       throw Exception('Passwords do not match');
     }
 
-    if (password.length < 6) {
-      throw Exception('Password must be at least 6 characters');
+    if (password.length < 8) {
+      _log('❌ [AUTH] Registration validation failed: Password too short');
+      throw Exception('Password must be at least 8 characters');
     }
 
-    // Create mock user
-    final user = UserModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      email: email,
-      name: name,
-      role: UserRole.patient,
-      subscriptionTier: SubscriptionTier.free,
-    );
+    try {
+      final response = await _apiService.post(
+        '/auth/register',
+        data: {
+          'email': email,
+          'password': password,
+          'name': name,
+        },
+      );
 
-    // Save to shared preferences
-    await _saveUser(user);
-    return user;
+      if (response.statusCode == 201) {
+        final data = response.data;
+        _log('✅ [AUTH] Registration successful: ${data['userId']}');
+        
+        // Registration successful - return a user model with the userId
+        // Note: Backend returns { message, userId }, not full user object
+        // User will need to verify email before logging in
+        final user = UserModel(
+          id: data['userId'].toString(),
+          email: email,
+          name: name,
+          role: UserRole.patient,
+          subscriptionTier: SubscriptionTier.free,
+        );
+
+        // Don't save user as logged in yet - they need to verify email
+        // Just return the user for UI purposes
+        _log('📝 [AUTH] User created (not logged in): ${user.email}');
+        return user;
+      } else {
+        _log('❌ [AUTH] Registration failed: ${response.statusMessage}');
+        throw Exception('Registration failed: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ [AUTH] Registration error: $e');
+      throw Exception(e.toString());
+    }
   }
 
-  // Verify email (mock)
-  Future<bool> verifyEmail(String email) async {
-    await _mockDelay();
-    return true; // Always successful in mock
+  // Verify email with token
+  Future<bool> verifyEmail(String token) async {
+    _log('✉️ [AUTH] Attempting email verification');
+    try {
+      final response = await _apiService.post(
+        '/auth/verify-email',
+        data: {
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ [AUTH] Email verification successful');
+        return true;
+      } else {
+        _log('❌ [AUTH] Email verification failed: ${response.statusMessage}');
+        throw Exception('Email verification failed');
+      }
+    } catch (e) {
+      _log('❌ [AUTH] Email verification error: $e');
+      throw Exception(e.toString());
+    }
   }
 
-  // Resend verification email (mock)
+  // Resend verification email (if backend supports it)
+  // Note: This might need to be a different endpoint
   Future<bool> resendVerificationEmail(String email) async {
-    await _mockDelay();
-    return true;
+    // Backend might not have this endpoint yet
+    // For now, we'll just return true or throw
+    throw Exception('Resend verification email not implemented in backend');
+  }
+
+  // Refresh access token
+  Future<void> refreshToken() async {
+    try {
+      final refreshToken = await _tokenService.getRefreshToken();
+      if (refreshToken == null) {
+        throw Exception('No refresh token available');
+      }
+
+      final response = await _apiService.post(
+        '/auth/refresh-token',
+        data: {
+          'refreshToken': refreshToken,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        await _tokenService.saveTokens(
+          accessToken: data['accessToken'],
+          refreshToken: data['refreshToken'],
+        );
+      } else {
+        throw Exception('Token refresh failed');
+      }
+    } catch (e) {
+      await _tokenService.clearTokens();
+      throw Exception(e.toString());
+    }
   }
 
   // Update user profile
@@ -90,33 +195,55 @@ class AuthService {
     String? emergencyContact,
     String? phone,
   }) async {
-    await _mockDelay();
-
     final currentUser = await getCurrentUser();
     if (currentUser == null) {
       throw Exception('User not logged in');
     }
 
-    final updatedUser = currentUser.copyWith(
-      age: age,
-      medicalConditions: medicalConditions,
-      emergencyContact: emergencyContact,
-      phone: phone,
-    );
+    try {
+      final response = await _apiService.patch(
+        '/users/profile',
+        data: {
+          if (age != null) 'age': age,
+          if (medicalConditions != null) 'medicalConditions': medicalConditions,
+          if (emergencyContact != null) 'emergencyContact': emergencyContact,
+          if (phone != null) 'phone': phone,
+        },
+      );
 
-    await _saveUser(updatedUser);
-    return updatedUser;
+      if (response.statusCode == 200) {
+        final userData = response.data;
+        final updatedUser = UserModel(
+          id: userData['id']?.toString() ?? currentUser.id,
+          email: userData['email'] ?? currentUser.email,
+          name: userData['name'] ?? currentUser.name,
+          role: currentUser.role,
+          subscriptionTier: currentUser.subscriptionTier,
+          age: userData['age'] ?? age,
+          medicalConditions: userData['medicalConditions'] ?? medicalConditions,
+          emergencyContact: userData['emergencyContact'] ?? emergencyContact,
+          phone: userData['phone'] ?? phone,
+        );
+
+        await _saveUser(updatedUser);
+        return updatedUser;
+      } else {
+        throw Exception('Profile update failed');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 
   // Update subscription tier
   Future<UserModel> updateSubscription(SubscriptionTier tier) async {
-    await _mockDelay();
-
     final currentUser = await getCurrentUser();
     if (currentUser == null) {
       throw Exception('User not logged in');
     }
 
+    // This would typically call a subscription endpoint
+    // For now, just update locally
     final updatedUser = currentUser.copyWith(subscriptionTier: tier);
     await _saveUser(updatedUser);
     return updatedUser;
@@ -124,32 +251,57 @@ class AuthService {
 
   // Get current logged-in user
   Future<UserModel?> getCurrentUser() async {
+    _log('👤 [AUTH] Checking for current user...');
+    // Check if we have tokens
+    final hasTokens = await _tokenService.hasTokens();
+    if (!hasTokens) {
+      _log('❌ [AUTH] No tokens found');
+      return null;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
 
     if (!isLoggedIn) {
+      _log('❌ [AUTH] User not logged in');
       return null;
     }
 
     final userJson = prefs.getString(_userKey);
     if (userJson == null) {
+      _log('❌ [AUTH] No user data found');
       return null;
     }
 
-    return UserModel.fromJson(json.decode(userJson));
+    try {
+      final user = UserModel.fromJson(json.decode(userJson));
+      _log('✅ [AUTH] Current user found: ${user.email} (${user.id})');
+      return user;
+    } catch (e) {
+      _log('❌ [AUTH] Error parsing user data: $e');
+      return null;
+    }
   }
 
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
+    final hasTokens = await _tokenService.hasTokens();
+    if (!hasTokens) {
+      return false;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
   // Logout
   Future<void> logout() async {
+    _log('🚪 [AUTH] Logging out...');
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
     await prefs.setBool(_isLoggedInKey, false);
+    await _tokenService.clearTokens();
+    _log('✅ [AUTH] Logout complete - tokens and user data cleared');
   }
 
   // Save user to shared preferences

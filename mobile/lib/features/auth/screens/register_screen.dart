@@ -60,6 +60,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: context.theme.colors.primary,
+            ),
             child: Text('common.ok'.tr()),
           ),
         ],
@@ -166,10 +169,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'auth.register.hasAccount'.tr(),
-                          style: context.theme.typography.sm,
+                          style: context.theme.typography.sm.copyWith(
+                            color: context.theme.colors.foreground,
+                          ),
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: context.theme.colors.primary,
+                          ),
                           child: Text('auth.register.loginLink'.tr()),
                         ),
                       ],
