@@ -56,46 +56,71 @@ export class MedicationsService {
    * Create medication with schedule
    */
   async create(userId: bigint, createDto: CreateMedicationDto) {
-    const { reminderTimes, frequency, periodicDays, startDate, endDate, ...medicationData } =
-      createDto;
+    try {
+      const { reminderTimes, frequency, periodicDays, startDate, endDate, ...medicationData } =
+        createDto;
 
-    // Parse dose value from strength and doseAmount
-    let doseValue: any = null;
-    if (medicationData.doseAmount) {
-      const match = medicationData.doseAmount.match(/(\d+(?:\.\d+)?)/);
-      if (match) {
-        doseValue = parseFloat(match[1]);
+      // Parse dose value from strength and doseAmount
+      let doseValue: any = null;
+      if (medicationData.doseAmount) {
+        try {
+          // Convert to string if it's not already (handles number input)
+          const doseAmountStr = String(medicationData.doseAmount).trim();
+          if (doseAmountStr) {
+            const match = doseAmountStr.match(/(\d+(?:\.\d+)?)/);
+            if (match) {
+              doseValue = parseFloat(match[1]);
+            }
+          }
+        } catch (error) {
+          // If parsing fails, continue without doseValue
+          console.warn('Failed to parse doseAmount:', error);
+        }
       }
-    }
 
-    // Create medication with schedule
-    const medication = await this.prisma.medication.create({
-      data: {
-        elderUserId: userId,
-        medicationName: medicationData.name,
-        doseValue: doseValue,
-        doseUnitCode: medicationData.strength ? 'mg' : null,
-        formCode: medicationData.medicineForm || null,
-        instructions: medicationData.dosage,
-        notes: medicationData.notes || null,
-        createdByUserId: userId,
-        schedules: {
-          create: {
-            timezone: 'Asia/Karachi',
-            startDate: new Date(startDate),
-            endDate: endDate ? new Date(endDate) : null,
-            daysMask: this.frequencyToDaysMask(frequency, periodicDays),
-            timesLocal: this.reminderTimesToJson(reminderTimes) as any,
-            isPrn: frequency === MedicineFrequency.AS_NEEDED,
+      // Handle empty strength field - only set unit code if strength is provided and not empty
+      const doseUnitCode =
+        medicationData.strength && String(medicationData.strength).trim()
+          ? 'mg'
+          : null;
+
+      // Create medication with schedule
+      const medication = await this.prisma.medication.create({
+        data: {
+          elderUserId: userId,
+          medicationName: medicationData.name,
+          doseValue: doseValue,
+          doseUnitCode: doseUnitCode,
+          formCode: medicationData.medicineForm || null,
+          instructions: medicationData.dosage,
+          notes: medicationData.notes || null,
+          createdByUserId: userId,
+          schedules: {
+            create: {
+              timezone: 'Asia/Karachi',
+              startDate: new Date(startDate),
+              endDate: endDate ? new Date(endDate) : null,
+              daysMask: this.frequencyToDaysMask(frequency, periodicDays),
+              timesLocal: this.reminderTimesToJson(reminderTimes) as any,
+              isPrn: frequency === MedicineFrequency.AS_NEEDED,
+            },
           },
         },
-      },
-      include: {
-        schedules: true,
-      },
-    });
+        include: {
+          schedules: true,
+        },
+      });
 
-    return this.mapToResponse(medication);
+      return this.mapToResponse(medication);
+    } catch (error) {
+      console.error('Error creating medication:', error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        `Failed to create medication: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   /**
@@ -177,10 +202,25 @@ export class MedicationsService {
 
     // Parse dose value
     if (medicationData.doseAmount) {
-      const match = medicationData.doseAmount.match(/(\d+(?:\.\d+)?)/);
-      if (match) {
-        updateData.doseValue = parseFloat(match[1]);
+      try {
+        // Convert to string if it's not already (handles number input)
+        const doseAmountStr = String(medicationData.doseAmount).trim();
+        if (doseAmountStr) {
+          const match = doseAmountStr.match(/(\d+(?:\.\d+)?)/);
+          if (match) {
+            updateData.doseValue = parseFloat(match[1]);
+          }
+        }
+      } catch (error) {
+        // If parsing fails, continue without doseValue
+        console.warn('Failed to parse doseAmount:', error);
       }
+    }
+
+    // Handle strength field update - only set unit code if strength is provided and not empty
+    if (medicationData.strength !== undefined) {
+      updateData.doseUnitCode =
+        medicationData.strength && String(medicationData.strength).trim() ? 'mg' : null;
     }
 
     const updated = await this.prisma.medication.update({

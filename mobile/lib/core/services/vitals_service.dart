@@ -1,17 +1,37 @@
 import '../models/vital_measurement_model.dart';
+import '../mappers/vital_mapper.dart';
+import 'api_service.dart';
 
 class VitalsService {
-  final List<VitalMeasurementModel> _vitals = [];
+  final ApiService _apiService = ApiService();
 
-  Future<void> _mockDelay() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  void _log(String message) {
+    print('🔍 [VITALS] $message');
   }
 
   // Get all vitals for a user
   Future<List<VitalMeasurementModel>> getVitals(String userId) async {
-    await _mockDelay();
-    return _vitals.where((v) => v.userId == userId).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('📋 Fetching vitals for user: $userId');
+    try {
+      final response = await _apiService.get('/vitals');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final vitals = data
+            .map((json) => VitalMapper.fromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${vitals.length} vital measurements');
+        return vitals;
+      } else {
+        _log('❌ Failed to fetch vitals: ${response.statusMessage}');
+        throw Exception('Failed to fetch vitals: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching vitals: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Get vitals by type
@@ -19,43 +39,147 @@ class VitalsService {
     String userId,
     VitalType type,
   ) async {
-    await _mockDelay();
-    return _vitals.where((v) => v.userId == userId && v.type == type).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('📋 Fetching vitals by type: $type for user: $userId');
+    try {
+      // Convert type enum to string for API
+      String typeStr;
+      switch (type) {
+        case VitalType.bloodPressure:
+          typeStr = 'bloodPressure';
+          break;
+        case VitalType.bloodSugar:
+          typeStr = 'bloodSugar';
+          break;
+        case VitalType.heartRate:
+          typeStr = 'heartRate';
+          break;
+        case VitalType.temperature:
+          typeStr = 'temperature';
+          break;
+        case VitalType.oxygenSaturation:
+          typeStr = 'oxygenSaturation';
+          break;
+        case VitalType.weight:
+          typeStr = 'weight';
+          break;
+      }
+
+      final response = await _apiService.get(
+        '/vitals',
+        queryParameters: {'type': typeStr},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final vitals = data
+            .map((json) => VitalMapper.fromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${vitals.length} vital measurements of type $type');
+        return vitals;
+      } else {
+        _log('❌ Failed to fetch vitals by type: ${response.statusMessage}');
+        throw Exception('Failed to fetch vitals by type: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching vitals by type: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Add vital measurement
   Future<VitalMeasurementModel> addVital(VitalMeasurementModel vital) async {
-    await _mockDelay();
-    _vitals.add(vital);
-    return vital;
+    _log('➕ Adding vital measurement: ${vital.type}');
+    try {
+      final requestData = VitalMapper.toApiRequest(vital);
+      final response = await _apiService.post('/vitals', data: requestData);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final addedVital = VitalMapper.fromApiResponse(response.data);
+        _log('✅ Vital measurement added successfully');
+        return addedVital;
+      } else {
+        _log('❌ Failed to add vital: ${response.statusMessage}');
+        throw Exception('Failed to add vital: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error adding vital: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Update vital
   Future<VitalMeasurementModel> updateVital(VitalMeasurementModel vital) async {
-    await _mockDelay();
-    final index = _vitals.indexWhere((v) => v.id == vital.id);
-    if (index == -1) {
-      throw Exception('Vital not found');
+    _log('✏️ Updating vital measurement: ${vital.id}');
+    try {
+      final requestData = VitalMapper.toApiRequest(vital);
+      final response = await _apiService.patch(
+        '/vitals/${vital.id}',
+        data: requestData,
+      );
+
+      if (response.statusCode == 200) {
+        final updatedVital = VitalMapper.fromApiResponse(response.data);
+        _log('✅ Vital measurement updated successfully');
+        return updatedVital;
+      } else {
+        _log('❌ Failed to update vital: ${response.statusMessage}');
+        throw Exception('Failed to update vital: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error updating vital: $e');
+      throw Exception(e.toString());
     }
-    _vitals[index] = vital;
-    return vital;
   }
 
   // Delete vital
   Future<void> deleteVital(String vitalId) async {
-    await _mockDelay();
-    _vitals.removeWhere((v) => v.id == vitalId);
+    _log('🗑️ Deleting vital measurement: $vitalId');
+    try {
+      final response = await _apiService.delete('/vitals/$vitalId');
+
+      if (response.statusCode == 200) {
+        _log('✅ Vital measurement deleted successfully');
+      } else {
+        _log('❌ Failed to delete vital: ${response.statusMessage}');
+        throw Exception('Failed to delete vital: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error deleting vital: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Get recent vitals (last 7 days)
   Future<List<VitalMeasurementModel>> getRecentVitals(String userId) async {
-    await _mockDelay();
-    final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
-    return _vitals
-        .where((v) => v.userId == userId && v.timestamp.isAfter(cutoffDate))
-        .toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('📋 Fetching recent vitals (last 7 days) for user: $userId');
+    try {
+      final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
+      final response = await _apiService.get(
+        '/vitals',
+        queryParameters: {
+          'startDate': cutoffDate.toIso8601String(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final vitals = data
+            .map((json) => VitalMapper.fromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${vitals.length} recent vital measurements');
+        return vitals;
+      } else {
+        _log('❌ Failed to fetch recent vitals: ${response.statusMessage}');
+        throw Exception('Failed to fetch recent vitals: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching recent vitals: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Calculate average for a vital type over a period
@@ -64,112 +188,109 @@ class VitalsService {
     VitalType type, {
     int days = 7,
   }) async {
-    await _mockDelay();
+    _log('📊 Calculating trends for ${type.toString()} (last $days days)');
+    try {
+      // Convert type enum to string
+      String typeStr;
+      switch (type) {
+        case VitalType.bloodPressure:
+          typeStr = 'bloodPressure';
+          break;
+        case VitalType.bloodSugar:
+          typeStr = 'bloodSugar';
+          break;
+        case VitalType.heartRate:
+          typeStr = 'heartRate';
+          break;
+        case VitalType.temperature:
+          typeStr = 'temperature';
+          break;
+        case VitalType.oxygenSaturation:
+          typeStr = 'oxygenSaturation';
+          break;
+        case VitalType.weight:
+          typeStr = 'weight';
+          break;
+      }
 
-    final cutoffDate = DateTime.now().subtract(Duration(days: days));
-    final measurements = _vitals
-        .where(
-          (v) =>
-              v.userId == userId &&
-              v.type == type &&
-              v.timestamp.isAfter(cutoffDate),
-        )
-        .toList();
+      final response = await _apiService.get(
+        '/vitals/trends',
+        queryParameters: {'kindCode': typeStr},
+      );
 
-    if (measurements.isEmpty) {
-      return {'average': 0.0, 'count': 0, 'hasAbnormal': false};
-    }
-
-    double sum = 0;
-    int count = measurements.length;
-    bool hasAbnormal = false;
-
-    for (var vital in measurements) {
-      // Parse value based on type
-      if (type == VitalType.bloodPressure) {
-        final parts = vital.value.split('/');
-        if (parts.length == 2) {
-          sum += double.tryParse(parts[0]) ?? 0; // Only systolic for average
-        }
+      if (response.statusCode == 200) {
+        final data = response.data;
+        _log('✅ Trends calculated successfully');
+        return {
+          'average': (data['average'] ?? 0.0).toDouble(),
+          'count': (data['count'] ?? 0) as int,
+          'hasAbnormal': (data['hasAbnormal'] ?? false) as bool,
+          'measurements': (data['measurements'] ?? []).map((json) => VitalMapper.fromApiResponse(
+              json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json))).toList(),
+        };
       } else {
-        sum += double.tryParse(vital.value) ?? 0;
+        _log('❌ Failed to calculate trends: ${response.statusMessage}');
+        throw Exception('Failed to calculate trends: ${response.statusMessage}');
       }
-
-      if (vital.isAbnormal()) {
-        hasAbnormal = true;
-      }
+    } catch (e) {
+      _log('❌ Error calculating trends: $e');
+      throw Exception(e.toString());
     }
-
-    return {
-      'average': sum / count,
-      'count': count,
-      'hasAbnormal': hasAbnormal,
-      'measurements': measurements,
-    };
   }
 
   // Check for abnormal readings
   Future<List<VitalMeasurementModel>> getAbnormalReadings(String userId) async {
-    await _mockDelay();
-    return _vitals.where((v) => v.userId == userId && v.isAbnormal()).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('⚠️ Fetching abnormal readings for user: $userId');
+    try {
+      final response = await _apiService.get('/vitals/abnormal');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final vitals = data
+            .map((json) => VitalMapper.fromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${vitals.length} abnormal readings');
+        return vitals;
+      } else {
+        _log('❌ Failed to fetch abnormal readings: ${response.statusMessage}');
+        throw Exception('Failed to fetch abnormal readings: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching abnormal readings: $e');
+      throw Exception(e.toString());
+    }
   }
 
-  // Initialize mock data
-  void initializeMockData(String userId) {
-    final now = DateTime.now();
+  // Get latest vitals per kind
+  Future<Map<String, VitalMeasurementModel>> getLatestVitals(String userId) async {
+    _log('📋 Fetching latest vitals per kind for user: $userId');
+    try {
+      final response = await _apiService.get('/vitals/latest');
 
-    // Blood Pressure readings
-    for (int i = 0; i < 30; i++) {
-      _vitals.add(
-        VitalMeasurementModel(
-          id: 'bp-$i',
-          type: VitalType.bloodPressure,
-          value: '${120 + (i % 10)}/${80 + (i % 5)}',
-          timestamp: now.subtract(Duration(days: i)),
-          userId: userId,
-        ),
-      );
-    }
-
-    // Blood Sugar readings
-    for (int i = 0; i < 30; i++) {
-      _vitals.add(
-        VitalMeasurementModel(
-          id: 'bs-$i',
-          type: VitalType.bloodSugar,
-          value: '${95 + (i % 15)}',
-          timestamp: now.subtract(Duration(days: i)),
-          notes: i % 7 == 0 ? 'Fasting' : 'Post-meal',
-          userId: userId,
-        ),
-      );
-    }
-
-    // Heart Rate readings
-    for (int i = 0; i < 15; i++) {
-      _vitals.add(
-        VitalMeasurementModel(
-          id: 'hr-$i',
-          type: VitalType.heartRate,
-          value: '${70 + (i % 10)}',
-          timestamp: now.subtract(Duration(days: i * 2)),
-          userId: userId,
-        ),
-      );
-    }
-
-    // Weight readings
-    for (int i = 0; i < 10; i++) {
-      _vitals.add(
-        VitalMeasurementModel(
-          id: 'wt-$i',
-          type: VitalType.weight,
-          value: '${170 - i}',
-          timestamp: now.subtract(Duration(days: i * 3)),
-          userId: userId,
-        ),
-      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final latestVitals = <String, VitalMeasurementModel>{};
+        
+        if (data is Map) {
+          data.forEach((key, value) {
+            if (value != null) {
+              latestVitals[key] = VitalMapper.fromApiResponse(
+                  value is Map<String, dynamic> ? value : Map<String, dynamic>.from(value));
+            }
+          });
+        }
+        
+        _log('✅ Fetched latest vitals for ${latestVitals.length} types');
+        return latestVitals;
+      } else {
+        _log('❌ Failed to fetch latest vitals: ${response.statusMessage}');
+        throw Exception('Failed to fetch latest vitals: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching latest vitals: $e');
+      throw Exception(e.toString());
     }
   }
 }

@@ -112,11 +112,9 @@ class AuthProvider with ChangeNotifier {
 
     try {
       _currentUser = await _authService.updateProfile(
-        userId: _currentUser!.id,
-        age: age,
+        phoneNumber: phone,
         medicalConditions: medicalConditions,
         emergencyContact: emergencyContact,
-        phone: phone,
       );
       _isLoading = false;
       notifyListeners();

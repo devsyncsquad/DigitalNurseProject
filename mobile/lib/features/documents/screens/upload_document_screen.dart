@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/models/document_model.dart';
 import '../../../core/providers/document_provider.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/document_picker_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/upload_options_bottom_sheet.dart';
@@ -77,24 +76,14 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser!.id;
-
-    final document = DocumentModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    final success = await context.read<DocumentProvider>().uploadDocument(
+      filePath: _selectedFile!.filePath,
       title: _titleController.text.trim(),
       type: _documentType,
-      filePath: _selectedFile!.filePath,
-      uploadDate: DateTime.now(),
       visibility: _visibility,
       description: _descriptionController.text.trim().isEmpty
           ? null
           : _descriptionController.text.trim(),
-      userId: userId,
-    );
-
-    final success = await context.read<DocumentProvider>().uploadDocument(
-      document,
     );
 
     if (mounted) {

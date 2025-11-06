@@ -146,9 +146,10 @@ class MedicationProvider with ChangeNotifier {
     _upcomingReminders = await _medicationService.getUpcomingReminders(userId);
   }
 
-  // Initialize mock data
+  // Initialize mock data (deprecated - no longer needed with API integration)
+  @Deprecated('Mock data initialization no longer supported')
   Future<void> initializeMockData(String userId) async {
-    _medicationService.initializeMockData(userId);
+    // Mock data initialization removed - data now comes from API
     await loadMedicines(userId);
   }
 

@@ -37,12 +37,24 @@ class DocumentProvider with ChangeNotifier {
   }
 
   // Upload document
-  Future<bool> uploadDocument(DocumentModel document) async {
+  Future<bool> uploadDocument({
+    required String filePath,
+    required String title,
+    required DocumentType type,
+    required DocumentVisibility visibility,
+    String? description,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final uploaded = await _documentService.uploadDocument(document);
+      final uploaded = await _documentService.uploadDocument(
+        filePath: filePath,
+        title: title,
+        type: type,
+        visibility: visibility,
+        description: description,
+      );
       _documents.insert(0, uploaded);
       _error = null;
       _isLoading = false;
@@ -128,9 +140,10 @@ class DocumentProvider with ChangeNotifier {
     }
   }
 
-  // Initialize mock data
+  // Initialize mock data (deprecated - no longer needed with API integration)
+  @Deprecated('Mock data initialization no longer supported')
   Future<void> initializeMockData(String userId) async {
-    _documentService.initializeMockData(userId);
+    // Mock data initialization removed - data now comes from API
     await loadDocuments(userId);
   }
 

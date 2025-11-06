@@ -64,18 +64,17 @@ class CaregiverProvider with ChangeNotifier {
   }
 
   // Accept invitation
-  Future<bool> acceptInvitation(String caregiverId) async {
+  Future<bool> acceptInvitation(String invitationId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final updatedCaregiver = await _caregiverService.acceptInvitation(
-        caregiverId,
-      );
-
-      final index = _caregivers.indexWhere((c) => c.id == caregiverId);
-      if (index != -1) {
-        _caregivers[index] = updatedCaregiver;
+      await _caregiverService.acceptInvitation(invitationId);
+      
+      // Reload caregivers to get updated status
+      final patientId = _caregivers.isNotEmpty ? _caregivers.first.linkedPatientId : '';
+      if (patientId.isNotEmpty) {
+        await loadCaregivers(patientId);
       }
 
       _error = null;
@@ -110,9 +109,10 @@ class CaregiverProvider with ChangeNotifier {
     }
   }
 
-  // Initialize mock data
+  // Initialize mock data (deprecated - no longer needed with API integration)
+  @Deprecated('Mock data initialization no longer supported')
   Future<void> initializeMockData(String patientId) async {
-    _caregiverService.initializeMockData(patientId);
+    // Mock data initialization removed - data now comes from API
     await loadCaregivers(patientId);
   }
 

@@ -1,12 +1,13 @@
 import '../models/diet_log_model.dart';
 import '../models/exercise_log_model.dart';
+import '../mappers/lifestyle_mapper.dart';
+import 'api_service.dart';
 
 class DietExerciseService {
-  final List<DietLogModel> _dietLogs = [];
-  final List<ExerciseLogModel> _exerciseLogs = [];
+  final ApiService _apiService = ApiService();
 
-  Future<void> _mockDelay() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  void _log(String message) {
+    print('🔍 [LIFESTYLE] $message');
   }
 
   // Diet Log Methods
@@ -14,32 +15,72 @@ class DietExerciseService {
     String userId, {
     DateTime? date,
   }) async {
-    await _mockDelay();
-    if (date != null) {
-      return _dietLogs
-          .where(
-            (d) =>
-                d.userId == userId &&
-                d.timestamp.year == date.year &&
-                d.timestamp.month == date.month &&
-                d.timestamp.day == date.day,
-          )
-          .toList()
-        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('📋 Fetching diet logs for user: $userId${date != null ? ' on ${date.toString().split(' ')[0]}' : ''}');
+    try {
+      final queryParams = <String, dynamic>{};
+      if (date != null) {
+        queryParams['date'] = date.toIso8601String().split('T')[0];
+      }
+
+      final response = await _apiService.get(
+        '/lifestyle/diet',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final dietLogs = data
+            .map((json) => LifestyleMapper.dietFromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${dietLogs.length} diet logs');
+        return dietLogs;
+      } else {
+        _log('❌ Failed to fetch diet logs: ${response.statusMessage}');
+        throw Exception('Failed to fetch diet logs: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching diet logs: $e');
+      throw Exception(e.toString());
     }
-    return _dietLogs.where((d) => d.userId == userId).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
   }
 
   Future<DietLogModel> addDietLog(DietLogModel dietLog) async {
-    await _mockDelay();
-    _dietLogs.add(dietLog);
-    return dietLog;
+    _log('➕ Adding diet log: ${dietLog.mealType}');
+    try {
+      final requestData = LifestyleMapper.dietToApiRequest(dietLog);
+      final response = await _apiService.post('/lifestyle/diet', data: requestData);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final addedLog = LifestyleMapper.dietFromApiResponse(response.data);
+        _log('✅ Diet log added successfully');
+        return addedLog;
+      } else {
+        _log('❌ Failed to add diet log: ${response.statusMessage}');
+        throw Exception('Failed to add diet log: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error adding diet log: $e');
+      throw Exception(e.toString());
+    }
   }
 
   Future<void> deleteDietLog(String logId) async {
-    await _mockDelay();
-    _dietLogs.removeWhere((d) => d.id == logId);
+    _log('🗑️ Deleting diet log: $logId');
+    try {
+      final response = await _apiService.delete('/lifestyle/diet/$logId');
+
+      if (response.statusCode == 200) {
+        _log('✅ Diet log deleted successfully');
+      } else {
+        _log('❌ Failed to delete diet log: ${response.statusMessage}');
+        throw Exception('Failed to delete diet log: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error deleting diet log: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Exercise Log Methods
@@ -47,32 +88,72 @@ class DietExerciseService {
     String userId, {
     DateTime? date,
   }) async {
-    await _mockDelay();
-    if (date != null) {
-      return _exerciseLogs
-          .where(
-            (e) =>
-                e.userId == userId &&
-                e.timestamp.year == date.year &&
-                e.timestamp.month == date.month &&
-                e.timestamp.day == date.day,
-          )
-          .toList()
-        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    _log('📋 Fetching exercise logs for user: $userId${date != null ? ' on ${date.toString().split(' ')[0]}' : ''}');
+    try {
+      final queryParams = <String, dynamic>{};
+      if (date != null) {
+        queryParams['date'] = date.toIso8601String().split('T')[0];
+      }
+
+      final response = await _apiService.get(
+        '/lifestyle/exercise',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final exerciseLogs = data
+            .map((json) => LifestyleMapper.exerciseFromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _log('✅ Fetched ${exerciseLogs.length} exercise logs');
+        return exerciseLogs;
+      } else {
+        _log('❌ Failed to fetch exercise logs: ${response.statusMessage}');
+        throw Exception('Failed to fetch exercise logs: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching exercise logs: $e');
+      throw Exception(e.toString());
     }
-    return _exerciseLogs.where((e) => e.userId == userId).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
   }
 
   Future<ExerciseLogModel> addExerciseLog(ExerciseLogModel exerciseLog) async {
-    await _mockDelay();
-    _exerciseLogs.add(exerciseLog);
-    return exerciseLog;
+    _log('➕ Adding exercise log: ${exerciseLog.activityType}');
+    try {
+      final requestData = LifestyleMapper.exerciseToApiRequest(exerciseLog);
+      final response = await _apiService.post('/lifestyle/exercise', data: requestData);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final addedLog = LifestyleMapper.exerciseFromApiResponse(response.data);
+        _log('✅ Exercise log added successfully');
+        return addedLog;
+      } else {
+        _log('❌ Failed to add exercise log: ${response.statusMessage}');
+        throw Exception('Failed to add exercise log: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error adding exercise log: $e');
+      throw Exception(e.toString());
+    }
   }
 
   Future<void> deleteExerciseLog(String logId) async {
-    await _mockDelay();
-    _exerciseLogs.removeWhere((e) => e.id == logId);
+    _log('🗑️ Deleting exercise log: $logId');
+    try {
+      final response = await _apiService.delete('/lifestyle/exercise/$logId');
+
+      if (response.statusCode == 200) {
+        _log('✅ Exercise log deleted successfully');
+      } else {
+        _log('❌ Failed to delete exercise log: ${response.statusMessage}');
+        throw Exception('Failed to delete exercise log: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error deleting exercise log: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Daily Summary
@@ -80,169 +161,64 @@ class DietExerciseService {
     String userId,
     DateTime date,
   ) async {
-    await _mockDelay();
+    _log('📊 Fetching daily summary for user: $userId on ${date.toString().split(' ')[0]}');
+    try {
+      final response = await _apiService.get(
+        '/lifestyle/summary',
+        queryParameters: {'date': date.toIso8601String().split('T')[0]},
+      );
 
-    final dietLogs = await getDietLogs(userId, date: date);
-    final exerciseLogs = await getExerciseLogs(userId, date: date);
-
-    final totalCaloriesIn = dietLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.calories,
-    );
-
-    final totalCaloriesOut = exerciseLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.caloriesBurned,
-    );
-
-    final totalExerciseMinutes = exerciseLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.durationMinutes,
-    );
-
-    return {
-      'date': date,
-      'caloriesIn': totalCaloriesIn,
-      'caloriesOut': totalCaloriesOut,
-      'netCalories': totalCaloriesIn - totalCaloriesOut,
-      'exerciseMinutes': totalExerciseMinutes,
-      'mealCount': dietLogs.length,
-      'workoutCount': exerciseLogs.length,
-    };
+      if (response.statusCode == 200) {
+        final data = response.data;
+        _log('✅ Daily summary fetched successfully');
+        return {
+          'date': date,
+          'caloriesIn': (data['caloriesIn'] ?? 0) as int,
+          'caloriesOut': (data['caloriesOut'] ?? 0) as int,
+          'netCalories': (data['netCalories'] ?? 0) as int,
+          'exerciseMinutes': (data['exerciseMinutes'] ?? 0) as int,
+          'mealCount': (data['mealCount'] ?? 0) as int,
+          'workoutCount': (data['workoutCount'] ?? 0) as int,
+        };
+      } else {
+        _log('❌ Failed to fetch daily summary: ${response.statusMessage}');
+        throw Exception('Failed to fetch daily summary: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching daily summary: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Weekly Summary
   Future<Map<String, dynamic>> getWeeklySummary(String userId) async {
-    await _mockDelay();
+    _log('📊 Fetching weekly summary for user: $userId');
+    try {
+      final response = await _apiService.get('/lifestyle/summary/weekly');
 
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: 7));
-
-    final dietLogs = _dietLogs
-        .where((d) => d.userId == userId && d.timestamp.isAfter(weekStart))
-        .toList();
-
-    final exerciseLogs = _exerciseLogs
-        .where((e) => e.userId == userId && e.timestamp.isAfter(weekStart))
-        .toList();
-
-    final totalCaloriesIn = dietLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.calories,
-    );
-
-    final totalCaloriesOut = exerciseLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.caloriesBurned,
-    );
-
-    final totalExerciseMinutes = exerciseLogs.fold<int>(
-      0,
-      (sum, log) => sum + log.durationMinutes,
-    );
-
-    return {
-      'weekStart': weekStart,
-      'weekEnd': now,
-      'totalCaloriesIn': totalCaloriesIn,
-      'totalCaloriesOut': totalCaloriesOut,
-      'avgCaloriesPerDay': totalCaloriesIn / 7,
-      'totalExerciseMinutes': totalExerciseMinutes,
-      'avgExercisePerDay': totalExerciseMinutes / 7,
-    };
-  }
-
-  // Initialize mock data
-  void initializeMockData(String userId) {
-    final now = DateTime.now();
-
-    // Mock diet logs for today
-    _dietLogs.addAll([
-      DietLogModel(
-        id: 'diet-1',
-        mealType: MealType.breakfast,
-        description: 'Oatmeal with berries and honey',
-        calories: 350,
-        timestamp: DateTime(now.year, now.month, now.day, 8, 30),
-        userId: userId,
-      ),
-      DietLogModel(
-        id: 'diet-2',
-        mealType: MealType.lunch,
-        description: 'Grilled chicken salad',
-        calories: 450,
-        timestamp: DateTime(now.year, now.month, now.day, 12, 30),
-        userId: userId,
-      ),
-      DietLogModel(
-        id: 'diet-3',
-        mealType: MealType.snack,
-        description: 'Apple and almonds',
-        calories: 200,
-        timestamp: DateTime(now.year, now.month, now.day, 15, 0),
-        userId: userId,
-      ),
-    ]);
-
-    // Mock diet logs for yesterday
-    final yesterday = now.subtract(const Duration(days: 1));
-    _dietLogs.addAll([
-      DietLogModel(
-        id: 'diet-4',
-        mealType: MealType.breakfast,
-        description: 'Scrambled eggs and toast',
-        calories: 400,
-        timestamp: DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          9,
-          0,
-        ),
-        userId: userId,
-      ),
-      DietLogModel(
-        id: 'diet-5',
-        mealType: MealType.dinner,
-        description: 'Salmon with vegetables',
-        calories: 550,
-        timestamp: DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          19,
-          0,
-        ),
-        userId: userId,
-      ),
-    ]);
-
-    // Mock exercise logs
-    _exerciseLogs.addAll([
-      ExerciseLogModel(
-        id: 'exercise-1',
-        activityType: ActivityType.walking,
-        description: 'Morning walk in the park',
-        durationMinutes: 30,
-        caloriesBurned: 150,
-        timestamp: DateTime(now.year, now.month, now.day, 7, 0),
-        userId: userId,
-      ),
-      ExerciseLogModel(
-        id: 'exercise-2',
-        activityType: ActivityType.yoga,
-        description: 'Evening yoga session',
-        durationMinutes: 45,
-        caloriesBurned: 200,
-        timestamp: DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          18,
-          0,
-        ),
-        userId: userId,
-      ),
-    ]);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        _log('✅ Weekly summary fetched successfully');
+        return {
+          'weekStart': data['weekStart'] != null
+              ? DateTime.parse(data['weekStart'].toString())
+              : DateTime.now().subtract(const Duration(days: 7)),
+          'weekEnd': data['weekEnd'] != null
+              ? DateTime.parse(data['weekEnd'].toString())
+              : DateTime.now(),
+          'totalCaloriesIn': (data['totalCaloriesIn'] ?? 0) as int,
+          'totalCaloriesOut': (data['totalCaloriesOut'] ?? 0) as int,
+          'avgCaloriesPerDay': (data['avgCaloriesPerDay'] ?? 0.0).toDouble(),
+          'totalExerciseMinutes': (data['totalExerciseMinutes'] ?? 0) as int,
+          'avgExercisePerDay': (data['avgExercisePerDay'] ?? 0.0).toDouble(),
+        };
+      } else {
+        _log('❌ Failed to fetch weekly summary: ${response.statusMessage}');
+        throw Exception('Failed to fetch weekly summary: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching weekly summary: $e');
+      throw Exception(e.toString());
+    }
   }
 }

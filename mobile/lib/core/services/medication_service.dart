@@ -1,75 +1,144 @@
 import '../models/medicine_model.dart';
 import '../models/notification_model.dart';
+import '../mappers/medication_mapper.dart';
+import 'api_service.dart';
 import 'fcm_service.dart';
 
 class MedicationService {
-  final List<MedicineModel> _medicines = [];
-  final List<MedicineIntake> _intakes = [];
+  final ApiService _apiService = ApiService();
   final FCMService _fcmService = FCMService();
 
-  Future<void> _mockDelay() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  void _log(String message) {
+    print('🔍 [MEDICATION] $message');
   }
 
   // Get all medicines for a user
   Future<List<MedicineModel>> getMedicines(String userId) async {
-    await _mockDelay();
-    return _medicines.where((m) => m.userId == userId).toList();
+    _log('📋 Fetching medications for user: $userId');
+    try {
+      final response = await _apiService.get('/medications');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final medicines = data
+            .map((json) => MedicationMapper.fromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList();
+        _log('✅ Fetched ${medicines.length} medications');
+        return medicines;
+      } else {
+        _log('❌ Failed to fetch medications: ${response.statusMessage}');
+        throw Exception('Failed to fetch medications: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching medications: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Add new medicine
   Future<MedicineModel> addMedicine(MedicineModel medicine) async {
-    await _mockDelay();
-    _medicines.add(medicine);
-
-    // Schedule notifications for medicine reminders (with error handling)
+    _log('➕ Adding medication: ${medicine.name}');
     try {
-      await _scheduleMedicineReminders(medicine);
-    } catch (e) {
-      print('Warning: Failed to schedule medicine reminders: $e');
-      // Don't fail the entire operation if notification scheduling fails
-      // The medicine is still saved successfully
-    }
+      final requestData = MedicationMapper.toApiRequest(medicine);
+      final response = await _apiService.post('/medications', data: requestData);
 
-    return medicine;
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final addedMedicine = MedicationMapper.fromApiResponse(response.data);
+        _log('✅ Medication added successfully: ${addedMedicine.name}');
+
+        // Schedule notifications for medicine reminders (with error handling)
+        try {
+          await _scheduleMedicineReminders(addedMedicine);
+        } catch (e) {
+          _log('⚠️ Warning: Failed to schedule medicine reminders: $e');
+          // Don't fail the entire operation if notification scheduling fails
+        }
+
+        return addedMedicine;
+      } else {
+        _log('❌ Failed to add medication: ${response.statusMessage}');
+        throw Exception('Failed to add medication: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error adding medication: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Update medicine
   Future<MedicineModel> updateMedicine(MedicineModel medicine) async {
-    await _mockDelay();
-    final index = _medicines.indexWhere((m) => m.id == medicine.id);
-    if (index == -1) {
-      throw Exception('Medicine not found');
-    }
-    _medicines[index] = medicine;
-
-    // Reschedule notifications for updated medicine (with error handling)
+    _log('✏️ Updating medication: ${medicine.name}');
     try {
-      await _scheduleMedicineReminders(medicine);
-    } catch (e) {
-      print('Warning: Failed to reschedule medicine reminders: $e');
-      // Don't fail the entire operation if notification scheduling fails
-    }
+      final requestData = MedicationMapper.toApiRequest(medicine);
+      final response = await _apiService.patch(
+        '/medications/${medicine.id}',
+        data: requestData,
+      );
 
-    return medicine;
+      if (response.statusCode == 200) {
+        final updatedMedicine = MedicationMapper.fromApiResponse(response.data);
+        _log('✅ Medication updated successfully: ${updatedMedicine.name}');
+
+        // Reschedule notifications for updated medicine (with error handling)
+        try {
+          await _scheduleMedicineReminders(updatedMedicine);
+        } catch (e) {
+          _log('⚠️ Warning: Failed to reschedule medicine reminders: $e');
+        }
+
+        return updatedMedicine;
+      } else {
+        _log('❌ Failed to update medication: ${response.statusMessage}');
+        throw Exception('Failed to update medication: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error updating medication: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Delete medicine
   Future<void> deleteMedicine(String medicineId) async {
-    await _mockDelay();
-    _medicines.removeWhere((m) => m.id == medicineId);
-    _intakes.removeWhere((i) => i.medicineId == medicineId);
+    _log('🗑️ Deleting medication: $medicineId');
+    try {
+      final response = await _apiService.delete('/medications/$medicineId');
 
-    // Cancel scheduled notifications for deleted medicine
-    await _fcmService.cancelNotification(medicineId.hashCode);
+      if (response.statusCode == 200) {
+        _log('✅ Medication deleted successfully');
+
+        // Cancel scheduled notifications for deleted medicine
+        try {
+          await _fcmService.cancelNotification(medicineId.hashCode);
+        } catch (e) {
+          _log('⚠️ Warning: Failed to cancel notifications: $e');
+        }
+      } else {
+        _log('❌ Failed to delete medication: ${response.statusMessage}');
+        throw Exception('Failed to delete medication: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error deleting medication: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Get medicine by ID
   Future<MedicineModel?> getMedicineById(String medicineId) async {
-    await _mockDelay();
+    _log('🔍 Fetching medication by ID: $medicineId');
     try {
-      return _medicines.firstWhere((m) => m.id == medicineId);
+      final response = await _apiService.get('/medications/$medicineId');
+
+      if (response.statusCode == 200) {
+        final medicine = MedicationMapper.fromApiResponse(response.data);
+        _log('✅ Medication fetched: ${medicine.name}');
+        return medicine;
+      } else {
+        _log('❌ Medication not found: $medicineId');
+        return null;
+      }
     } catch (e) {
+      _log('❌ Error fetching medication: $e');
       return null;
     }
   }
@@ -80,147 +149,173 @@ class MedicationService {
     required DateTime scheduledTime,
     required IntakeStatus status,
   }) async {
-    await _mockDelay();
+    _log('📝 Logging intake for medication: $medicineId');
+    try {
+      final intake = MedicineIntake(
+        id: '', // Will be set by backend
+        medicineId: medicineId,
+        scheduledTime: scheduledTime,
+        takenTime: status == IntakeStatus.taken ? DateTime.now() : null,
+        status: status,
+      );
 
-    final intake = MedicineIntake(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      medicineId: medicineId,
-      scheduledTime: scheduledTime,
-      takenTime: status == IntakeStatus.taken ? DateTime.now() : null,
-      status: status,
-    );
+      final requestData = MedicationMapper.intakeToApiRequest(intake);
+      final response = await _apiService.post(
+        '/medications/$medicineId/intakes',
+        data: requestData,
+      );
 
-    _intakes.add(intake);
-    return intake;
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final loggedIntake = MedicationMapper.intakeFromApiResponse(response.data);
+        _log('✅ Intake logged successfully');
+        return loggedIntake;
+      } else {
+        _log('❌ Failed to log intake: ${response.statusMessage}');
+        throw Exception('Failed to log intake: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error logging intake: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Get intake history for a medicine
   Future<List<MedicineIntake>> getIntakeHistory(String medicineId) async {
-    await _mockDelay();
-    return _intakes.where((i) => i.medicineId == medicineId).toList()
-      ..sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
+    _log('📜 Fetching intake history for medication: $medicineId');
+    try {
+      final response = await _apiService.get('/medications/$medicineId/intakes');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final intakes = data
+            .map((json) => MedicationMapper.intakeFromApiResponse(
+                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .toList()
+          ..sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
+        _log('✅ Fetched ${intakes.length} intake records');
+        return intakes;
+      } else {
+        _log('❌ Failed to fetch intake history: ${response.statusMessage}');
+        throw Exception('Failed to fetch intake history: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error fetching intake history: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Get upcoming reminders
   Future<List<Map<String, dynamic>>> getUpcomingReminders(String userId) async {
-    await _mockDelay();
+    _log('⏰ Fetching upcoming reminders for user: $userId');
+    try {
+      final response = await _apiService.get('/medications/upcoming');
 
-    final userMedicines = _medicines.where((m) => m.userId == userId).toList();
-    final reminders = <Map<String, dynamic>>[];
-
-    for (var medicine in userMedicines) {
-      final now = DateTime.now();
-      for (var timeStr in medicine.reminderTimes) {
-        final parts = timeStr.split(':');
-        final hour = int.parse(parts[0]);
-        final minute = int.parse(parts[1]);
-
-        var reminderTime = DateTime(now.year, now.month, now.day, hour, minute);
-
-        // If time has passed today, schedule for tomorrow
-        if (reminderTime.isBefore(now)) {
-          reminderTime = reminderTime.add(const Duration(days: 1));
-        }
-
-        reminders.add({'medicine': medicine, 'reminderTime': reminderTime});
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final reminders = data.map((item) {
+          final map = item is Map<String, dynamic> ? item : Map<String, dynamic>.from(item);
+          return {
+            'medicine': MedicationMapper.fromApiResponse(map['medicine'] ?? {}),
+            'reminderTime': DateTime.parse(map['reminderTime']?.toString() ?? DateTime.now().toIso8601String()),
+          };
+        }).toList();
+        _log('✅ Fetched ${reminders.length} upcoming reminders');
+        return reminders;
+      } else {
+        _log('❌ Failed to fetch upcoming reminders: ${response.statusMessage}');
+        throw Exception('Failed to fetch upcoming reminders: ${response.statusMessage}');
       }
+    } catch (e) {
+      _log('❌ Error fetching upcoming reminders: $e');
+      throw Exception(e.toString());
     }
-
-    reminders.sort(
-      (a, b) => (a['reminderTime'] as DateTime).compareTo(
-        b['reminderTime'] as DateTime,
-      ),
-    );
-
-    return reminders.take(5).toList();
   }
 
   // Get adherence percentage
   Future<double> getAdherencePercentage(String userId, {int days = 7}) async {
-    await _mockDelay();
+    _log('📊 Calculating adherence percentage for user: $userId (last $days days)');
+    
+    // Get all medications for the user
+    final medicines = await getMedicines(userId);
+    if (medicines.isEmpty) {
+      _log('✅ No medications found, returning 100% adherence');
+      return 100.0;
+    }
 
-    final userMedicines = _medicines.where((m) => m.userId == userId).toList();
-    if (userMedicines.isEmpty) return 100.0;
+    // Calculate overall adherence across all medications
+    double totalPercentage = 0.0;
+    int medicationCount = 0;
 
-    final cutoffDate = DateTime.now().subtract(Duration(days: days));
-    final recentIntakes = _intakes
-        .where((i) => i.scheduledTime.isAfter(cutoffDate))
-        .toList();
+    for (var medicine in medicines) {
+      try {
+        final response = await _apiService.get(
+          '/medications/${medicine.id}/adherence',
+          queryParameters: {'days': days.toString()},
+        );
 
-    if (recentIntakes.isEmpty) return 100.0;
+        if (response.statusCode == 200) {
+          final data = response.data;
+          final percentage = (data['percentage'] ?? 100.0).toDouble();
+          totalPercentage += percentage;
+          medicationCount++;
+        }
+      } catch (e) {
+        _log('⚠️ Warning: Failed to get adherence for ${medicine.id}: $e');
+        // Continue with other medications
+      }
+    }
 
-    final takenCount = recentIntakes
-        .where((i) => i.status == IntakeStatus.taken)
-        .length;
+    if (medicationCount == 0) {
+      return 100.0;
+    }
 
-    return (takenCount / recentIntakes.length) * 100;
+    final averagePercentage = totalPercentage / medicationCount;
+    _log('✅ Overall adherence: ${averagePercentage.toStringAsFixed(1)}%');
+    return averagePercentage;
   }
 
   // Get adherence streak (consecutive days with 100% adherence)
   Future<int> getAdherenceStreak(String userId) async {
-    await _mockDelay();
-
-    final userMedicines = _medicines.where((m) => m.userId == userId).toList();
-    if (userMedicines.isEmpty) return 0;
-
-    int streak = 0;
-    final now = DateTime.now();
-
-    // Check each day going backwards from today
-    for (int i = 0; i < 365; i++) {
-      final checkDate = now.subtract(Duration(days: i));
-      final startOfDay = DateTime(
-        checkDate.year,
-        checkDate.month,
-        checkDate.day,
-      );
-      final endOfDay = startOfDay.add(const Duration(days: 1));
-
-      // Get all intakes for this day
-      final dayIntakes = _intakes.where((intake) {
-        return intake.scheduledTime.isAfter(startOfDay) &&
-            intake.scheduledTime.isBefore(endOfDay);
-      }).toList();
-
-      if (dayIntakes.isEmpty) {
-        // No medicines scheduled for this day, consider it as 100% adherence
-        if (i == 0 || streak > 0) {
-          // Only count as streak if it's today or we're in a streak
-          if (i > 0) streak++;
-        } else {
-          break; // Not in a streak and no intakes, stop checking
-        }
-        continue;
-      }
-
-      // Check if all intakes for this day were taken
-      final allTaken = dayIntakes.every(
-        (intake) => intake.status == IntakeStatus.taken,
-      );
-
-      if (allTaken) {
-        streak++;
-      } else {
-        // If checking today and not perfect, don't break streak yet
-        if (i > 0) break;
-      }
+    _log('🔥 Calculating adherence streak for user: $userId');
+    
+    // Get all medications for the user
+    final medicines = await getMedicines(userId);
+    if (medicines.isEmpty) {
+      _log('✅ No medications found, returning 0 streak');
+      return 0;
     }
 
-    return streak;
+    // Get streak for the first medication (or calculate overall)
+    // For simplicity, we'll use the first medication's streak
+    // In a more sophisticated implementation, we'd calculate overall streak
+    try {
+      final response = await _apiService.get('/medications/${medicines.first.id}/streak');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final streak = (data['streak'] ?? 0) as int;
+        _log('✅ Adherence streak: $streak days');
+        return streak;
+      }
+    } catch (e) {
+      _log('⚠️ Warning: Failed to get streak: $e');
+    }
+
+    return 0;
   }
 
   // Test immediate notification (for debugging)
   Future<void> testImmediateNotification(String medicineName) async {
     try {
-      print('Testing immediate notification for $medicineName');
+      _log('🧪 Testing immediate notification for $medicineName');
 
       // Check if FCM service is initialized
       if (!_fcmService.isInitialized) {
-        print('FCM service not initialized, attempting to initialize...');
+        _log('FCM service not initialized, attempting to initialize...');
         try {
           await _fcmService.initialize();
         } catch (e) {
-          print('Failed to initialize FCM service: $e');
+          _log('Failed to initialize FCM service: $e');
           return;
         }
       }
@@ -235,70 +330,10 @@ class MedicationService {
         payload: '{"type": "test_notification"}',
         type: NotificationType.medicineReminder,
       );
-      print('Test notification scheduled for 10 seconds from now');
+      _log('Test notification scheduled for 10 seconds from now');
     } catch (e) {
-      print('Failed to schedule test notification: $e');
+      _log('Failed to schedule test notification: $e');
       // Don't rethrow to prevent app crashes
-    }
-  }
-
-  // Initialize mock data
-  void initializeMockData(String userId) {
-    final now = DateTime.now();
-
-    _medicines.addAll([
-      MedicineModel(
-        id: 'mock-med-1',
-        name: 'Aspirin',
-        dosage: '1 tablet of 75mg',
-        frequency: MedicineFrequency.daily,
-        startDate: now.subtract(const Duration(days: 30)),
-        reminderTimes: ['08:00', '20:00'],
-        notes: 'Take with food',
-        userId: userId,
-        medicineForm: MedicineForm.tablet,
-        strength: '75mg',
-        doseAmount: '1 tablet',
-      ),
-      MedicineModel(
-        id: 'mock-med-2',
-        name: 'Metformin',
-        dosage: '1 tablet of 500mg',
-        frequency: MedicineFrequency.twiceDaily,
-        startDate: now.subtract(const Duration(days: 15)),
-        reminderTimes: ['09:00', '21:00'],
-        notes: 'For blood sugar control',
-        userId: userId,
-        medicineForm: MedicineForm.tablet,
-        strength: '500mg',
-        doseAmount: '1 tablet',
-      ),
-      MedicineModel(
-        id: 'mock-med-3',
-        name: 'Vitamin D',
-        dosage: '1 capsule of 1000 IU',
-        frequency: MedicineFrequency.daily,
-        startDate: now.subtract(const Duration(days: 60)),
-        reminderTimes: ['10:00'],
-        userId: userId,
-        medicineForm: MedicineForm.capsule,
-        strength: '1000 IU',
-        doseAmount: '1 capsule',
-      ),
-    ]);
-
-    // Add some mock intakes
-    for (int i = 0; i < 7; i++) {
-      final date = now.subtract(Duration(days: i));
-      _intakes.add(
-        MedicineIntake(
-          id: 'intake-1-$i',
-          medicineId: 'mock-med-1',
-          scheduledTime: DateTime(date.year, date.month, date.day, 8, 0),
-          takenTime: DateTime(date.year, date.month, date.day, 8, 15),
-          status: i == 1 ? IntakeStatus.missed : IntakeStatus.taken,
-        ),
-      );
     }
   }
 
@@ -307,11 +342,11 @@ class MedicationService {
     try {
       // Check if FCM service is initialized
       if (!_fcmService.isInitialized) {
-        print('FCM service not initialized, attempting to initialize...');
+        _log('FCM service not initialized, attempting to initialize...');
         try {
           await _fcmService.initialize();
         } catch (e) {
-          print('Failed to initialize FCM service: $e');
+          _log('Failed to initialize FCM service: $e');
           return;
         }
       }
@@ -326,7 +361,7 @@ class MedicationService {
           try {
             final parts = timeStr.split(':');
             if (parts.length != 2) {
-              print('Warning: Invalid time format: $timeStr');
+              _log('Warning: Invalid time format: $timeStr');
               continue;
             }
 
@@ -343,33 +378,27 @@ class MedicationService {
 
             // Only schedule if the time is in the future
             if (reminderTime.isAfter(now)) {
-              print(
-                'Scheduling notification for ${medicine.name} at ${reminderTime.toString()}',
-              );
+              _log('Scheduling notification for ${medicine.name} at ${reminderTime.toString()}');
               await _fcmService.scheduleLocalNotification(
-                id: '${medicine.id}_${reminderTime.millisecondsSinceEpoch}'
-                    .hashCode,
+                id: '${medicine.id}_${reminderTime.millisecondsSinceEpoch}'.hashCode,
                 title: 'Medicine Reminder',
                 body: 'Time to take ${medicine.name} ${medicine.dosage}',
                 scheduledDate: reminderTime,
-                payload:
-                    '{"medicineId": "${medicine.id}", "type": "medicine_reminder"}',
+                payload: '{"medicineId": "${medicine.id}", "type": "medicine_reminder"}',
                 type: NotificationType.medicineReminder,
               );
-              print('Notification scheduled successfully for ${medicine.name}');
+              _log('Notification scheduled successfully for ${medicine.name}');
             } else {
-              print(
-                'Skipping notification for ${medicine.name} - time ${reminderTime.toString()} is in the past',
-              );
+              _log('Skipping notification for ${medicine.name} - time ${reminderTime.toString()} is in the past');
             }
           } catch (e) {
-            print('Warning: Failed to schedule reminder for time $timeStr: $e');
+            _log('Warning: Failed to schedule reminder for time $timeStr: $e');
             // Continue with other times even if one fails
           }
         }
       }
     } catch (e) {
-      print('Error in _scheduleMedicineReminders: $e');
+      _log('Error in _scheduleMedicineReminders: $e');
       rethrow;
     }
   }

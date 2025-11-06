@@ -38,13 +38,32 @@ class AuthService {
         _log('💾 [AUTH] Tokens saved');
 
         // Create user model from response
-        final userData = data['user'];
+        final userData = data['user'] ?? data;
+        
+        // Convert role string to enum
+        UserRole role = UserRole.patient;
+        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        if (roleStr == 'caregiver') {
+          role = UserRole.caregiver;
+        }
+
+        // Convert subscription tier string to enum
+        SubscriptionTier subscriptionTier = SubscriptionTier.free;
+        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        if (tierStr == 'premium') {
+          subscriptionTier = SubscriptionTier.premium;
+        }
+
         final user = UserModel(
-          id: userData['id'].toString(),
-          email: userData['email'] ?? email,
-          name: userData['name'] ?? '',
-          role: UserRole.patient, // Default, can be fetched from profile later
-          subscriptionTier: SubscriptionTier.free, // Default, can be fetched from profile later
+          id: userData['id']?.toString() ?? userData['userId']?.toString() ?? '',
+          email: userData['email']?.toString() ?? email,
+          name: userData['name']?.toString() ?? userData['full_name']?.toString() ?? '',
+          role: role,
+          subscriptionTier: subscriptionTier,
+          age: userData['age']?.toString(),
+          medicalConditions: userData['medicalConditions']?.toString(),
+          emergencyContact: userData['emergencyContact']?.toString(),
+          phone: userData['phone']?.toString(),
         );
 
         // Save user to shared preferences
@@ -187,50 +206,120 @@ class AuthService {
     }
   }
 
-  // Update user profile
-  Future<UserModel> updateProfile({
-    required String userId,
-    String? age,
-    String? medicalConditions,
-    String? emergencyContact,
-    String? phone,
-  }) async {
-    final currentUser = await getCurrentUser();
-    if (currentUser == null) {
-      throw Exception('User not logged in');
-    }
-
+  // Get user profile from API
+  Future<UserModel> getProfile() async {
+    _log('👤 [AUTH] Fetching user profile from API');
     try {
-      final response = await _apiService.patch(
-        '/users/profile',
-        data: {
-          if (age != null) 'age': age,
-          if (medicalConditions != null) 'medicalConditions': medicalConditions,
-          if (emergencyContact != null) 'emergencyContact': emergencyContact,
-          if (phone != null) 'phone': phone,
-        },
-      );
+      final response = await _apiService.get('/users/profile');
 
       if (response.statusCode == 200) {
         final userData = response.data;
+        _log('✅ [AUTH] Profile fetched successfully');
+
+        // Convert role string to enum
+        UserRole role = UserRole.patient;
+        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        if (roleStr == 'caregiver') {
+          role = UserRole.caregiver;
+        }
+
+        // Convert subscription tier string to enum
+        SubscriptionTier subscriptionTier = SubscriptionTier.free;
+        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        if (tierStr == 'premium') {
+          subscriptionTier = SubscriptionTier.premium;
+        }
+
+        final user = UserModel(
+          id: userData['id']?.toString() ?? '',
+          email: userData['email']?.toString() ?? '',
+          name: userData['name']?.toString() ?? '',
+          role: role,
+          subscriptionTier: subscriptionTier,
+          age: userData['age']?.toString(),
+          medicalConditions: userData['medicalConditions']?.toString(),
+          emergencyContact: userData['emergencyContact']?.toString(),
+          phone: userData['phone']?.toString(),
+        );
+
+        await _saveUser(user);
+        return user;
+      } else {
+        _log('❌ [AUTH] Profile fetch failed: ${response.statusMessage}');
+        throw Exception('Profile fetch failed: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ [AUTH] Profile fetch error: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  // Update user profile
+  Future<UserModel> updateProfile({
+    String? name,
+    String? phoneNumber,
+    String? dateOfBirth,
+    String? address,
+    String? city,
+    String? country,
+    String? medicalConditions,
+    String? emergencyContact,
+  }) async {
+    _log('📝 [AUTH] Updating user profile');
+    try {
+      final data = <String, dynamic>{};
+      if (name != null) data['name'] = name;
+      if (phoneNumber != null) data['phoneNumber'] = phoneNumber;
+      if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth;
+      if (address != null) data['address'] = address;
+      if (city != null) data['city'] = city;
+      if (country != null) data['country'] = country;
+      if (medicalConditions != null) data['medicalConditions'] = medicalConditions;
+      if (emergencyContact != null) data['emergencyContact'] = emergencyContact;
+
+      final response = await _apiService.patch(
+        '/users/profile',
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ [AUTH] Profile updated successfully');
+        final userData = response.data;
+
+        // Convert role string to enum
+        UserRole role = UserRole.patient;
+        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        if (roleStr == 'caregiver') {
+          role = UserRole.caregiver;
+        }
+
+        // Convert subscription tier string to enum
+        SubscriptionTier subscriptionTier = SubscriptionTier.free;
+        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        if (tierStr == 'premium') {
+          subscriptionTier = SubscriptionTier.premium;
+        }
+
         final updatedUser = UserModel(
-          id: userData['id']?.toString() ?? currentUser.id,
-          email: userData['email'] ?? currentUser.email,
-          name: userData['name'] ?? currentUser.name,
-          role: currentUser.role,
-          subscriptionTier: currentUser.subscriptionTier,
-          age: userData['age'] ?? age,
-          medicalConditions: userData['medicalConditions'] ?? medicalConditions,
-          emergencyContact: userData['emergencyContact'] ?? emergencyContact,
-          phone: userData['phone'] ?? phone,
+          id: userData['id']?.toString() ?? '',
+          email: userData['email']?.toString() ?? '',
+          name: userData['name']?.toString() ?? '',
+          role: role,
+          subscriptionTier: subscriptionTier,
+          age: userData['age']?.toString(),
+          medicalConditions: userData['medicalConditions']?.toString(),
+          emergencyContact: userData['emergencyContact']?.toString(),
+          phone: userData['phone']?.toString(),
         );
 
         await _saveUser(updatedUser);
         return updatedUser;
       } else {
-        throw Exception('Profile update failed');
+        _log('❌ [AUTH] Profile update failed: ${response.statusMessage}');
+        throw Exception('Profile update failed: ${response.statusMessage}');
       }
     } catch (e) {
+      _log('❌ [AUTH] Profile update error: $e');
       throw Exception(e.toString());
     }
   }

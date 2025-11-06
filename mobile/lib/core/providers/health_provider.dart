@@ -131,9 +131,10 @@ class HealthProvider with ChangeNotifier {
     return await _vitalsService.getAbnormalReadings(userId);
   }
 
-  // Initialize mock data
+  // Initialize mock data (deprecated - no longer needed with API integration)
+  @Deprecated('Mock data initialization no longer supported')
   Future<void> initializeMockData(String userId) async {
-    _vitalsService.initializeMockData(userId);
+    // Mock data initialization removed - data now comes from API
     await loadVitals(userId);
   }
 

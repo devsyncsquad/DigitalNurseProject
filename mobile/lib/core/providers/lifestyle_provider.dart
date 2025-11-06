@@ -145,9 +145,10 @@ class LifestyleProvider with ChangeNotifier {
     return await _service.getWeeklySummary(userId);
   }
 
-  // Initialize mock data
+  // Initialize mock data (deprecated - no longer needed with API integration)
+  @Deprecated('Mock data initialization no longer supported')
   Future<void> initializeMockData(String userId) async {
-    _service.initializeMockData(userId);
+    // Mock data initialization removed - data now comes from API
     await loadAll(userId);
   }
 
