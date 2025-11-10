@@ -27,23 +27,23 @@ export function AppLayout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="border-b border-border/70 bg-background/95 backdrop-blur transition-[height] duration-200 ease-linear supports-[backdrop-filter]:bg-background/80 group-data-[collapsible=icon]/sidebar-wrapper:h-14">
+        <header className="border-b border-border/40 bg-background/70 backdrop-blur transition-[height] duration-200 ease-linear supports-[backdrop-filter]:bg-background/60 group-data-[collapsible=icon]/sidebar-wrapper:h-14">
           <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-2 px-4">
             <SidebarTrigger className="md:hidden" />
             <Separator orientation="vertical" className="h-6 md:hidden" />
             <div className="hidden flex-1 items-center gap-3 md:flex">
-              <SidebarTrigger className="hidden md:inline-flex" />
+              <SidebarTrigger className="hidden h-9 w-9 items-center justify-center rounded-full border border-border/50 bg-background shadow-sm transition-all hover:bg-muted md:inline-flex" />
               <Input
-                className="h-9 w-full max-w-lg"
+                className="h-10 w-full max-w-lg rounded-full border border-border/50 bg-card/80 px-4 shadow-xs focus-visible:ring-2 focus-visible:ring-sidebar-ring/50"
                 placeholder="Search patients, caregivers, alerts..."
               />
             </div>
             <div className="ml-auto flex items-center gap-2">
               <LanguageToggle />
-              <Badge variant="secondary" className="hidden md:flex">
+              <Badge variant="secondary" className="hidden rounded-full px-3 py-1 text-xs font-medium md:flex">
                 Care Coordinator
               </Badge>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative rounded-full border border-border/50 bg-background/60 shadow-xs hover:bg-muted">
                 <Bell className="size-4" />
                 <span className="sr-only">Notifications</span>
                 <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
