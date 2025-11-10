@@ -17,6 +17,8 @@ export class UsersService {
           take: 1,
         },
         userRoles: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
           include: {
             role: true,
           },
@@ -40,11 +42,16 @@ export class UsersService {
         })
       : null;
 
+    const activeRoleCode = user.userRoles[0]?.role?.roleCode;
+    const normalizedRole = activeRoleCode
+      ? activeRoleCode.toLowerCase()
+      : 'patient';
+
     return {
       id: user.userId.toString(),
       email: user.email || '',
       name: user.full_name,
-      role: user.userRoles[0]?.role?.roleCode || 'patient',
+      role: normalizedRole,
       subscriptionTier: subscriptionTier?.planCode || 'free',
       age: age?.toString() || null,
       medicalConditions: user.medicalConditions || null,

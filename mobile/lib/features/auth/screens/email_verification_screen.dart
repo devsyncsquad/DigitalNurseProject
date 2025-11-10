@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
 class EmailVerificationScreen extends StatelessWidget {
@@ -15,33 +13,6 @@ class EmailVerificationScreen extends StatelessWidget {
     // In real app, would check if email is verified
     // For mock, just continue to profile setup
     context.go('/profile-setup');
-  }
-
-  Future<void> _handleResend(BuildContext context) async {
-    // Note: Backend doesn't have a resend endpoint yet
-    // This will show an error, but handled gracefully
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.verifyEmail('');
-
-    if (context.mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Verification email sent!'),
-            backgroundColor: AppTheme.getSuccessColor(context),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Resend verification email not available yet',
-            ),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -103,10 +74,36 @@ class EmailVerificationScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
 
-                // Resend button
-                TextButton(
-                  onPressed: () => _handleResend(context),
-                  child: const Text('Resend Email'),
+                // Resend information
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 12.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.getWarningColor(context).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        FIcons.mail,
+                        color: AppTheme.getWarningColor(context),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          'Didn’t get the email yet? It can take a few minutes. If nothing arrives, contact support and we’ll resend it manually.',
+                          style: context.theme.typography.xs.copyWith(
+                            color: AppTheme.getWarningColor(context),
+                            height: 1.3,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 24.h),
 

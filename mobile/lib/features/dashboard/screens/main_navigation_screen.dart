@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import 'home_dashboard_screen.dart';
 import '../../medication/screens/medicine_list_screen.dart';
 import '../../health/screens/vitals_list_screen.dart';
 import '../../documents/screens/document_list_screen.dart';
 import '../../profile/screens/profile_view_screen.dart';
 import 'dart:io';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/models/user_model.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -26,16 +29,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _currentIndex = widget.initialIndex;
   }
 
-  final List<Widget> _pages = const [
-    HomeDashboardScreen(),
-    MedicineListScreen(),
-    VitalsListScreen(),
-    DocumentListScreen(),
-    ProfileViewScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final userRole = authProvider.currentUser?.role ?? UserRole.patient;
+    final isCaregiver = userRole == UserRole.caregiver;
+
+    final navigationEntries = _buildNavigationEntries(context, isCaregiver);
+    final maxIndex = navigationEntries.length - 1;
+
+    if (_currentIndex > maxIndex && maxIndex >= 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _currentIndex = maxIndex;
+        });
+      });
+    }
+
     return PopScope(
       canPop: false, // Always intercept back button
       onPopInvoked: (didPop) async {
@@ -57,7 +68,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       child: Scaffold(
         body: SafeArea(
           bottom: false, // Let the bottom nav bar handle its own safe area
-          child: IndexedStack(index: _currentIndex, children: _pages),
+          child: IndexedStack(
+            index: _currentIndex,
+            children: navigationEntries.map((entry) => entry.page).toList(),
+          ),
         ),
         bottomNavigationBar: SafeArea(
           child: FBottomNavigationBar(
@@ -68,26 +82,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               });
             },
             children: [
-              FBottomNavigationBarItem(
-                icon: const Icon(FIcons.house),
-                label: Text('navigation.home'.tr()),
-              ),
-              FBottomNavigationBarItem(
-                icon: const Icon(FIcons.pill),
-                label: Text('navigation.medicines'.tr()),
-              ),
-              FBottomNavigationBarItem(
-                icon: const Icon(FIcons.activity),
-                label: Text('navigation.health'.tr()),
-              ),
-              FBottomNavigationBarItem(
-                icon: const Icon(FIcons.fileText),
-                label: Text('navigation.documents'.tr()),
-              ),
-              FBottomNavigationBarItem(
-                icon: const Icon(FIcons.user),
-                label: Text('navigation.profile'.tr()),
-              ),
+              for (final entry in navigationEntries) entry.navigationItem,
             ],
           ),
         ),
@@ -116,4 +111,69 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       },
     );
   }
+}
+
+class _NavigationEntry {
+  final Widget page;
+  final FBottomNavigationBarItem navigationItem;
+  final bool hideForCaregiver;
+
+  const _NavigationEntry({
+    required this.page,
+    required this.navigationItem,
+    this.hideForCaregiver = false,
+  });
+}
+
+List<_NavigationEntry> _buildNavigationEntries(
+  BuildContext context,
+  bool isCaregiver,
+) {
+  final entries = <_NavigationEntry>[
+    _NavigationEntry(
+      page: const HomeDashboardScreen(),
+      navigationItem: FBottomNavigationBarItem(
+        icon: const Icon(FIcons.house),
+        label: Text('navigation.home'.tr()),
+      ),
+    ),
+    _NavigationEntry(
+      page: const MedicineListScreen(),
+      navigationItem: FBottomNavigationBarItem(
+        icon: const Icon(FIcons.pill),
+        label: Text('navigation.medicines'.tr()),
+      ),
+    ),
+    _NavigationEntry(
+      page: const VitalsListScreen(),
+      navigationItem: FBottomNavigationBarItem(
+        icon: const Icon(FIcons.activity),
+        label: Text('navigation.health'.tr()),
+      ),
+    ),
+    _NavigationEntry(
+      page: const DocumentListScreen(),
+      navigationItem: FBottomNavigationBarItem(
+        icon: const Icon(FIcons.fileText),
+        label: Text('navigation.documents'.tr()),
+      ),
+    ),
+    _NavigationEntry(
+      page: const ProfileViewScreen(),
+      navigationItem: FBottomNavigationBarItem(
+        icon: const Icon(FIcons.user),
+        label: Text('navigation.profile'.tr()),
+      ),
+      hideForCaregiver: false,
+    ),
+  ];
+
+  return entries
+      .where((entry) {
+        if (isCaregiver && entry.hideForCaregiver) {
+          return false;
+        }
+        return true;
+      })
+      .toList(growable: false);
 }

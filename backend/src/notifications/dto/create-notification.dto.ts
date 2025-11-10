@@ -10,6 +10,14 @@ export enum NotificationType {
 }
 
 export class CreateNotificationDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required when caregiver)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ example: 'Medicine Reminder', description: 'Notification title' })
   @IsString()
   @IsNotEmpty()

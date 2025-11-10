@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateNotificationDto, NotificationType } from './dto/create-notification.dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { ActorContext } from '../common/services/access-control.service';
 
 @Injectable()
 export class NotificationsService {
@@ -9,10 +10,10 @@ export class NotificationsService {
   /**
    * Create notification
    */
-  async create(userId: bigint, createDto: CreateNotificationDto) {
+  async create(context: ActorContext, createDto: CreateNotificationDto) {
     const notification = await this.prisma.notification.create({
       data: {
-        userId,
+        userId: context.elderUserId,
         title: createDto.title,
         message: createDto.body,
         notificationType: createDto.type,
@@ -30,8 +31,8 @@ export class NotificationsService {
   /**
    * Find all notifications for a user
    */
-  async findAll(userId: bigint, isRead?: boolean) {
-    const where: any = { userId };
+  async findAll(context: ActorContext, isRead?: boolean) {
+    const where: any = { userId: context.elderUserId };
     if (isRead !== undefined) {
       where.isRead = isRead;
     }
@@ -49,10 +50,10 @@ export class NotificationsService {
   /**
    * Get unread notifications
    */
-  async getUnread(userId: bigint) {
+  async getUnread(context: ActorContext) {
     const notifications = await this.prisma.notification.findMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         isRead: false,
       },
       orderBy: {
@@ -66,10 +67,10 @@ export class NotificationsService {
   /**
    * Get unread count
    */
-  async getUnreadCount(userId: bigint) {
+  async getUnreadCount(context: ActorContext) {
     const count = await this.prisma.notification.count({
       where: {
-        userId,
+        userId: context.elderUserId,
         isRead: false,
       },
     });
@@ -80,11 +81,11 @@ export class NotificationsService {
   /**
    * Mark notification as read
    */
-  async markAsRead(userId: bigint, notificationId: bigint) {
+  async markAsRead(context: ActorContext, notificationId: bigint) {
     const notification = await this.prisma.notification.findFirst({
       where: {
         notificationId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -103,10 +104,10 @@ export class NotificationsService {
   /**
    * Mark all notifications as read
    */
-  async markAllAsRead(userId: bigint) {
+  async markAllAsRead(context: ActorContext) {
     await this.prisma.notification.updateMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         isRead: false,
       },
       data: {
@@ -120,11 +121,11 @@ export class NotificationsService {
   /**
    * Delete notification
    */
-  async remove(userId: bigint, notificationId: bigint) {
+  async remove(context: ActorContext, notificationId: bigint) {
     const notification = await this.prisma.notification.findFirst({
       where: {
         notificationId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 

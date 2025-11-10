@@ -131,7 +131,10 @@ class MedicationMapper {
   }
 
   /// Convert MedicineModel to backend API request format
-  static Map<String, dynamic> toApiRequest(MedicineModel medicine) {
+  static Map<String, dynamic> toApiRequest(
+    MedicineModel medicine, {
+    String? elderUserId,
+  }) {
     // Convert reminderTimes to array of objects
     final reminderTimes = medicine.reminderTimes
         .map((time) => {'time': time})
@@ -207,6 +210,7 @@ class MedicationMapper {
       if (medicine.strength != null) 'strength': medicine.strength,
       if (medicine.doseAmount != null) 'doseAmount': medicine.doseAmount,
       if (medicine.periodicDays != null) 'periodicDays': medicine.periodicDays,
+      if (elderUserId != null) 'elderUserId': elderUserId,
     };
   }
 
@@ -259,7 +263,10 @@ class MedicationMapper {
   }
 
   /// Convert MedicineIntake to API request format
-  static Map<String, dynamic> intakeToApiRequest(MedicineIntake intake) {
+  static Map<String, dynamic> intakeToApiRequest(
+    MedicineIntake intake, {
+    String? elderUserId,
+  }) {
     String status;
     switch (intake.status) {
       case IntakeStatus.taken:
@@ -280,6 +287,7 @@ class MedicationMapper {
       'status': status,
       if (intake.takenTime != null)
         'takenTime': intake.takenTime!.toIso8601String(),
+      if (elderUserId != null) 'elderUserId': elderUserId,
     };
   }
 }

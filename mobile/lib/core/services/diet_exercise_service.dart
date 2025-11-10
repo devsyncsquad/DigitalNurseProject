@@ -14,12 +14,16 @@ class DietExerciseService {
   Future<List<DietLogModel>> getDietLogs(
     String userId, {
     DateTime? date,
+    String? elderUserId,
   }) async {
     _log('📋 Fetching diet logs for user: $userId${date != null ? ' on ${date.toString().split(' ')[0]}' : ''}');
     try {
       final queryParams = <String, dynamic>{};
       if (date != null) {
         queryParams['date'] = date.toIso8601String().split('T')[0];
+      }
+      if (elderUserId != null) {
+        queryParams['elderUserId'] = elderUserId;
       }
 
       final response = await _apiService.get(
@@ -49,8 +53,14 @@ class DietExerciseService {
   Future<DietLogModel> addDietLog(DietLogModel dietLog) async {
     _log('➕ Adding diet log: ${dietLog.mealType}');
     try {
-      final requestData = LifestyleMapper.dietToApiRequest(dietLog);
-      final response = await _apiService.post('/lifestyle/diet', data: requestData);
+      final requestData = LifestyleMapper.dietToApiRequest(
+        dietLog,
+        elderUserId: dietLog.userId,
+      );
+      final response = await _apiService.post(
+        '/lifestyle/diet',
+        data: requestData,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final addedLog = LifestyleMapper.dietFromApiResponse(response.data);
@@ -66,10 +76,14 @@ class DietExerciseService {
     }
   }
 
-  Future<void> deleteDietLog(String logId) async {
+  Future<void> deleteDietLog(String logId, {String? elderUserId}) async {
     _log('🗑️ Deleting diet log: $logId');
     try {
-      final response = await _apiService.delete('/lifestyle/diet/$logId');
+      final response = await _apiService.delete(
+        '/lifestyle/diet/$logId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         _log('✅ Diet log deleted successfully');
@@ -87,12 +101,16 @@ class DietExerciseService {
   Future<List<ExerciseLogModel>> getExerciseLogs(
     String userId, {
     DateTime? date,
+    String? elderUserId,
   }) async {
     _log('📋 Fetching exercise logs for user: $userId${date != null ? ' on ${date.toString().split(' ')[0]}' : ''}');
     try {
       final queryParams = <String, dynamic>{};
       if (date != null) {
         queryParams['date'] = date.toIso8601String().split('T')[0];
+      }
+      if (elderUserId != null) {
+        queryParams['elderUserId'] = elderUserId;
       }
 
       final response = await _apiService.get(
@@ -122,8 +140,14 @@ class DietExerciseService {
   Future<ExerciseLogModel> addExerciseLog(ExerciseLogModel exerciseLog) async {
     _log('➕ Adding exercise log: ${exerciseLog.activityType}');
     try {
-      final requestData = LifestyleMapper.exerciseToApiRequest(exerciseLog);
-      final response = await _apiService.post('/lifestyle/exercise', data: requestData);
+      final requestData = LifestyleMapper.exerciseToApiRequest(
+        exerciseLog,
+        elderUserId: exerciseLog.userId,
+      );
+      final response = await _apiService.post(
+        '/lifestyle/exercise',
+        data: requestData,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final addedLog = LifestyleMapper.exerciseFromApiResponse(response.data);
@@ -139,10 +163,14 @@ class DietExerciseService {
     }
   }
 
-  Future<void> deleteExerciseLog(String logId) async {
+  Future<void> deleteExerciseLog(String logId, {String? elderUserId}) async {
     _log('🗑️ Deleting exercise log: $logId');
     try {
-      final response = await _apiService.delete('/lifestyle/exercise/$logId');
+      final response = await _apiService.delete(
+        '/lifestyle/exercise/$logId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         _log('✅ Exercise log deleted successfully');
@@ -159,13 +187,21 @@ class DietExerciseService {
   // Daily Summary
   Future<Map<String, dynamic>> getDailySummary(
     String userId,
-    DateTime date,
-  ) async {
+    DateTime date, {
+    String? elderUserId,
+  }) async {
     _log('📊 Fetching daily summary for user: $userId on ${date.toString().split(' ')[0]}');
     try {
+      final queryParameters = {
+        'date': date.toIso8601String().split('T')[0],
+      };
+      if (elderUserId != null) {
+        queryParameters['elderUserId'] = elderUserId;
+      }
+
       final response = await _apiService.get(
         '/lifestyle/summary',
-        queryParameters: {'date': date.toIso8601String().split('T')[0]},
+        queryParameters: queryParameters,
       );
 
       if (response.statusCode == 200) {
@@ -191,10 +227,17 @@ class DietExerciseService {
   }
 
   // Weekly Summary
-  Future<Map<String, dynamic>> getWeeklySummary(String userId) async {
+  Future<Map<String, dynamic>> getWeeklySummary(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📊 Fetching weekly summary for user: $userId');
     try {
-      final response = await _apiService.get('/lifestyle/summary/weekly');
+      final response = await _apiService.get(
+        '/lifestyle/summary/weekly',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data;

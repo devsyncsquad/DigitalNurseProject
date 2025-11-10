@@ -1,4 +1,5 @@
 import '../models/caregiver_model.dart';
+import '../models/care_recipient_model.dart';
 import '../mappers/caregiver_mapper.dart';
 import 'api_service.dart';
 
@@ -18,17 +19,56 @@ class CaregiverService {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
         final caregivers = data
-            .map((json) => CaregiverMapper.fromApiResponse(
-                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .map(
+              (json) => CaregiverMapper.fromApiResponse(
+                json is Map<String, dynamic>
+                    ? json
+                    : Map<String, dynamic>.from(json),
+              ),
+            )
             .toList();
         _log('✅ Fetched ${caregivers.length} caregivers');
         return caregivers;
       } else {
         _log('❌ Failed to fetch caregivers: ${response.statusMessage}');
-        throw Exception('Failed to fetch caregivers: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch caregivers: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error fetching caregivers: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  // Get all elder assignments for a caregiver
+  Future<List<CareRecipientModel>> getCareRecipients() async {
+    _log('📋 Fetching caregiver assignments');
+    try {
+      final response = await _apiService.get('/caregivers/assignments');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final assignments = data
+            .map(
+              (json) => CareRecipientModel.fromJson(
+                json is Map<String, dynamic>
+                    ? json
+                    : Map<String, dynamic>.from(json),
+              ),
+            )
+            .where((assignment) => assignment.elderId.isNotEmpty)
+            .toList();
+        _log('✅ Fetched ${assignments.length} caregiver assignments');
+        return assignments;
+      } else {
+        _log('❌ Failed to fetch caregiver assignments: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch caregiver assignments: ${response.statusMessage}',
+        );
+      }
+    } catch (e) {
+      _log('❌ Error fetching caregiver assignments: $e');
       throw Exception(e.toString());
     }
   }
@@ -38,6 +78,7 @@ class CaregiverService {
     required String email,
     String? phone,
     String? relationship,
+    String? name,
   }) async {
     _log('📧 Sending caregiver invitation to: $email');
     try {
@@ -45,6 +86,7 @@ class CaregiverService {
         email: email,
         phone: phone,
         relationship: relationship,
+        name: name,
       );
 
       final response = await _apiService.post(
@@ -76,14 +118,21 @@ class CaregiverService {
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
         final invitations = data
-            .map((json) => CaregiverMapper.invitationFromApiResponse(
-                json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json)))
+            .map(
+              (json) => CaregiverMapper.invitationFromApiResponse(
+                json is Map<String, dynamic>
+                    ? json
+                    : Map<String, dynamic>.from(json),
+              ),
+            )
             .toList();
         _log('✅ Fetched ${invitations.length} pending invitations');
         return invitations;
       } else {
         _log('❌ Failed to fetch invitations: ${response.statusMessage}');
-        throw Exception('Failed to fetch invitations: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch invitations: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error fetching invitations: $e');
@@ -104,7 +153,9 @@ class CaregiverService {
             : Map<String, dynamic>.from(response.data);
       } else {
         _log('❌ Failed to fetch invitation: ${response.statusMessage}');
-        throw Exception('Failed to fetch invitation: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch invitation: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error fetching invitation: $e');
@@ -127,7 +178,9 @@ class CaregiverService {
             : Map<String, dynamic>.from(response.data);
       } else {
         _log('❌ Failed to accept invitation: ${response.statusMessage}');
-        throw Exception('Failed to accept invitation: ${response.statusMessage}');
+        throw Exception(
+          'Failed to accept invitation: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error accepting invitation: $e');
@@ -147,7 +200,9 @@ class CaregiverService {
         _log('✅ Invitation declined successfully');
       } else {
         _log('❌ Failed to decline invitation: ${response.statusMessage}');
-        throw Exception('Failed to decline invitation: ${response.statusMessage}');
+        throw Exception(
+          'Failed to decline invitation: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error declining invitation: $e');
@@ -165,7 +220,9 @@ class CaregiverService {
         _log('✅ Caregiver removed successfully');
       } else {
         _log('❌ Failed to remove caregiver: ${response.statusMessage}');
-        throw Exception('Failed to remove caregiver: ${response.statusMessage}');
+        throw Exception(
+          'Failed to remove caregiver: ${response.statusMessage}',
+        );
       }
     } catch (e) {
       _log('❌ Error removing caregiver: $e');
@@ -185,15 +242,19 @@ class CaregiverService {
     // For backward compatibility, we'll send an invitation
     // Note: The backend requires email, so we'll need to handle this differently
     // This is a legacy method that may not work perfectly with the new API
-    _log('⚠️ Using deprecated addCaregiver method - consider using sendInvitation');
-    
+    _log(
+      '⚠️ Using deprecated addCaregiver method - consider using sendInvitation',
+    );
+
     try {
       final result = await sendInvitation(
-        email: phone, // Using phone as email is not ideal, but for backward compatibility
+        email:
+            phone, // Using phone as email is not ideal, but for backward compatibility
         phone: phone,
         relationship: relationship,
+        name: name,
       );
-      
+
       // The result may not be a CaregiverModel, so we'll create a placeholder
       return CaregiverModel(
         id: result['id']?.toString() ?? '',

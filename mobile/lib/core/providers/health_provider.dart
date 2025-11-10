@@ -13,12 +13,15 @@ class HealthProvider with ChangeNotifier {
   String? get error => _error;
 
   // Load vitals
-  Future<void> loadVitals(String userId) async {
+  Future<void> loadVitals(String userId, {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _vitals = await _vitalsService.getVitals(userId);
+      _vitals = await _vitalsService.getVitals(
+        userId,
+        elderUserId: elderUserId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -31,9 +34,14 @@ class HealthProvider with ChangeNotifier {
   // Get vitals by type
   Future<List<VitalMeasurementModel>> getVitalsByType(
     String userId,
-    VitalType type,
-  ) async {
-    return await _vitalsService.getVitalsByType(userId, type);
+    VitalType type, {
+    String? elderUserId,
+  }) async {
+    return _vitalsService.getVitalsByType(
+      userId,
+      type,
+      elderUserId: elderUserId,
+    );
   }
 
   // Add vital
@@ -80,12 +88,12 @@ class HealthProvider with ChangeNotifier {
   }
 
   // Delete vital
-  Future<bool> deleteVital(String vitalId) async {
+  Future<bool> deleteVital(String vitalId, {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _vitalsService.deleteVital(vitalId);
+      await _vitalsService.deleteVital(vitalId, elderUserId: elderUserId);
       _vitals.removeWhere((v) => v.id == vitalId);
       _error = null;
       _isLoading = false;
@@ -100,8 +108,14 @@ class HealthProvider with ChangeNotifier {
   }
 
   // Get recent vitals
-  Future<List<VitalMeasurementModel>> getRecentVitals(String userId) async {
-    return await _vitalsService.getRecentVitals(userId);
+  Future<List<VitalMeasurementModel>> getRecentVitals(
+    String userId, {
+    String? elderUserId,
+  }) async {
+    return await _vitalsService.getRecentVitals(
+      userId,
+      elderUserId: elderUserId,
+    );
   }
 
   // Get vitals for a specific date
@@ -122,13 +136,25 @@ class HealthProvider with ChangeNotifier {
     String userId,
     VitalType type, {
     int days = 7,
+    String? elderUserId,
   }) async {
-    return await _vitalsService.calculateTrends(userId, type, days: days);
+    return await _vitalsService.calculateTrends(
+      userId,
+      type,
+      days: days,
+      elderUserId: elderUserId,
+    );
   }
 
   // Get abnormal readings
-  Future<List<VitalMeasurementModel>> getAbnormalReadings(String userId) async {
-    return await _vitalsService.getAbnormalReadings(userId);
+  Future<List<VitalMeasurementModel>> getAbnormalReadings(
+    String userId, {
+    String? elderUserId,
+  }) async {
+    return await _vitalsService.getAbnormalReadings(
+      userId,
+      elderUserId: elderUserId,
+    );
   }
 
   // Initialize mock data (deprecated - no longer needed with API integration)

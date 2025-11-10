@@ -13,12 +13,15 @@ class DocumentProvider with ChangeNotifier {
   String? get error => _error;
 
   // Load documents
-  Future<void> loadDocuments(String userId) async {
+  Future<void> loadDocuments(String userId, {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _documents = await _documentService.getDocuments(userId);
+      _documents = await _documentService.getDocuments(
+        userId,
+        elderUserId: elderUserId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -31,9 +34,14 @@ class DocumentProvider with ChangeNotifier {
   // Get documents by type
   Future<List<DocumentModel>> getDocumentsByType(
     String userId,
-    DocumentType type,
-  ) async {
-    return await _documentService.getDocumentsByType(userId, type);
+    DocumentType type, {
+    String? elderUserId,
+  }) async {
+    return _documentService.getDocumentsByType(
+      userId,
+      type,
+      elderUserId: elderUserId,
+    );
   }
 
   // Upload document
@@ -43,6 +51,7 @@ class DocumentProvider with ChangeNotifier {
     required DocumentType type,
     required DocumentVisibility visibility,
     String? description,
+    String? elderUserId,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -54,6 +63,7 @@ class DocumentProvider with ChangeNotifier {
         type: type,
         visibility: visibility,
         description: description,
+        elderUserId: elderUserId,
       );
       _documents.insert(0, uploaded);
       _error = null;
@@ -92,12 +102,15 @@ class DocumentProvider with ChangeNotifier {
   }
 
   // Delete document
-  Future<bool> deleteDocument(String documentId) async {
+  Future<bool> deleteDocument(String documentId, {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _documentService.deleteDocument(documentId);
+      await _documentService.deleteDocument(
+        documentId,
+        elderUserId: elderUserId,
+      );
       _documents.removeWhere((d) => d.id == documentId);
       _error = null;
       _isLoading = false;
@@ -114,8 +127,9 @@ class DocumentProvider with ChangeNotifier {
   // Share document
   Future<bool> shareDocument(
     String documentId,
-    DocumentVisibility visibility,
-  ) async {
+    DocumentVisibility visibility, {
+    String? elderUserId,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
@@ -123,6 +137,7 @@ class DocumentProvider with ChangeNotifier {
       final updated = await _documentService.shareDocument(
         documentId,
         visibility,
+        elderUserId: elderUserId,
       );
       final index = _documents.indexWhere((d) => d.id == documentId);
       if (index != -1) {

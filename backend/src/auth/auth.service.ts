@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -21,7 +22,32 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, name } = registerDto;
+    const {
+      email,
+      password,
+      name,
+      phone,
+      roleCode: rawRoleCode,
+      caregiverInviteCode,
+    } = registerDto;
+
+    const normalizedRoleCode = (rawRoleCode || 'patient').trim().toLowerCase();
+    const inviteCode = caregiverInviteCode?.trim();
+    const dbRoleCode = this.toDbRoleCode(normalizedRoleCode);
+
+    const role = await this.prisma.role.findUnique({
+      where: { roleCode: dbRoleCode },
+    });
+
+    if (!role) {
+      throw new BadRequestException('Invalid role selected.');
+    }
+
+    if (normalizedRoleCode === 'caregiver' && !inviteCode) {
+      throw new BadRequestException(
+        'Invitation code is required for caregiver registration.',
+      );
+    }
 
     // Check if user exists
     const existingUser = await this.prisma.user.findUnique({
@@ -35,30 +61,102 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        passwordHash: hashedPassword,
-        full_name: name || '',
-      },
-    });
+    const registrationResult = await this.prisma.$transaction(async (tx) => {
+      // When registering as caregiver, load and validate invitation inside transaction
+      let invitation: {
+        invitationId: bigint;
+        elderUserId: bigint;
+        inviterUserId: bigint;
+        relationshipCode: string;
+        status: string;
+        expiresAt: Date;
+      } | null = null;
 
-    // Create default FREE subscription (planId is null for FREE plan)
-    await this.prisma.subscription.create({
-      data: {
-        userId: user.userId,
-        planId: null,
-        status: 'active',
-      },
+      if (normalizedRoleCode === 'caregiver') {
+        invitation = await tx.userInvitation.findUnique({
+          where: { inviteCode: inviteCode! },
+          select: {
+            invitationId: true,
+            elderUserId: true,
+            inviterUserId: true,
+            relationshipCode: true,
+            status: true,
+            expiresAt: true,
+          },
+        });
+
+        if (!invitation) {
+          throw new BadRequestException('Invalid caregiver invitation code.');
+        }
+
+        if (invitation.status !== 'pending') {
+          throw new BadRequestException('Invitation has already been processed.');
+        }
+
+        if (invitation.expiresAt < new Date()) {
+          throw new BadRequestException('Invitation has expired.');
+        }
+      }
+
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          phone: phone || null,
+          passwordHash: hashedPassword,
+          full_name: name || '',
+        },
+      });
+
+      // Provision default FREE subscription
+      await tx.subscription.create({
+        data: {
+          userId: user.userId,
+          planId: null,
+          status: 'active',
+        },
+      });
+
+      // Attach selected role
+      await tx.userRole.create({
+        data: {
+          userId: user.userId,
+          roleId: role.roleId,
+        },
+      });
+
+      if (normalizedRoleCode === 'caregiver' && invitation) {
+        const now = new Date();
+
+        await tx.userInvitation.update({
+          where: { invitationId: invitation.invitationId },
+          data: {
+            status: 'accepted',
+            acceptedUserId: user.userId,
+            acceptedAt: now,
+          },
+        });
+
+        await tx.elderAssignment.create({
+          data: {
+            elderUserId: invitation.elderUserId,
+            caregiverUserId: user.userId,
+            relationshipCode: invitation.relationshipCode,
+            isPrimary: false,
+          },
+        });
+      }
+
+      return user;
     });
 
     // TODO: Send verification email
-    // await this.sendVerificationEmail(user.email, verificationToken);
+    // await this.sendVerificationEmail(registrationResult.email, verificationToken);
 
     return {
       message: 'Registration successful. Please verify your email.',
-      userId: user.userId.toString(),
+      userId: registrationResult.userId.toString(),
+      role: this.toClientRoleCode(role.roleCode),
     };
   }
 
@@ -69,7 +167,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.generateTokens(user);
+    const activeRole = await this.resolveActiveRole(user.userId);
+    const tokens = await this.generateTokens(user, activeRole);
 
     return {
       ...tokens,
@@ -77,6 +176,7 @@ export class AuthService {
         id: user.userId.toString(),
         email: user.email,
         name: user.full_name,
+        role: activeRole,
       },
     };
   }
@@ -129,6 +229,26 @@ export class AuthService {
       });
     }
 
+    // Ensure user has patient role
+    const patientRole = await this.prisma.role.findUnique({
+      where: { roleCode: this.toDbRoleCode('patient') },
+    });
+
+    if (patientRole) {
+      const hasRole = await this.prisma.userRole.findFirst({
+        where: { userId: user.userId, roleId: patientRole.roleId },
+      });
+
+      if (!hasRole) {
+        await this.prisma.userRole.create({
+          data: {
+            userId: user.userId,
+            roleId: patientRole.roleId,
+          },
+        });
+      }
+    }
+
     return user;
   }
 
@@ -152,14 +272,20 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      return this.generateTokens(user);
+      const activeRole = await this.resolveActiveRole(user.userId);
+      return this.generateTokens(user, activeRole);
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
-  private async generateTokens(user: User) {
-    const payload = { sub: user.userId.toString(), email: user.email || '' };
+  private async generateTokens(user: User, role?: string) {
+    const roleCode = role || (await this.resolveActiveRole(user.userId));
+    const payload = {
+      sub: user.userId.toString(),
+      email: user.email || '',
+      role: roleCode,
+    };
 
     const jwtSecret =
       this.configService.get<string>('JWT_SECRET') || 'default-secret';
@@ -185,5 +311,29 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+  private async resolveActiveRole(userId: bigint): Promise<string> {
+    const role = await this.prisma.userRole.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        role: true,
+      },
+    });
+
+    const roleCode = role?.role.roleCode;
+    return this.toClientRoleCode(roleCode);
+  }
+
+  private toDbRoleCode(roleCode: string | undefined): string {
+    const normalized = (roleCode || '').trim().toLowerCase();
+    return normalized || 'patient';
+  }
+
+  private toClientRoleCode(roleCode: string | undefined): string {
+    if (!roleCode) {
+      return 'patient';
+    }
+    return roleCode.toLowerCase();
   }
 }

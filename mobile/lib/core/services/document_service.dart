@@ -15,10 +15,17 @@ class DocumentService {
   }
 
   // Get all documents for a user
-  Future<List<DocumentModel>> getDocuments(String userId) async {
+  Future<List<DocumentModel>> getDocuments(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📋 Fetching documents for user: $userId');
     try {
-      final response = await _apiService.get('/documents');
+      final response = await _apiService.get(
+        '/documents',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -40,10 +47,11 @@ class DocumentService {
   }
 
   // Get documents by type
-  Future<List<DocumentModel>> getDocumentsByType(
-    String userId,
-    DocumentType type,
-  ) async {
+Future<List<DocumentModel>> getDocumentsByType(
+  String userId,
+  DocumentType type, {
+  String? elderUserId,
+}) async {
     _log('📋 Fetching documents by type: $type for user: $userId');
     try {
       // Convert type enum to string
@@ -72,9 +80,14 @@ class DocumentService {
           break;
       }
 
+      final queryParameters = {'type': typeStr};
+      if (elderUserId != null) {
+        queryParameters['elderUserId'] = elderUserId;
+      }
+
       final response = await _apiService.get(
         '/documents',
-        queryParameters: {'type': typeStr},
+        queryParameters: queryParameters,
       );
 
       if (response.statusCode == 200) {
@@ -103,6 +116,7 @@ class DocumentService {
     required DocumentType type,
     required DocumentVisibility visibility,
     String? description,
+    String? elderUserId,
   }) async {
     _log('📤 Uploading document: $title');
     try {
@@ -121,6 +135,7 @@ class DocumentService {
         'type': _documentTypeToString(type),
         'visibility': _documentVisibilityToString(visibility),
         if (description != null) 'description': description,
+        if (elderUserId != null) 'elderUserId': elderUserId,
       });
 
       // Use Dio directly for multipart upload
@@ -185,10 +200,14 @@ class DocumentService {
   }
 
   // Delete document
-  Future<void> deleteDocument(String documentId) async {
+  Future<void> deleteDocument(String documentId, {String? elderUserId}) async {
     _log('🗑️ Deleting document: $documentId');
     try {
-      final response = await _apiService.delete('/documents/$documentId');
+      final response = await _apiService.delete(
+        '/documents/$documentId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         _log('✅ Document deleted successfully');
@@ -205,13 +224,16 @@ class DocumentService {
   // Share document with caregiver (update visibility)
   Future<DocumentModel> shareDocument(
     String documentId,
-    DocumentVisibility visibility,
-  ) async {
+    DocumentVisibility visibility, {
+    String? elderUserId,
+  }) async {
     _log('🔗 Sharing document: $documentId with visibility: $visibility');
     try {
       final response = await _apiService.patch(
         '/documents/$documentId/visibility',
         data: {'visibility': _documentVisibilityToString(visibility)},
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
       );
 
       if (response.statusCode == 200) {

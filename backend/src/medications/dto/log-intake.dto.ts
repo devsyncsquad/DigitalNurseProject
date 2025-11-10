@@ -9,6 +9,14 @@ export enum IntakeStatus {
 }
 
 export class LogIntakeDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required when caregiver)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ enum: IntakeStatus, example: IntakeStatus.TAKEN })
   @IsEnum(IntakeStatus)
   status!: IntakeStatus;

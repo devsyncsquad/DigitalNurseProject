@@ -14,6 +14,9 @@ import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/document_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/care_context_provider.dart';
+import '../../../core/models/care_recipient_model.dart';
+import '../../../core/models/user_model.dart';
 import '../widgets/adherence_streak_card.dart';
 import '../widgets/medicine_reminder_section.dart';
 import '../widgets/vitals_section.dart';
@@ -33,23 +36,67 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     super.initState();
     // Defer data loading until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      _loadData(force: true);
     });
   }
 
-  Future<void> _loadData() async {
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser?.id;
+  String? _lastLoadedContextKey;
 
-    if (userId != null) {
-      await Future.wait([
-        context.read<MedicationProvider>().loadMedicines(userId),
-        context.read<HealthProvider>().loadVitals(userId),
-        context.read<CaregiverProvider>().loadCaregivers(userId),
-        context.read<NotificationProvider>().loadNotifications(),
-        context.read<LifestyleProvider>().loadAll(userId),
-        context.read<DocumentProvider>().loadDocuments(userId),
-      ]);
+  Future<void> _loadData({bool force = false}) async {
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.currentUser;
+    final isCaregiver = currentUser?.role == UserRole.caregiver;
+
+    String? targetUserId = currentUser?.id;
+    String? elderUserId;
+
+    if (isCaregiver) {
+      final careContext = context.read<CareContextProvider>();
+      await careContext.ensureLoaded();
+      if (!mounted) {
+        return;
+      }
+      targetUserId = careContext.selectedElderId;
+      elderUserId = targetUserId;
+
+      if (targetUserId == null) {
+        setState(() {
+          _lastLoadedContextKey = null;
+        });
+        return;
+      }
+    }
+
+    if (targetUserId == null) {
+      return;
+    }
+
+    final contextKey = elderUserId ?? targetUserId;
+    if (!force && contextKey == _lastLoadedContextKey) {
+      return;
+    }
+
+    _lastLoadedContextKey = contextKey;
+
+    await Future.wait([
+      context
+          .read<MedicationProvider>()
+          .loadMedicines(targetUserId, elderUserId: elderUserId),
+      context
+          .read<HealthProvider>()
+          .loadVitals(targetUserId, elderUserId: elderUserId),
+      if (!isCaregiver)
+        context.read<CaregiverProvider>().loadCaregivers(targetUserId),
+      context.read<NotificationProvider>().loadNotifications(),
+      context
+          .read<LifestyleProvider>()
+          .loadAll(targetUserId, elderUserId: elderUserId),
+      context
+          .read<DocumentProvider>()
+          .loadDocuments(targetUserId, elderUserId: elderUserId),
+    ]);
+    if (!mounted) {
+      return;
     }
   }
 
@@ -108,21 +155,36 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final careContextProvider = context.watch<CareContextProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
 
     final user = authProvider.currentUser;
     final unreadNotifications = notificationProvider.unreadCount;
+    final isCaregiver = user?.role == UserRole.caregiver;
+    final careRecipients = careContextProvider.careRecipients;
+    final selectedRecipient = careContextProvider.selectedRecipient;
+
+    final headerTitle = isCaregiver
+        ? Text(
+            'Caregiver Dashboard',
+            style: context.theme.typography.xl.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          )
+        : Text(
+            'dashboard.hello'.tr(
+              namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()},
+            ),
+          );
 
     return FScaffold(
       header: FHeader(
-        title: Text('dashboard.hello'.tr(namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()})),
+        title: headerTitle,
         suffixes: [
-          // Language switcher
           FHeaderAction(
             icon: const Icon(FIcons.languages),
             onPress: () => _showLanguageDialog(context),
           ),
-          // Notifications
           FHeaderAction(
             icon: Stack(
               clipBehavior: Clip.none,
@@ -160,13 +222,25 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         ],
       ),
       child: RefreshIndicator(
-        onRefresh: _loadData,
+        onRefresh: () => _loadData(force: true),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Adherence Streak Card
+              if (isCaregiver) ...[
+                CareRecipientSelector(
+                  isLoading: careContextProvider.isLoading,
+                  recipients: careRecipients,
+                  selectedRecipient: selectedRecipient,
+                  error: careContextProvider.error,
+                  onSelect: (elderId) {
+                    careContextProvider.selectRecipient(elderId);
+                    _loadData(force: true);
+                  },
+                ),
+                SizedBox(height: 16.h),
+              ],
               Consumer<MedicationProvider>(
                 builder: (context, medicationProvider, child) {
                   return AdherenceStreakCard(
@@ -176,8 +250,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 },
               ),
               SizedBox(height: 24.h),
-
-              // Section Tiles
               const MedicineReminderSection(),
               SizedBox(height: 16.h),
               const VitalsSection(),
@@ -188,6 +260,148 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class CareRecipientSelector extends StatelessWidget {
+  final bool isLoading;
+  final List<CareRecipientModel> recipients;
+  final CareRecipientModel? selectedRecipient;
+  final String? error;
+  final ValueChanged<String> onSelect;
+
+  const CareRecipientSelector({
+    super.key,
+    required this.isLoading,
+    required this.recipients,
+    required this.selectedRecipient,
+    required this.error,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading && recipients.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: SizedBox(
+            height: 32,
+            width: 32,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(context.theme.colors.primary),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (error != null && recipients.isEmpty) {
+      final errorColor = AppTheme.getErrorColor(context);
+      return FCard(
+        style: (cardStyle) => cardStyle.copyWith(
+          decoration: cardStyle.decoration.copyWith(
+            border: Border.all(color: errorColor),
+            color: errorColor.withOpacity(0.08),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Unable to load assigned elders',
+              style: context.theme.typography.sm.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error!,
+              style: context.theme.typography.xs,
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (recipients.isEmpty) {
+      final highlightColor = context.theme.colors.primary;
+      return FCard(
+        style: (cardStyle) => cardStyle.copyWith(
+          decoration: cardStyle.decoration.copyWith(
+            border: Border.all(color: highlightColor),
+            color: highlightColor.withOpacity(0.08),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'No elders assigned yet',
+              style: context.theme.typography.sm.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Once an elder invites you as a caregiver, their profile will appear here.',
+              style: context.theme.typography.xs,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return FCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Managing care for',
+            style: context.theme.typography.xs.copyWith(
+              color: context.theme.colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: selectedRecipient?.elderId,
+            items: recipients
+                .map(
+                  (recipient) => DropdownMenuItem<String>(
+                    value: recipient.elderId,
+                    child: Text(
+                      recipient.name,
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                onSelect(value);
+              }
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          if (selectedRecipient?.relationship != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              selectedRecipient!.relationship!,
+              style: context.theme.typography.xs.copyWith(
+                color: context.theme.colors.mutedForeground,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

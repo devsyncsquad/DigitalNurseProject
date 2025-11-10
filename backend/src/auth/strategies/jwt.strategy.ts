@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export interface JwtPayload {
   sub: string;
   email: string;
+  role?: string;
 }
 
 @Injectable()
@@ -23,15 +24,36 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload) {
-    // Try to find user by email (since JWT payload uses email)
-    const user = await this.prisma.user.findFirst({
-      where: { email: payload.email },
+    const userId = BigInt(payload.sub);
+
+    const user = await this.prisma.user.findUnique({
+      where: { userId },
+      include: {
+        userRoles: {
+          include: { role: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    return user;
+    const dbRole = user.userRoles[0]?.role?.roleCode;
+    const activeRole = this.toClientRoleCode(payload.role || dbRole);
+
+    return {
+      ...user,
+      activeRoleCode: activeRole,
+    };
+  }
+
+  private toClientRoleCode(roleCode: string | undefined): string {
+    if (!roleCode) {
+      return 'patient';
+    }
+    return roleCode.toLowerCase();
   }
 }

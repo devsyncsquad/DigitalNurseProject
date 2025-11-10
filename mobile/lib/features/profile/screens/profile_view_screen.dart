@@ -19,6 +19,8 @@ class ProfileViewScreen extends StatelessWidget {
       return const FScaffold(child: Center(child: CircularProgressIndicator()));
     }
 
+    final isCaregiver = user.role == UserRole.caregiver;
+
     return FScaffold(
       header: FHeader(
         title: const Text('Profile'),
@@ -209,59 +211,61 @@ class ProfileViewScreen extends StatelessWidget {
                       },
                     ),
                     const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        FIcons.creditCard,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      title: Text(
-                        'Subscription',
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.foreground,
-                        ),
-                      ),
-                      subtitle: Text(
-                        user.subscriptionTier == SubscriptionTier.premium
-                            ? 'Manage your premium subscription'
-                            : 'Upgrade to Premium',
-                        style: context.theme.typography.xs.copyWith(
+                    if (!isCaregiver) ...[
+                      ListTile(
+                        leading: Icon(
+                          FIcons.creditCard,
                           color: context.theme.colors.mutedForeground,
                         ),
-                      ),
-                      trailing: Icon(
-                        FIcons.chevronsRight,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      onTap: () {
-                        context.push('/subscription-plans');
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        FIcons.users,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      title: Text(
-                        'Manage Caregivers',
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.foreground,
-                        ),
-                      ),
-                      trailing: Icon(
-                        FIcons.chevronsRight,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      onTap: () {
-                        // Navigate to caregiver list (would need a separate route)
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Navigate to Caregivers tab'),
+                        title: Text(
+                          'Subscription',
+                          style: context.theme.typography.sm.copyWith(
+                            color: context.theme.colors.foreground,
                           ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
+                        ),
+                        subtitle: Text(
+                          user.subscriptionTier == SubscriptionTier.premium
+                              ? 'Manage your premium subscription'
+                              : 'Upgrade to Premium',
+                          style: context.theme.typography.xs.copyWith(
+                            color: context.theme.colors.mutedForeground,
+                          ),
+                        ),
+                        trailing: Icon(
+                          FIcons.chevronsRight,
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                        onTap: () {
+                          context.push('/subscription-plans');
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          FIcons.users,
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                        title: Text(
+                          'Manage Caregivers',
+                          style: context.theme.typography.sm.copyWith(
+                            color: context.theme.colors.foreground,
+                          ),
+                        ),
+                        trailing: Icon(
+                          FIcons.chevronsRight,
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                        onTap: () {
+                          // Navigate to caregiver list (would need a separate route)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Navigate to Caregivers tab'),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1),
+                    ],
                     _ThemeSelectorTile(),
                     const Divider(height: 1),
                     ListTile(
@@ -308,7 +312,9 @@ class ProfileViewScreen extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(false),
                         child: Text(
                           'Cancel',
-                          style: TextStyle(color: context.theme.colors.foreground),
+                          style: TextStyle(
+                            color: context.theme.colors.foreground,
+                          ),
                         ),
                       ),
                       TextButton(

@@ -52,27 +52,35 @@ class CaregiverMapper {
     String phone = '';
     if (json['caregiver'] != null && json['caregiver'] is Map) {
       final caregiver = json['caregiver'] as Map<String, dynamic>;
-      name = caregiver['full_name']?.toString() ?? 
-             caregiver['name']?.toString() ?? '';
+      name =
+          caregiver['full_name']?.toString() ??
+          caregiver['name']?.toString() ??
+          '';
       phone = caregiver['phone']?.toString() ?? '';
     } else {
-      name = json['name']?.toString() ?? 
-             json['full_name']?.toString() ?? 
-             json['caregiverName']?.toString() ?? '';
+      name =
+          json['name']?.toString() ??
+          json['full_name']?.toString() ??
+          json['caregiverName']?.toString() ??
+          '';
       phone = json['phone']?.toString() ?? '';
     }
 
     return CaregiverModel(
-      id: json['id']?.toString() ?? 
-          json['elderAssignmentId']?.toString() ?? 
-          json['assignmentId']?.toString() ?? '',
+      id:
+          json['id']?.toString() ??
+          json['elderAssignmentId']?.toString() ??
+          json['assignmentId']?.toString() ??
+          '',
       name: name,
       phone: phone,
       status: status,
       relationship: json['relationship']?.toString(),
-      linkedPatientId: json['linkedPatientId']?.toString() ?? 
-                       json['elderUserId']?.toString() ?? 
-                       json['patientId']?.toString() ?? '',
+      linkedPatientId:
+          json['linkedPatientId']?.toString() ??
+          json['elderUserId']?.toString() ??
+          json['patientId']?.toString() ??
+          '',
       invitedAt: invitedAt,
       acceptedAt: acceptedAt,
     );
@@ -127,8 +135,8 @@ class CaregiverMapper {
     String phone = '';
     if (json['inviter'] != null && json['inviter'] is Map) {
       final inviter = json['inviter'] as Map<String, dynamic>;
-      name = inviter['full_name']?.toString() ?? 
-             inviter['name']?.toString() ?? '';
+      name =
+          inviter['full_name']?.toString() ?? inviter['name']?.toString() ?? '';
       phone = inviter['phone']?.toString() ?? '';
     } else {
       name = json['inviterName']?.toString() ?? '';
@@ -136,14 +144,15 @@ class CaregiverMapper {
     }
 
     return CaregiverModel(
-      id: json['id']?.toString() ?? 
-          json['invitationId']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['invitationId']?.toString() ?? '',
       name: name,
       phone: phone,
       status: status,
       relationship: json['relationship']?.toString(),
-      linkedPatientId: json['elderUserId']?.toString() ?? 
-                       json['patientId']?.toString() ?? '',
+      linkedPatientId:
+          json['elderUserId']?.toString() ??
+          json['patientId']?.toString() ??
+          '',
       invitedAt: invitedAt,
       acceptedAt: acceptedAt,
     );
@@ -154,12 +163,13 @@ class CaregiverMapper {
     required String email,
     String? phone,
     String? relationship,
+    String? name,
   }) {
     return {
       'email': email,
       if (phone != null) 'phone': phone,
       if (relationship != null) 'relationship': relationship,
+      if (name != null && name.isNotEmpty) 'name': name,
     };
   }
 }
-

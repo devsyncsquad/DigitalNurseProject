@@ -41,6 +41,14 @@ export class ReminderTimeDto {
 }
 
 export class CreateMedicationDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required when caregiver)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ example: 'Aspirin', description: 'Medicine name' })
   @IsString()
   @IsNotEmpty()

@@ -17,100 +17,127 @@ import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { LogIntakeDto } from './dto/log-intake.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AccessControlService } from '../common/services/access-control.service';
 
 @ApiTags('Medications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('medications')
 export class MedicationsController {
-  constructor(private readonly medicationsService: MedicationsService) {}
+  constructor(
+    private readonly medicationsService: MedicationsService,
+    private readonly accessControlService: AccessControlService,
+  ) {}
+
+  private async resolveContext(user: any, elderUserId?: string) {
+    return this.accessControlService.resolveActorContext(user, elderUserId);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new medication' })
   @ApiResponse({ status: 201, description: 'Medication created successfully' })
-  create(@CurrentUser() user: any, @Body() createDto: CreateMedicationDto) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.create(userId, createDto);
+  async create(@CurrentUser() user: any, @Body() createDto: CreateMedicationDto) {
+    const context = await this.resolveContext(user, createDto.elderUserId);
+    return this.medicationsService.create(context, createDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all medications for the current user' })
   @ApiResponse({ status: 200, description: 'List of medications' })
-  findAll(@CurrentUser() user: any) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.findAll(userId);
+  async findAll(
+    @CurrentUser() user: any,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.findAll(context);
   }
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming medication reminders' })
   @ApiResponse({ status: 200, description: 'List of upcoming reminders' })
-  getUpcomingReminders(@CurrentUser() user: any) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.getUpcomingReminders(userId);
+  async getUpcomingReminders(
+    @CurrentUser() user: any,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.getUpcomingReminders(context);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a medication by ID' })
   @ApiResponse({ status: 200, description: 'Medication details' })
   @ApiResponse({ status: 404, description: 'Medication not found' })
-  findOne(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.findOne(userId, BigInt(id));
+  async findOne(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.findOne(context, BigInt(id));
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a medication' })
   @ApiResponse({ status: 200, description: 'Medication updated successfully' })
   @ApiResponse({ status: 404, description: 'Medication not found' })
-  update(
+  async update(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: string,
     @Body() updateDto: UpdateMedicationDto,
   ) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.update(userId, BigInt(id), updateDto);
+    const context = await this.resolveContext(user, updateDto.elderUserId);
+    return this.medicationsService.update(context, BigInt(id), updateDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a medication' })
   @ApiResponse({ status: 200, description: 'Medication deleted successfully' })
   @ApiResponse({ status: 404, description: 'Medication not found' })
-  remove(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.remove(userId, BigInt(id));
+  async remove(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.remove(context, BigInt(id));
   }
 
   @Get(':id/intakes')
   @ApiOperation({ summary: 'Get intake history for a medication' })
   @ApiResponse({ status: 200, description: 'List of intakes' })
-  getIntakeHistory(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.getIntakeHistory(userId, BigInt(id));
+  async getIntakeHistory(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.getIntakeHistory(context, BigInt(id));
   }
 
   @Post(':id/intakes')
   @ApiOperation({ summary: 'Log medication intake' })
   @ApiResponse({ status: 201, description: 'Intake logged successfully' })
-  logIntake(
+  async logIntake(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: string,
     @Body() logDto: LogIntakeDto,
   ) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.logIntake(userId, BigInt(id), logDto);
+    const context = await this.resolveContext(user, logDto.elderUserId);
+    return this.medicationsService.logIntake(context, BigInt(id), logDto);
   }
 
   @Get(':id/adherence')
   @ApiOperation({ summary: 'Get medication adherence percentage' })
   @ApiResponse({ status: 200, description: 'Adherence percentage' })
-  getAdherence(
+  async getAdherence(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: string,
     @Query('days') days?: string,
+    @Query('elderUserId') elderUserId?: string,
   ) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    const context = await this.resolveContext(user, elderUserId);
     return this.medicationsService.getAdherence(
-      userId,
+      context,
       BigInt(id),
       days ? parseInt(days, 10) : 7,
     );
@@ -119,9 +146,13 @@ export class MedicationsController {
   @Get(':id/streak')
   @ApiOperation({ summary: 'Get medication adherence streak' })
   @ApiResponse({ status: 200, description: 'Adherence streak' })
-  getAdherenceStreak(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.medicationsService.getAdherenceStreak(userId, BigInt(id));
+  async getAdherenceStreak(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.medicationsService.getAdherenceStreak(context, BigInt(id));
   }
 }
 

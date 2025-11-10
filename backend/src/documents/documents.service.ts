@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDocumentDto, DocumentType, DocumentVisibility } from './dto/create-document.dto';
+import { ActorContext } from '../common/services/access-control.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -30,19 +31,19 @@ export class DocumentsService {
   /**
    * Create document
    */
-  async create(userId: bigint, createDto: CreateDocumentDto, file: any) {
-    const filePath = await this.saveFile(file, userId);
+  async create(context: ActorContext, createDto: CreateDocumentDto, file: any) {
+    const filePath = await this.saveFile(file, context.elderUserId);
     const fileType = file.mimetype || path.extname(file.originalname).substring(1);
 
     const document = await this.prisma.userDocument.create({
       data: {
-        userId,
+        userId: context.elderUserId,
         documentType: createDto.type,
         title: createDto.title,
         description: createDto.description || null,
         filePath,
         fileType,
-        uploadedBy: userId,
+        uploadedBy: context.actorUserId,
         visibility: createDto.visibility || DocumentVisibility.PRIVATE,
       },
     });
@@ -53,8 +54,8 @@ export class DocumentsService {
   /**
    * Find all documents for a user
    */
-  async findAll(userId: bigint, type?: DocumentType) {
-    const where: any = { userId };
+  async findAll(context: ActorContext, type?: DocumentType) {
+    const where: any = { userId: context.elderUserId };
     if (type) {
       where.documentType = type;
     }
@@ -72,11 +73,11 @@ export class DocumentsService {
   /**
    * Find one document by ID
    */
-  async findOne(userId: bigint, documentId: bigint) {
+  async findOne(context: ActorContext, documentId: bigint) {
     const document = await this.prisma.userDocument.findFirst({
       where: {
         documentId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -90,11 +91,11 @@ export class DocumentsService {
   /**
    * Get document file
    */
-  async getFile(userId: bigint, documentId: bigint) {
+  async getFile(context: ActorContext, documentId: bigint) {
     const document = await this.prisma.userDocument.findFirst({
       where: {
         documentId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -116,11 +117,15 @@ export class DocumentsService {
   /**
    * Update document metadata
    */
-  async update(userId: bigint, documentId: bigint, updateDto: Partial<CreateDocumentDto>) {
+  async update(
+    context: ActorContext,
+    documentId: bigint,
+    updateDto: Partial<CreateDocumentDto>,
+  ) {
     const document = await this.prisma.userDocument.findFirst({
       where: {
         documentId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -145,11 +150,15 @@ export class DocumentsService {
   /**
    * Update document visibility
    */
-  async updateVisibility(userId: bigint, documentId: bigint, visibility: DocumentVisibility) {
+  async updateVisibility(
+    context: ActorContext,
+    documentId: bigint,
+    visibility: DocumentVisibility,
+  ) {
     const document = await this.prisma.userDocument.findFirst({
       where: {
         documentId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -168,11 +177,11 @@ export class DocumentsService {
   /**
    * Delete document
    */
-  async remove(userId: bigint, documentId: bigint) {
+  async remove(context: ActorContext, documentId: bigint) {
     const document = await this.prisma.userDocument.findFirst({
       where: {
         documentId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 

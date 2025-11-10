@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVitalDto, VitalType } from './dto/create-vital.dto';
 import { UpdateVitalDto } from './dto/update-vital.dto';
+import { ActorContext } from '../common/services/access-control.service';
 
 @Injectable()
 export class VitalsService {
@@ -96,13 +97,13 @@ export class VitalsService {
   /**
    * Create vital measurement
    */
-  async create(userId: bigint, createDto: CreateVitalDto) {
+  async create(context: ActorContext, createDto: CreateVitalDto) {
     const { type, value, timestamp, notes } = createDto;
     const { value1, value2, valueText } = this.parseValue(type, value);
 
     const measurement = await this.prisma.vitalMeasurement.create({
       data: {
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
         kindCode: this.typeToKindCode(type),
         unitCode: this.getUnitCode(type),
         value1: value1,
@@ -111,7 +112,7 @@ export class VitalsService {
         recordedAt: new Date(timestamp),
         source: 'manual',
         notes: notes || null,
-        recordedByUserId: userId,
+        recordedByUserId: context.actorUserId,
       },
     });
 
@@ -121,9 +122,14 @@ export class VitalsService {
   /**
    * Find all vitals for a user
    */
-  async findAll(userId: bigint, type?: VitalType, startDate?: Date, endDate?: Date) {
+  async findAll(
+    context: ActorContext,
+    type?: VitalType,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
     const where: any = {
-      elderUserId: userId,
+      elderUserId: context.elderUserId,
     };
 
     if (type) {
@@ -149,11 +155,11 @@ export class VitalsService {
   /**
    * Find one vital by ID
    */
-  async findOne(userId: bigint, vitalId: bigint) {
+  async findOne(context: ActorContext, vitalId: bigint) {
     const measurement = await this.prisma.vitalMeasurement.findFirst({
       where: {
         vitalMeasurementId: vitalId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -167,11 +173,11 @@ export class VitalsService {
   /**
    * Update vital measurement
    */
-  async update(userId: bigint, vitalId: bigint, updateDto: UpdateVitalDto) {
+  async update(context: ActorContext, vitalId: bigint, updateDto: UpdateVitalDto) {
     const measurement = await this.prisma.vitalMeasurement.findFirst({
       where: {
         vitalMeasurementId: vitalId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -213,11 +219,11 @@ export class VitalsService {
   /**
    * Delete vital measurement
    */
-  async remove(userId: bigint, vitalId: bigint) {
+  async remove(context: ActorContext, vitalId: bigint) {
     const measurement = await this.prisma.vitalMeasurement.findFirst({
       where: {
         vitalMeasurementId: vitalId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -235,11 +241,11 @@ export class VitalsService {
   /**
    * Get latest vitals per kind (use database view)
    */
-  async getLatest(userId: bigint) {
+  async getLatest(context: ActorContext) {
     // Use raw query to access the view
     const results = await this.prisma.$queryRaw`
       SELECT * FROM "v_vitals_latest_per_kind"
-      WHERE "elderUserId" = ${userId}
+      WHERE "elderUserId" = ${context.elderUserId}
     `;
 
     return (results as any[]).map((r) => this.mapToResponse(r));
@@ -248,11 +254,11 @@ export class VitalsService {
   /**
    * Get 7-day trends (use database view)
    */
-  async getTrends(userId: bigint, kindCode?: string) {
+  async getTrends(context: ActorContext, kindCode?: string) {
     if (kindCode) {
       const results = await this.prisma.$queryRaw`
         SELECT * FROM "v_vitals_trend_7d"
-        WHERE "elderUserId" = ${userId}::bigint
+        WHERE "elderUserId" = ${context.elderUserId}::bigint
         AND "kindCode" = ${kindCode}
       `;
       return (results as any[]).map((r) => ({
@@ -264,7 +270,7 @@ export class VitalsService {
     } else {
       const results = await this.prisma.$queryRaw`
         SELECT * FROM "v_vitals_trend_7d"
-        WHERE "elderUserId" = ${userId}::bigint
+        WHERE "elderUserId" = ${context.elderUserId}::bigint
       `;
       return (results as any[]).map((r) => ({
         kindCode: r.kindCode,
@@ -278,10 +284,10 @@ export class VitalsService {
   /**
    * Get abnormal readings
    */
-  async getAbnormal(userId: bigint) {
+  async getAbnormal(context: ActorContext) {
     const measurements = await this.prisma.vitalMeasurement.findMany({
       where: {
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       orderBy: {
         recordedAt: 'desc',

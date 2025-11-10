@@ -17,6 +17,18 @@ export class CaregiversService {
    * Get all caregivers (elder assignments) for a user
    */
   async findAll(userId: bigint) {
+    const roles = await this.prisma.userRole.findMany({
+      where: { userId },
+      include: { role: true },
+    });
+    const normalizedRoles = roles.map((userRole) => userRole.role.roleCode.toLowerCase());
+    const hasCaregiverRole = normalizedRoles.includes('caregiver');
+    const hasPatientRole = normalizedRoles.includes('patient');
+
+    if (hasCaregiverRole && !hasPatientRole) {
+      return this.findAssignmentsForCaregiver(userId);
+    }
+
     const assignments = await this.prisma.elderAssignment.findMany({
       where: {
         elderUserId: userId,
@@ -41,6 +53,42 @@ export class CaregiversService {
       name: assignment.caregiverUser.full_name,
       phone: assignment.caregiverUser.phone || '',
       status: 'accepted' as const,
+      relationship: assignment.relationshipCode,
+      linkedPatientId: assignment.elderUserId.toString(),
+      invitedAt: assignment.createdAt.toISOString(),
+      acceptedAt: assignment.createdAt.toISOString(),
+    }));
+  }
+
+  /**
+   * Get all elder assignments for a caregiver user
+   */
+  async findAssignmentsForCaregiver(userId: bigint) {
+    const assignments = await this.prisma.elderAssignment.findMany({
+      where: {
+        caregiverUserId: userId,
+      },
+      include: {
+        elderUser: {
+          select: {
+            userId: true,
+            full_name: true,
+            phone: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return assignments.map((assignment) => ({
+      id: assignment.elderAssignmentId.toString(),
+      elderId: assignment.elderUser.userId.toString(),
+      elderName: assignment.elderUser.full_name,
+      elderPhone: assignment.elderUser.phone || '',
+      elderEmail: assignment.elderUser.email || '',
       relationship: assignment.relationshipCode,
       linkedPatientId: assignment.elderUserId.toString(),
       invitedAt: assignment.createdAt.toISOString(),

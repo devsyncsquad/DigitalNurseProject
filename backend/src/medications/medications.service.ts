@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMedicationDto, MedicineFrequency } from './dto/create-medication.dto';
 import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { LogIntakeDto, IntakeStatus } from './dto/log-intake.dto';
+import { ActorContext } from '../common/services/access-control.service';
 
 @Injectable()
 export class MedicationsService {
@@ -55,7 +56,7 @@ export class MedicationsService {
   /**
    * Create medication with schedule
    */
-  async create(userId: bigint, createDto: CreateMedicationDto) {
+  async create(context: ActorContext, createDto: CreateMedicationDto) {
     try {
       const { reminderTimes, frequency, periodicDays, startDate, endDate, ...medicationData } =
         createDto;
@@ -87,14 +88,14 @@ export class MedicationsService {
       // Create medication with schedule
       const medication = await this.prisma.medication.create({
         data: {
-          elderUserId: userId,
+          elderUserId: context.elderUserId,
           medicationName: medicationData.name,
           doseValue: doseValue,
           doseUnitCode: doseUnitCode,
           formCode: medicationData.medicineForm || null,
           instructions: medicationData.dosage,
           notes: medicationData.notes || null,
-          createdByUserId: userId,
+          createdByUserId: context.actorUserId,
           schedules: {
             create: {
               timezone: 'Asia/Karachi',
@@ -126,10 +127,10 @@ export class MedicationsService {
   /**
    * Find all medications for a user
    */
-  async findAll(userId: bigint) {
+  async findAll(context: ActorContext) {
     const medications = await this.prisma.medication.findMany({
       where: {
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       include: {
         schedules: {
@@ -144,17 +145,17 @@ export class MedicationsService {
       },
     });
 
-    return medications.map((med) => this.mapToResponse(med));
+    return medications.map((medication: any) => this.mapToResponse(medication));
   }
 
   /**
    * Find one medication by ID
    */
-  async findOne(userId: bigint, medicationId: bigint) {
+  async findOne(context: ActorContext, medicationId: bigint) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       include: {
         schedules: {
@@ -175,11 +176,11 @@ export class MedicationsService {
   /**
    * Update medication
    */
-  async update(userId: bigint, medicationId: bigint, updateDto: UpdateMedicationDto) {
+  async update(context: ActorContext, medicationId: bigint, updateDto: UpdateMedicationDto) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       include: {
         schedules: true,
@@ -190,21 +191,18 @@ export class MedicationsService {
       throw new NotFoundException('Medication not found');
     }
 
-    const { reminderTimes, frequency, periodicDays, startDate, endDate, ...medicationData } =
-      updateDto;
-
     // Update medication
     const updateData: any = {};
-    if (medicationData.name) updateData.medicationName = medicationData.name;
-    if (medicationData.dosage) updateData.instructions = medicationData.dosage;
-    if (medicationData.notes !== undefined) updateData.notes = medicationData.notes;
-    if (medicationData.medicineForm) updateData.formCode = medicationData.medicineForm;
+    if (updateDto.name) updateData.medicationName = updateDto.name;
+    if (updateDto.dosage) updateData.instructions = updateDto.dosage;
+    if (updateDto.notes !== undefined) updateData.notes = updateDto.notes;
+    if (updateDto.medicineForm) updateData.formCode = updateDto.medicineForm;
 
     // Parse dose value
-    if (medicationData.doseAmount) {
+    if (updateDto.doseAmount) {
       try {
         // Convert to string if it's not already (handles number input)
-        const doseAmountStr = String(medicationData.doseAmount).trim();
+        const doseAmountStr = String(updateDto.doseAmount).trim();
         if (doseAmountStr) {
           const match = doseAmountStr.match(/(\d+(?:\.\d+)?)/);
           if (match) {
@@ -218,9 +216,9 @@ export class MedicationsService {
     }
 
     // Handle strength field update - only set unit code if strength is provided and not empty
-    if (medicationData.strength !== undefined) {
+    if (updateDto.strength !== undefined) {
       updateData.doseUnitCode =
-        medicationData.strength && String(medicationData.strength).trim() ? 'mg' : null;
+        updateDto.strength && String(updateDto.strength).trim() ? 'mg' : null;
     }
 
     const updated = await this.prisma.medication.update({
@@ -232,22 +230,33 @@ export class MedicationsService {
     });
 
     // Update or create schedule if schedule data provided
-    if (reminderTimes || frequency || startDate !== undefined) {
+    if (
+      updateDto.reminderTimes ||
+      updateDto.frequency ||
+      updateDto.startDate !== undefined
+    ) {
       const latestSchedule = medication.schedules[0];
       if (latestSchedule) {
         // Update existing schedule
         await this.prisma.medSchedule.update({
           where: { medScheduleId: latestSchedule.medScheduleId },
           data: {
-            startDate: startDate ? new Date(startDate) : latestSchedule.startDate,
-            endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : latestSchedule.endDate,
+            startDate: updateDto.startDate
+              ? new Date(updateDto.startDate)
+              : latestSchedule.startDate,
+            endDate:
+              updateDto.endDate !== undefined
+                ? updateDto.endDate
+                  ? new Date(updateDto.endDate)
+                  : null
+                : latestSchedule.endDate,
             daysMask:
-              frequency !== undefined
-                ? this.frequencyToDaysMask(frequency, periodicDays)
+              updateDto.frequency !== undefined
+                ? this.frequencyToDaysMask(updateDto.frequency, updateDto.periodicDays)
                 : latestSchedule.daysMask,
             timesLocal:
-              reminderTimes !== undefined
-                ? (this.reminderTimesToJson(reminderTimes) as any)
+              updateDto.reminderTimes !== undefined
+                ? (this.reminderTimesToJson(updateDto.reminderTimes) as any)
                 : latestSchedule.timesLocal,
           },
         });
@@ -257,33 +266,33 @@ export class MedicationsService {
           data: {
             medicationId,
             timezone: 'Asia/Karachi',
-            startDate: startDate ? new Date(startDate) : new Date(),
-            endDate: endDate ? new Date(endDate) : null,
+            startDate: updateDto.startDate ? new Date(updateDto.startDate) : new Date(),
+            endDate: updateDto.endDate ? new Date(updateDto.endDate) : null,
             daysMask:
-              frequency !== undefined
-                ? this.frequencyToDaysMask(frequency, periodicDays)
+              updateDto.frequency !== undefined
+                ? this.frequencyToDaysMask(updateDto.frequency, updateDto.periodicDays)
                 : 127,
             timesLocal:
-              reminderTimes !== undefined
-                ? (this.reminderTimesToJson(reminderTimes) as any)
+              updateDto.reminderTimes !== undefined
+                ? (this.reminderTimesToJson(updateDto.reminderTimes) as any)
                 : ([] as any),
-            isPrn: frequency === MedicineFrequency.AS_NEEDED,
+            isPrn: updateDto.frequency === MedicineFrequency.AS_NEEDED,
           },
         });
       }
     }
 
-    return this.findOne(userId, medicationId);
+    return this.findOne(context, medicationId);
   }
 
   /**
    * Delete medication
    */
-  async remove(userId: bigint, medicationId: bigint) {
+  async remove(context: ActorContext, medicationId: bigint) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -301,11 +310,11 @@ export class MedicationsService {
   /**
    * Get intake history for a medication
    */
-  async getIntakeHistory(userId: bigint, medicationId: bigint) {
+  async getIntakeHistory(context: ActorContext, medicationId: bigint) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -327,7 +336,7 @@ export class MedicationsService {
       },
     });
 
-    return intakes.map((intake) => ({
+    return intakes.map((intake: any) => ({
       id: intake.intakeId.toString(),
       medicationId: medicationId.toString(),
       scheduledTime: intake.dueAt.toISOString(),
@@ -339,11 +348,15 @@ export class MedicationsService {
   /**
    * Log medication intake
    */
-  async logIntake(userId: bigint, medicationId: bigint, logDto: LogIntakeDto) {
+  async logIntake(
+    context: ActorContext,
+    medicationId: bigint,
+    logDto: LogIntakeDto,
+  ) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       include: {
         schedules: {
@@ -401,7 +414,7 @@ export class MedicationsService {
           status: logDto.status,
           takenAt: logDto.status === IntakeStatus.TAKEN ? (logDto.takenTime ? new Date(logDto.takenTime) : new Date()) : null,
           notes: logDto.notes || null,
-          recordedByUserId: userId,
+          recordedByUserId: context.actorUserId,
         },
       });
 
@@ -418,11 +431,15 @@ export class MedicationsService {
   /**
    * Get adherence percentage
    */
-  async getAdherence(userId: bigint, medicationId: bigint, days: number = 7) {
+  async getAdherence(
+    context: ActorContext,
+    medicationId: bigint,
+    days: number = 7,
+  ) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -448,7 +465,7 @@ export class MedicationsService {
       return { percentage: 100, total: 0, taken: 0 };
     }
 
-    const taken = intakes.filter((i) => i.status === 'taken').length;
+    const taken = intakes.filter((intake: any) => intake.status === 'taken').length;
     const percentage = (taken / intakes.length) * 100;
 
     return {
@@ -461,11 +478,11 @@ export class MedicationsService {
   /**
    * Get adherence streak
    */
-  async getAdherenceStreak(userId: bigint, medicationId: bigint) {
+  async getAdherenceStreak(context: ActorContext, medicationId: bigint) {
     const medication = await this.prisma.medication.findFirst({
       where: {
         medicationId,
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
     });
 
@@ -498,7 +515,7 @@ export class MedicationsService {
       const checkDate = new Date(today);
       checkDate.setDate(checkDate.getDate() - i);
 
-      const dayIntakes = intakes.filter((intake) => {
+      const dayIntakes = intakes.filter((intake: any) => {
         const intakeDate = new Date(intake.dueAt);
         return (
           intakeDate.getFullYear() === checkDate.getFullYear() &&
@@ -516,7 +533,7 @@ export class MedicationsService {
         continue;
       }
 
-      const allTaken = dayIntakes.every((intake) => intake.status === 'taken');
+      const allTaken = dayIntakes.every((intake: any) => intake.status === 'taken');
       if (allTaken) {
         streak++;
       } else if (i > 0) {
@@ -530,10 +547,10 @@ export class MedicationsService {
   /**
    * Get upcoming reminders
    */
-  async getUpcomingReminders(userId: bigint) {
+  async getUpcomingReminders(context: ActorContext) {
     const medications = await this.prisma.medication.findMany({
       where: {
-        elderUserId: userId,
+        elderUserId: context.elderUserId,
       },
       include: {
         schedules: {

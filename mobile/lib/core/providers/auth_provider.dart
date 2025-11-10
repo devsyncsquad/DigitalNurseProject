@@ -53,6 +53,9 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String confirmPassword,
+    required UserRole role,
+    String? phone,
+    String? caregiverInviteCode,
   }) async {
     _isLoading = true;
     _error = null;
@@ -66,6 +69,9 @@ class AuthProvider with ChangeNotifier {
         email: email,
         password: password,
         confirmPassword: confirmPassword,
+        role: role,
+        phone: phone,
+        caregiverInviteCode: caregiverInviteCode,
       );
       _isLoading = false;
       notifyListeners();
@@ -112,6 +118,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       _currentUser = await _authService.updateProfile(
+        age: age,
         phoneNumber: phone,
         medicalConditions: medicalConditions,
         emergencyContact: emergencyContact,
@@ -164,12 +171,12 @@ class AuthProvider with ChangeNotifier {
   // Extract user-friendly error message
   String _extractErrorMessage(dynamic error) {
     final errorString = error.toString();
-    
+
     // Remove "Exception: " prefix if present
     if (errorString.startsWith('Exception: ')) {
       return errorString.substring(11);
     }
-    
+
     // Handle common error patterns
     if (errorString.contains('Conflict:')) {
       return errorString.split('Conflict:').last.trim();
@@ -180,7 +187,7 @@ class AuthProvider with ChangeNotifier {
     if (errorString.contains('Bad request:')) {
       return errorString.split('Bad request:').last.trim();
     }
-    
+
     return errorString;
   }
 }

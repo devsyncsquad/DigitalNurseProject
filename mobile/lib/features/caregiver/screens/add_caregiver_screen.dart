@@ -16,12 +16,14 @@ class AddCaregiverScreen extends StatefulWidget {
 
 class _AddCaregiverScreenState extends State<AddCaregiverScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
   final _relationshipController = TextEditingController();
 
   @override
   void dispose() {
+    _emailController.dispose();
     _phoneController.dispose();
     _nameController.dispose();
     _relationshipController.dispose();
@@ -31,12 +33,37 @@ class _AddCaregiverScreenState extends State<AddCaregiverScreen> {
   Future<void> _handleAdd() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Enter a valid email address'),
+          backgroundColor: AppTheme.getErrorColor(context),
+        ),
+      );
+      return;
+    }
+
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Phone number is required'),
+          backgroundColor: AppTheme.getErrorColor(context),
+        ),
+      );
+      return;
+    }
+
     final authProvider = context.read<AuthProvider>();
     final patientId = authProvider.currentUser!.id;
 
-    final caregiver = await context.read<CaregiverProvider>().addCaregiver(
+    final invitation = await context.read<CaregiverProvider>().inviteCaregiver(
       patientId: patientId,
-      phone: _phoneController.text.trim(),
+      email: email,
+      phone: phone,
       name: _nameController.text.trim().isEmpty
           ? null
           : _nameController.text.trim(),
@@ -45,21 +72,37 @@ class _AddCaregiverScreenState extends State<AddCaregiverScreen> {
           : _relationshipController.text.trim(),
     );
 
-    if (mounted) {
-      if (caregiver != null) {
-        _showInvitationSentDialog(caregiver.id);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to add caregiver'),
-            backgroundColor: AppTheme.getErrorColor(context),
-          ),
-        );
-      }
+    if (!mounted) return;
+
+    if (invitation != null) {
+      _showInvitationSentDialog(invitation);
+    } else {
+      final error = context.read<CaregiverProvider>().error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error ?? 'Failed to send invitation'),
+          backgroundColor: AppTheme.getErrorColor(context),
+        ),
+      );
     }
   }
 
-  void _showInvitationSentDialog(String caregiverId) {
+  void _showInvitationSentDialog(Map<String, dynamic> invitation) {
+    final inviteCode =
+        invitation['inviteCode']?.toString() ?? invitation['code']?.toString();
+    final inviteLink = inviteCode != null && inviteCode.isNotEmpty
+        ? 'https://digitalnurse.app/invite/$inviteCode'
+        : null;
+    final expiresAtRaw = invitation['expiresAt'] ?? invitation['expires_at'];
+    DateTime? expiresAt;
+    if (expiresAtRaw != null) {
+      try {
+        expiresAt = DateTime.parse(expiresAtRaw.toString());
+      } catch (_) {
+        expiresAt = null;
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -69,22 +112,33 @@ class _AddCaregiverScreenState extends State<AddCaregiverScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'An invitation has been sent via SMS to the provided phone number.',
+              'An invitation has been sent to the caregiver. Share the link below so they can join and accept.',
             ),
             const SizedBox(height: 16),
-            const Text('Shareable Link:'),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.theme.colors.muted,
-                borderRadius: BorderRadius.circular(8),
+            if (inviteLink != null) ...[
+              const Text('Shareable Link:'),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.theme.colors.muted,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SelectableText(
+                  inviteLink,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
-              child: SelectableText(
-                'https://digitalnurse.app/invite/$caregiverId',
-                style: const TextStyle(fontSize: 12),
+            ],
+            if (expiresAt != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Expires: ${expiresAt.toLocal()}',
+                style: context.theme.typography.xs.copyWith(
+                  color: context.theme.colors.mutedForeground,
+                ),
               ),
-            ),
+            ],
           ],
         ),
         actions: [
@@ -120,6 +174,14 @@ class _AddCaregiverScreenState extends State<AddCaregiverScreen> {
                   style: context.theme.typography.base,
                 ),
                 SizedBox(height: 24.h),
+
+                FTextField(
+                  controller: _emailController,
+                  label: const Text('Email'),
+                  hint: 'caregiver@example.com',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                SizedBox(height: 16.h),
 
                 FTextField(
                   controller: _phoneController,

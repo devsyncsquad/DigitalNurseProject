@@ -16,20 +16,28 @@ import { CreateVitalDto, VitalType } from './dto/create-vital.dto';
 import { UpdateVitalDto } from './dto/update-vital.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AccessControlService } from '../common/services/access-control.service';
 
 @ApiTags('Vitals')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('vitals')
 export class VitalsController {
-  constructor(private readonly vitalsService: VitalsService) {}
+  constructor(
+    private readonly vitalsService: VitalsService,
+    private readonly accessControlService: AccessControlService,
+  ) {}
+
+  private async resolveContext(user: any, elderUserId?: string) {
+    return this.accessControlService.resolveActorContext(user, elderUserId);
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new vital measurement' })
   @ApiResponse({ status: 201, description: 'Vital measurement created successfully' })
-  create(@CurrentUser() user: any, @Body() createDto: CreateVitalDto) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.create(userId, createDto);
+  async create(@CurrentUser() user: any, @Body() createDto: CreateVitalDto) {
+    const context = await this.resolveContext(user, createDto.elderUserId);
+    return this.vitalsService.create(context, createDto);
   }
 
   @Get()
@@ -37,16 +45,18 @@ export class VitalsController {
   @ApiQuery({ name: 'type', enum: VitalType, required: false })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'elderUserId', required: false, type: String })
   @ApiResponse({ status: 200, description: 'List of vital measurements' })
-  findAll(
+  async findAll(
     @CurrentUser() user: any,
     @Query('type') type?: VitalType,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('elderUserId') elderUserId?: string,
   ) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    const context = await this.resolveContext(user, elderUserId);
     return this.vitalsService.findAll(
-      userId,
+      context,
       type,
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
@@ -56,57 +66,76 @@ export class VitalsController {
   @Get('latest')
   @ApiOperation({ summary: 'Get latest vital measurements per kind' })
   @ApiResponse({ status: 200, description: 'Latest vital measurements' })
-  getLatest(@CurrentUser() user: any) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.getLatest(userId);
+  async getLatest(
+    @CurrentUser() user: any,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.vitalsService.getLatest(context);
   }
 
   @Get('trends')
   @ApiOperation({ summary: 'Get 7-day trends for vital measurements' })
   @ApiQuery({ name: 'kindCode', required: false, type: String })
+  @ApiQuery({ name: 'elderUserId', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Trend data' })
-  getTrends(@CurrentUser() user: any, @Query('kindCode') kindCode?: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.getTrends(userId, kindCode);
+  async getTrends(
+    @CurrentUser() user: any,
+    @Query('kindCode') kindCode?: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.vitalsService.getTrends(context, kindCode);
   }
 
   @Get('abnormal')
   @ApiOperation({ summary: 'Get abnormal vital readings' })
   @ApiResponse({ status: 200, description: 'List of abnormal readings' })
-  getAbnormal(@CurrentUser() user: any) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.getAbnormal(userId);
+  async getAbnormal(
+    @CurrentUser() user: any,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.vitalsService.getAbnormal(context);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a vital measurement by ID' })
   @ApiResponse({ status: 200, description: 'Vital measurement details' })
   @ApiResponse({ status: 404, description: 'Vital measurement not found' })
-  findOne(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.findOne(userId, BigInt(id));
+  async findOne(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.vitalsService.findOne(context, BigInt(id));
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a vital measurement' })
   @ApiResponse({ status: 200, description: 'Vital measurement updated successfully' })
   @ApiResponse({ status: 404, description: 'Vital measurement not found' })
-  update(
+  async update(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: string,
     @Body() updateDto: UpdateVitalDto,
   ) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.update(userId, BigInt(id), updateDto);
+    const context = await this.resolveContext(user, updateDto.elderUserId);
+    return this.vitalsService.update(context, BigInt(id), updateDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a vital measurement' })
   @ApiResponse({ status: 200, description: 'Vital measurement deleted successfully' })
   @ApiResponse({ status: 404, description: 'Vital measurement not found' })
-  remove(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: string) {
-    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
-    return this.vitalsService.remove(userId, BigInt(id));
+  async remove(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    return this.vitalsService.remove(context, BigInt(id));
   }
 }
 

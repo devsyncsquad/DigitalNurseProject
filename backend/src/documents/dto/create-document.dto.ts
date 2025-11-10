@@ -18,6 +18,14 @@ export enum DocumentVisibility {
 }
 
 export class CreateDocumentDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required when caregiver)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ example: 'Blood Test Results', description: 'Document title' })
   @IsString()
   @IsNotEmpty()

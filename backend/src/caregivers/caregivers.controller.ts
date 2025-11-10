@@ -29,6 +29,14 @@ export class CaregiversController {
     return this.caregiversService.findAll(userId);
   }
 
+  @Get('assignments')
+  @ApiOperation({ summary: 'Get all elder assignments for the current caregiver user' })
+  @ApiResponse({ status: 200, description: 'List of caregiver assignments' })
+  getAssignments(@CurrentUser() user: any) {
+    const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
+    return this.caregiversService.findAssignmentsForCaregiver(userId);
+  }
+
   @Post('invitations')
   @ApiOperation({ summary: 'Send caregiver invitation' })
   @ApiResponse({ status: 201, description: 'Invitation sent successfully' })

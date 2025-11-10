@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDietLogDto } from './dto/create-diet-log.dto';
 import { CreateExerciseLogDto } from './dto/create-exercise-log.dto';
+import { ActorContext } from '../common/services/access-control.service';
 
 @Injectable()
 export class LifestyleService {
@@ -11,10 +12,10 @@ export class LifestyleService {
   // Diet Log Methods
   // ============================================
 
-  async createDietLog(userId: bigint, createDto: CreateDietLogDto) {
+  async createDietLog(context: ActorContext, createDto: CreateDietLogDto) {
     const dietLog = await this.prisma.dietLog.create({
       data: {
-        userId,
+        userId: context.elderUserId,
         logDate: new Date(createDto.logDate),
         mealType: createDto.mealType,
         foodItems: createDto.description,
@@ -26,8 +27,8 @@ export class LifestyleService {
     return this.mapDietLogToResponse(dietLog);
   }
 
-  async findAllDietLogs(userId: bigint, date?: string) {
-    const where: any = { userId };
+  async findAllDietLogs(context: ActorContext, date?: string) {
+    const where: any = { userId: context.elderUserId };
     if (date) {
       const targetDate = new Date(date);
       where.logDate = targetDate;
@@ -43,11 +44,11 @@ export class LifestyleService {
     return dietLogs.map((log) => this.mapDietLogToResponse(log));
   }
 
-  async removeDietLog(userId: bigint, dietId: bigint) {
+  async removeDietLog(context: ActorContext, dietId: bigint) {
     const dietLog = await this.prisma.dietLog.findFirst({
       where: {
         dietId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -66,10 +67,10 @@ export class LifestyleService {
   // Exercise Log Methods
   // ============================================
 
-  async createExerciseLog(userId: bigint, createDto: CreateExerciseLogDto) {
+  async createExerciseLog(context: ActorContext, createDto: CreateExerciseLogDto) {
     const exerciseLog = await this.prisma.exerciseLog.create({
       data: {
-        userId,
+        userId: context.elderUserId,
         logDate: new Date(createDto.logDate),
         exerciseType: createDto.activityType,
         description: createDto.description,
@@ -83,8 +84,8 @@ export class LifestyleService {
     return this.mapExerciseLogToResponse(exerciseLog);
   }
 
-  async findAllExerciseLogs(userId: bigint, date?: string) {
-    const where: any = { userId };
+  async findAllExerciseLogs(context: ActorContext, date?: string) {
+    const where: any = { userId: context.elderUserId };
     if (date) {
       const targetDate = new Date(date);
       where.logDate = targetDate;
@@ -100,11 +101,11 @@ export class LifestyleService {
     return exerciseLogs.map((log) => this.mapExerciseLogToResponse(log));
   }
 
-  async removeExerciseLog(userId: bigint, exerciseId: bigint) {
+  async removeExerciseLog(context: ActorContext, exerciseId: bigint) {
     const exerciseLog = await this.prisma.exerciseLog.findFirst({
       where: {
         exerciseId,
-        userId,
+        userId: context.elderUserId,
       },
     });
 
@@ -123,19 +124,19 @@ export class LifestyleService {
   // Summary Methods
   // ============================================
 
-  async getDailySummary(userId: bigint, date: string) {
+  async getDailySummary(context: ActorContext, date: string) {
     const targetDate = new Date(date);
 
     const dietLogs = await this.prisma.dietLog.findMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         logDate: targetDate,
       },
     });
 
     const exerciseLogs = await this.prisma.exerciseLog.findMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         logDate: targetDate,
       },
     });
@@ -158,14 +159,14 @@ export class LifestyleService {
     };
   }
 
-  async getWeeklySummary(userId: bigint) {
+  async getWeeklySummary(context: ActorContext) {
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(weekStart.getDate() - 7);
 
     const dietLogs = await this.prisma.dietLog.findMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         logDate: {
           gte: weekStart,
         },
@@ -174,7 +175,7 @@ export class LifestyleService {
 
     const exerciseLogs = await this.prisma.exerciseLog.findMany({
       where: {
-        userId,
+        userId: context.elderUserId,
         logDate: {
           gte: weekStart,
         },

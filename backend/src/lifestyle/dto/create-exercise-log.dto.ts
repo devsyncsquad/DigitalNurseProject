@@ -27,6 +27,14 @@ export enum Intensity {
 }
 
 export class CreateExerciseLogDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required for caregivers)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ enum: ActivityType, example: ActivityType.WALKING })
   @IsEnum(ActivityType)
   activityType!: ActivityType;

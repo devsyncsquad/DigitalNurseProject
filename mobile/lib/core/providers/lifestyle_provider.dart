@@ -18,12 +18,17 @@ class LifestyleProvider with ChangeNotifier {
   String? get error => _error;
 
   // Load diet logs
-  Future<void> loadDietLogs(String userId, {DateTime? date}) async {
+  Future<void> loadDietLogs(String userId,
+      {DateTime? date, String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _dietLogs = await _service.getDietLogs(userId, date: date);
+      _dietLogs = await _service.getDietLogs(
+        userId,
+        date: date,
+        elderUserId: elderUserId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -34,12 +39,17 @@ class LifestyleProvider with ChangeNotifier {
   }
 
   // Load exercise logs
-  Future<void> loadExerciseLogs(String userId, {DateTime? date}) async {
+  Future<void> loadExerciseLogs(String userId,
+      {DateTime? date, String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _exerciseLogs = await _service.getExerciseLogs(userId, date: date);
+      _exerciseLogs = await _service.getExerciseLogs(
+        userId,
+        date: date,
+        elderUserId: elderUserId,
+      );
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -50,16 +60,26 @@ class LifestyleProvider with ChangeNotifier {
   }
 
   // Load both diet and exercise logs
-  Future<void> loadAll(String userId, {DateTime? date}) async {
+  Future<void> loadAll(String userId,
+      {DateTime? date, String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _dietLogs = await _service.getDietLogs(userId, date: date);
-      _exerciseLogs = await _service.getExerciseLogs(userId, date: date);
+      _dietLogs = await _service.getDietLogs(
+        userId,
+        date: date,
+        elderUserId: elderUserId,
+      );
+      _exerciseLogs = await _service.getExerciseLogs(
+        userId,
+        date: date,
+        elderUserId: elderUserId,
+      );
       _dailySummary = await _service.getDailySummary(
         userId,
         date ?? DateTime.now(),
+        elderUserId: elderUserId,
       );
       _error = null;
     } catch (e) {
@@ -78,6 +98,7 @@ class LifestyleProvider with ChangeNotifier {
       _dailySummary = await _service.getDailySummary(
         dietLog.userId,
         dietLog.timestamp,
+        elderUserId: dietLog.userId,
       );
       _error = null;
       notifyListeners();
@@ -90,11 +111,19 @@ class LifestyleProvider with ChangeNotifier {
   }
 
   // Delete diet log
-  Future<bool> deleteDietLog(String logId, String userId) async {
+  Future<bool> deleteDietLog(String logId, String userId,
+      {String? elderUserId}) async {
     try {
-      await _service.deleteDietLog(logId);
+      await _service.deleteDietLog(
+        logId,
+        elderUserId: elderUserId,
+      );
       _dietLogs.removeWhere((d) => d.id == logId);
-      _dailySummary = await _service.getDailySummary(userId, DateTime.now());
+      _dailySummary = await _service.getDailySummary(
+        userId,
+        DateTime.now(),
+        elderUserId: elderUserId,
+      );
       _error = null;
       notifyListeners();
       return true;
@@ -113,6 +142,7 @@ class LifestyleProvider with ChangeNotifier {
       _dailySummary = await _service.getDailySummary(
         exerciseLog.userId,
         exerciseLog.timestamp,
+        elderUserId: exerciseLog.userId,
       );
       _error = null;
       notifyListeners();
@@ -125,11 +155,19 @@ class LifestyleProvider with ChangeNotifier {
   }
 
   // Delete exercise log
-  Future<bool> deleteExerciseLog(String logId, String userId) async {
+  Future<bool> deleteExerciseLog(String logId, String userId,
+      {String? elderUserId}) async {
     try {
-      await _service.deleteExerciseLog(logId);
+      await _service.deleteExerciseLog(
+        logId,
+        elderUserId: elderUserId,
+      );
       _exerciseLogs.removeWhere((e) => e.id == logId);
-      _dailySummary = await _service.getDailySummary(userId, DateTime.now());
+      _dailySummary = await _service.getDailySummary(
+        userId,
+        DateTime.now(),
+        elderUserId: elderUserId,
+      );
       _error = null;
       notifyListeners();
       return true;
@@ -141,8 +179,12 @@ class LifestyleProvider with ChangeNotifier {
   }
 
   // Get weekly summary
-  Future<Map<String, dynamic>> getWeeklySummary(String userId) async {
-    return await _service.getWeeklySummary(userId);
+  Future<Map<String, dynamic>> getWeeklySummary(String userId,
+      {String? elderUserId}) async {
+    return await _service.getWeeklySummary(
+      userId,
+      elderUserId: elderUserId,
+    );
   }
 
   // Initialize mock data (deprecated - no longer needed with API integration)

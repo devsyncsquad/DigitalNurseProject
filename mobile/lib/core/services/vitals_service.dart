@@ -10,10 +10,17 @@ class VitalsService {
   }
 
   // Get all vitals for a user
-  Future<List<VitalMeasurementModel>> getVitals(String userId) async {
+  Future<List<VitalMeasurementModel>> getVitals(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📋 Fetching vitals for user: $userId');
     try {
-      final response = await _apiService.get('/vitals');
+      final response = await _apiService.get(
+        '/vitals',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -35,10 +42,11 @@ class VitalsService {
   }
 
   // Get vitals by type
-  Future<List<VitalMeasurementModel>> getVitalsByType(
-    String userId,
-    VitalType type,
-  ) async {
+Future<List<VitalMeasurementModel>> getVitalsByType(
+  String userId,
+  VitalType type, {
+  String? elderUserId,
+}) async {
     _log('📋 Fetching vitals by type: $type for user: $userId');
     try {
       // Convert type enum to string for API
@@ -64,9 +72,14 @@ class VitalsService {
           break;
       }
 
+      final queryParameters = {'type': typeStr};
+      if (elderUserId != null) {
+        queryParameters['elderUserId'] = elderUserId;
+      }
+
       final response = await _apiService.get(
         '/vitals',
-        queryParameters: {'type': typeStr},
+        queryParameters: queryParameters,
       );
 
       if (response.statusCode == 200) {
@@ -92,8 +105,14 @@ class VitalsService {
   Future<VitalMeasurementModel> addVital(VitalMeasurementModel vital) async {
     _log('➕ Adding vital measurement: ${vital.type}');
     try {
-      final requestData = VitalMapper.toApiRequest(vital);
-      final response = await _apiService.post('/vitals', data: requestData);
+      final requestData = VitalMapper.toApiRequest(
+        vital,
+        elderUserId: vital.userId,
+      );
+      final response = await _apiService.post(
+        '/vitals',
+        data: requestData,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final addedVital = VitalMapper.fromApiResponse(response.data);
@@ -113,10 +132,15 @@ class VitalsService {
   Future<VitalMeasurementModel> updateVital(VitalMeasurementModel vital) async {
     _log('✏️ Updating vital measurement: ${vital.id}');
     try {
-      final requestData = VitalMapper.toApiRequest(vital);
+      final requestData = VitalMapper.toApiRequest(
+        vital,
+        elderUserId: vital.userId,
+      );
       final response = await _apiService.patch(
         '/vitals/${vital.id}',
         data: requestData,
+        queryParameters:
+            vital.userId.isNotEmpty ? {'elderUserId': vital.userId} : null,
       );
 
       if (response.statusCode == 200) {
@@ -134,10 +158,14 @@ class VitalsService {
   }
 
   // Delete vital
-  Future<void> deleteVital(String vitalId) async {
+  Future<void> deleteVital(String vitalId, {String? elderUserId}) async {
     _log('🗑️ Deleting vital measurement: $vitalId');
     try {
-      final response = await _apiService.delete('/vitals/$vitalId');
+      final response = await _apiService.delete(
+        '/vitals/$vitalId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         _log('✅ Vital measurement deleted successfully');
@@ -152,7 +180,10 @@ class VitalsService {
   }
 
   // Get recent vitals (last 7 days)
-  Future<List<VitalMeasurementModel>> getRecentVitals(String userId) async {
+  Future<List<VitalMeasurementModel>> getRecentVitals(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📋 Fetching recent vitals (last 7 days) for user: $userId');
     try {
       final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
@@ -160,6 +191,7 @@ class VitalsService {
         '/vitals',
         queryParameters: {
           'startDate': cutoffDate.toIso8601String(),
+          if (elderUserId != null) 'elderUserId': elderUserId,
         },
       );
 
@@ -187,10 +219,10 @@ class VitalsService {
     String userId,
     VitalType type, {
     int days = 7,
+    String? elderUserId,
   }) async {
     _log('📊 Calculating trends for ${type.toString()} (last $days days)');
     try {
-      // Convert type enum to string
       String typeStr;
       switch (type) {
         case VitalType.bloodPressure:
@@ -213,9 +245,14 @@ class VitalsService {
           break;
       }
 
+      final queryParameters = {'kindCode': typeStr};
+      if (elderUserId != null) {
+        queryParameters['elderUserId'] = elderUserId;
+      }
+
       final response = await _apiService.get(
         '/vitals/trends',
-        queryParameters: {'kindCode': typeStr},
+        queryParameters: queryParameters,
       );
 
       if (response.statusCode == 200) {
@@ -225,12 +262,18 @@ class VitalsService {
           'average': (data['average'] ?? 0.0).toDouble(),
           'count': (data['count'] ?? 0) as int,
           'hasAbnormal': (data['hasAbnormal'] ?? false) as bool,
-          'measurements': (data['measurements'] ?? []).map((json) => VitalMapper.fromApiResponse(
-              json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json))).toList(),
+          'measurements': (data['measurements'] ?? [])
+              .map((json) => VitalMapper.fromApiResponse(
+                    json is Map<String, dynamic>
+                        ? json
+                        : Map<String, dynamic>.from(json),
+                  ))
+              .toList(),
         };
       } else {
         _log('❌ Failed to calculate trends: ${response.statusMessage}');
-        throw Exception('Failed to calculate trends: ${response.statusMessage}');
+        throw Exception(
+            'Failed to calculate trends: ${response.statusMessage}');
       }
     } catch (e) {
       _log('❌ Error calculating trends: $e');
@@ -239,10 +282,17 @@ class VitalsService {
   }
 
   // Check for abnormal readings
-  Future<List<VitalMeasurementModel>> getAbnormalReadings(String userId) async {
+  Future<List<VitalMeasurementModel>> getAbnormalReadings(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('⚠️ Fetching abnormal readings for user: $userId');
     try {
-      final response = await _apiService.get('/vitals/abnormal');
+      final response = await _apiService.get(
+        '/vitals/abnormal',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -264,10 +314,17 @@ class VitalsService {
   }
 
   // Get latest vitals per kind
-  Future<Map<String, VitalMeasurementModel>> getLatestVitals(String userId) async {
+  Future<Map<String, VitalMeasurementModel>> getLatestVitals(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📋 Fetching latest vitals per kind for user: $userId');
     try {
-      final response = await _apiService.get('/vitals/latest');
+      final response = await _apiService.get(
+        '/vitals/latest',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data;

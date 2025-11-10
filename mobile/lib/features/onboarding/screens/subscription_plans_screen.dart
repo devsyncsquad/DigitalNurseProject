@@ -30,15 +30,15 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       await authProvider.updateSubscription(SubscriptionTier.premium);
     }
 
-    // Initialize mock data for all providers
+    // Load latest data for all providers to sync with backend
     final userId = authProvider.currentUser!.id;
     await Future.wait([
-      context.read<MedicationProvider>().initializeMockData(userId),
-      context.read<HealthProvider>().initializeMockData(userId),
-      context.read<CaregiverProvider>().initializeMockData(userId),
-      context.read<LifestyleProvider>().initializeMockData(userId),
-      context.read<DocumentProvider>().initializeMockData(userId),
-      context.read<NotificationProvider>().initializeMockData(),
+      context.read<MedicationProvider>().loadMedicines(userId),
+      context.read<HealthProvider>().loadVitals(userId),
+      context.read<CaregiverProvider>().loadCaregivers(userId),
+      context.read<LifestyleProvider>().loadAll(userId),
+      context.read<DocumentProvider>().loadDocuments(userId),
+      context.read<NotificationProvider>().loadNotifications(),
     ]);
 
     if (mounted) {

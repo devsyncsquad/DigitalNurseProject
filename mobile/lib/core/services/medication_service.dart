@@ -13,10 +13,16 @@ class MedicationService {
   }
 
   // Get all medicines for a user
-  Future<List<MedicineModel>> getMedicines(String userId) async {
+  Future<List<MedicineModel>> getMedicines(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('📋 Fetching medications for user: $userId');
     try {
-      final response = await _apiService.get('/medications');
+      final response = await _apiService.get(
+        '/medications',
+        queryParameters: elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -40,8 +46,14 @@ class MedicationService {
   Future<MedicineModel> addMedicine(MedicineModel medicine) async {
     _log('➕ Adding medication: ${medicine.name}');
     try {
-      final requestData = MedicationMapper.toApiRequest(medicine);
-      final response = await _apiService.post('/medications', data: requestData);
+      final requestData = MedicationMapper.toApiRequest(
+        medicine,
+        elderUserId: medicine.userId,
+      );
+      final response = await _apiService.post(
+        '/medications',
+        data: requestData,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final addedMedicine = MedicationMapper.fromApiResponse(response.data);
@@ -70,7 +82,10 @@ class MedicationService {
   Future<MedicineModel> updateMedicine(MedicineModel medicine) async {
     _log('✏️ Updating medication: ${medicine.name}');
     try {
-      final requestData = MedicationMapper.toApiRequest(medicine);
+      final requestData = MedicationMapper.toApiRequest(
+        medicine,
+        elderUserId: medicine.userId,
+      );
       final response = await _apiService.patch(
         '/medications/${medicine.id}',
         data: requestData,
@@ -99,10 +114,17 @@ class MedicationService {
   }
 
   // Delete medicine
-  Future<void> deleteMedicine(String medicineId) async {
+  Future<void> deleteMedicine(
+    String medicineId, {
+    String? elderUserId,
+  }) async {
     _log('🗑️ Deleting medication: $medicineId');
     try {
-      final response = await _apiService.delete('/medications/$medicineId');
+      final response = await _apiService.delete(
+        '/medications/$medicineId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         _log('✅ Medication deleted successfully');
@@ -124,10 +146,17 @@ class MedicationService {
   }
 
   // Get medicine by ID
-  Future<MedicineModel?> getMedicineById(String medicineId) async {
+  Future<MedicineModel?> getMedicineById(
+    String medicineId, {
+    String? elderUserId,
+  }) async {
     _log('🔍 Fetching medication by ID: $medicineId');
     try {
-      final response = await _apiService.get('/medications/$medicineId');
+      final response = await _apiService.get(
+        '/medications/$medicineId',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final medicine = MedicationMapper.fromApiResponse(response.data);
@@ -148,6 +177,7 @@ class MedicationService {
     required String medicineId,
     required DateTime scheduledTime,
     required IntakeStatus status,
+    String? elderUserId,
   }) async {
     _log('📝 Logging intake for medication: $medicineId');
     try {
@@ -159,10 +189,15 @@ class MedicationService {
         status: status,
       );
 
-      final requestData = MedicationMapper.intakeToApiRequest(intake);
+      final requestData = MedicationMapper.intakeToApiRequest(
+        intake,
+        elderUserId: elderUserId,
+      );
       final response = await _apiService.post(
         '/medications/$medicineId/intakes',
         data: requestData,
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
@@ -180,10 +215,17 @@ class MedicationService {
   }
 
   // Get intake history for a medicine
-  Future<List<MedicineIntake>> getIntakeHistory(String medicineId) async {
+  Future<List<MedicineIntake>> getIntakeHistory(
+    String medicineId, {
+    String? elderUserId,
+  }) async {
     _log('📜 Fetching intake history for medication: $medicineId');
     try {
-      final response = await _apiService.get('/medications/$medicineId/intakes');
+      final response = await _apiService.get(
+        '/medications/$medicineId/intakes',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -205,10 +247,17 @@ class MedicationService {
   }
 
   // Get upcoming reminders
-  Future<List<Map<String, dynamic>>> getUpcomingReminders(String userId) async {
+  Future<List<Map<String, dynamic>>> getUpcomingReminders(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('⏰ Fetching upcoming reminders for user: $userId');
     try {
-      final response = await _apiService.get('/medications/upcoming');
+      final response = await _apiService.get(
+        '/medications/upcoming',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data is List ? response.data : [];
@@ -232,11 +281,18 @@ class MedicationService {
   }
 
   // Get adherence percentage
-  Future<double> getAdherencePercentage(String userId, {int days = 7}) async {
-    _log('📊 Calculating adherence percentage for user: $userId (last $days days)');
-    
-    // Get all medications for the user
-    final medicines = await getMedicines(userId);
+  Future<double> getAdherencePercentage(
+    String userId, {
+    int days = 7,
+    String? elderUserId,
+  }) async {
+    _log(
+        '📊 Calculating adherence percentage for user: $userId (last $days days)');
+
+    final medicines = await getMedicines(
+      userId,
+      elderUserId: elderUserId,
+    );
     if (medicines.isEmpty) {
       _log('✅ No medications found, returning 100% adherence');
       return 100.0;
@@ -250,7 +306,10 @@ class MedicationService {
       try {
         final response = await _apiService.get(
           '/medications/${medicine.id}/adherence',
-          queryParameters: {'days': days.toString()},
+          queryParameters: {
+            'days': days.toString(),
+            if (elderUserId != null) 'elderUserId': elderUserId,
+          },
         );
 
         if (response.statusCode == 200) {
@@ -275,11 +334,16 @@ class MedicationService {
   }
 
   // Get adherence streak (consecutive days with 100% adherence)
-  Future<int> getAdherenceStreak(String userId) async {
+  Future<int> getAdherenceStreak(
+    String userId, {
+    String? elderUserId,
+  }) async {
     _log('🔥 Calculating adherence streak for user: $userId');
-    
-    // Get all medications for the user
-    final medicines = await getMedicines(userId);
+
+    final medicines = await getMedicines(
+      userId,
+      elderUserId: elderUserId,
+    );
     if (medicines.isEmpty) {
       _log('✅ No medications found, returning 0 streak');
       return 0;
@@ -289,7 +353,11 @@ class MedicationService {
     // For simplicity, we'll use the first medication's streak
     // In a more sophisticated implementation, we'd calculate overall streak
     try {
-      final response = await _apiService.get('/medications/${medicines.first.id}/streak');
+      final response = await _apiService.get(
+        '/medications/${medicines.first.id}/streak',
+        queryParameters:
+            elderUserId != null ? {'elderUserId': elderUserId} : null,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data;

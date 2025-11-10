@@ -54,7 +54,10 @@ class LifestyleMapper {
   }
 
   /// Convert DietLogModel to backend API request format
-  static Map<String, dynamic> dietToApiRequest(DietLogModel diet) {
+  static Map<String, dynamic> dietToApiRequest(
+    DietLogModel diet, {
+    String? elderUserId,
+  }) {
     // Convert mealType enum to string
     String mealType;
     switch (diet.mealType) {
@@ -77,6 +80,8 @@ class LifestyleMapper {
       'description': diet.description,
       'calories': diet.calories,
       'timestamp': diet.timestamp.toIso8601String(),
+      if (elderUserId != null && elderUserId.isNotEmpty)
+        'elderUserId': elderUserId,
     };
   }
 
@@ -142,7 +147,10 @@ class LifestyleMapper {
   }
 
   /// Convert ExerciseLogModel to backend API request format
-  static Map<String, dynamic> exerciseToApiRequest(ExerciseLogModel exercise) {
+  static Map<String, dynamic> exerciseToApiRequest(
+    ExerciseLogModel exercise, {
+    String? elderUserId,
+  }) {
     // Convert activityType enum to string
     String activityType;
     switch (exercise.activityType) {
@@ -178,6 +186,8 @@ class LifestyleMapper {
       'durationMinutes': exercise.durationMinutes,
       'caloriesBurned': exercise.caloriesBurned,
       'timestamp': exercise.timestamp.toIso8601String(),
+      if (elderUserId != null && elderUserId.isNotEmpty)
+        'elderUserId': elderUserId,
     };
   }
 }

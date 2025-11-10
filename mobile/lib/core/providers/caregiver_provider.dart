@@ -28,10 +28,11 @@ class CaregiverProvider with ChangeNotifier {
     }
   }
 
-  // Add caregiver
-  Future<CaregiverModel?> addCaregiver({
+  // Send caregiver invitation
+  Future<Map<String, dynamic>?> inviteCaregiver({
     required String patientId,
-    required String phone,
+    required String email,
+    String? phone,
     String? name,
     String? relationship,
   }) async {
@@ -39,22 +40,19 @@ class CaregiverProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final caregiver = await _caregiverService.addCaregiver(
-        patientId: patientId,
+      final invitation = await _caregiverService.sendInvitation(
+        email: email,
         phone: phone,
-        name: name,
         relationship: relationship,
+        name: name,
       );
 
-      // Generate and send invitation
-      final link = await _caregiverService.generateInvitationLink(caregiver.id);
-      await _caregiverService.sendInvitationSMS(phone, link);
-
-      _caregivers.add(caregiver);
+      // Refresh caregiver assignments to include pending invitations
+      await loadCaregivers(patientId);
       _error = null;
       _isLoading = false;
       notifyListeners();
-      return caregiver;
+      return invitation;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -70,9 +68,11 @@ class CaregiverProvider with ChangeNotifier {
 
     try {
       await _caregiverService.acceptInvitation(invitationId);
-      
+
       // Reload caregivers to get updated status
-      final patientId = _caregivers.isNotEmpty ? _caregivers.first.linkedPatientId : '';
+      final patientId = _caregivers.isNotEmpty
+          ? _caregivers.first.linkedPatientId
+          : '';
       if (patientId.isNotEmpty) {
         await loadCaregivers(patientId);
       }

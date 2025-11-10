@@ -20,16 +20,13 @@ class AuthService {
     try {
       final response = await _apiService.post(
         '/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 200) {
         final data = response.data;
         _log('✅ [AUTH] Login successful');
-        
+
         // Save tokens
         await _tokenService.saveTokens(
           accessToken: data['accessToken'],
@@ -39,25 +36,35 @@ class AuthService {
 
         // Create user model from response
         final userData = data['user'] ?? data;
-        
+
         // Convert role string to enum
         UserRole role = UserRole.patient;
-        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        final roleStr = (userData['role'] ?? 'patient')
+            .toString()
+            .toLowerCase();
         if (roleStr == 'caregiver') {
           role = UserRole.caregiver;
         }
 
         // Convert subscription tier string to enum
         SubscriptionTier subscriptionTier = SubscriptionTier.free;
-        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        final tierStr = (userData['subscriptionTier'] ?? 'free')
+            .toString()
+            .toLowerCase();
         if (tierStr == 'premium') {
           subscriptionTier = SubscriptionTier.premium;
         }
 
         final user = UserModel(
-          id: userData['id']?.toString() ?? userData['userId']?.toString() ?? '',
+          id:
+              userData['id']?.toString() ??
+              userData['userId']?.toString() ??
+              '',
           email: userData['email']?.toString() ?? email,
-          name: userData['name']?.toString() ?? userData['full_name']?.toString() ?? '',
+          name:
+              userData['name']?.toString() ??
+              userData['full_name']?.toString() ??
+              '',
           role: role,
           subscriptionTier: subscriptionTier,
           age: userData['age']?.toString(),
@@ -86,9 +93,12 @@ class AuthService {
     required String email,
     required String password,
     required String confirmPassword,
+    required UserRole role,
+    String? phone,
+    String? caregiverInviteCode,
   }) async {
     _log('📝 [AUTH] Attempting registration for: $email');
-    
+
     // Client-side validation
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
       _log('❌ [AUTH] Registration validation failed: All fields are required');
@@ -105,28 +115,43 @@ class AuthService {
       throw Exception('Password must be at least 8 characters');
     }
 
+    final trimmedPhone =
+        phone != null && phone.trim().isNotEmpty ? phone.trim() : null;
+    final payloadRole = role == UserRole.caregiver ? 'caregiver' : 'patient';
+
     try {
+      final requestBody = {
+        'email': email.trim(),
+        'password': password,
+        'name': name.trim(),
+        'roleCode': payloadRole,
+        if (trimmedPhone != null) 'phone': trimmedPhone,
+        if (role == UserRole.caregiver && caregiverInviteCode != null)
+          'caregiverInviteCode': caregiverInviteCode.trim(),
+      };
+
       final response = await _apiService.post(
         '/auth/register',
-        data: {
-          'email': email,
-          'password': password,
-          'name': name,
-        },
+        data: requestBody,
       );
 
       if (response.statusCode == 201) {
         final data = response.data;
         _log('✅ [AUTH] Registration successful: ${data['userId']}');
-        
+
         // Registration successful - return a user model with the userId
         // Note: Backend returns { message, userId }, not full user object
         // User will need to verify email before logging in
+        final responseRole =
+            (data['role'] ?? payloadRole).toString().toLowerCase();
+        final userRole =
+            responseRole == 'caregiver' ? UserRole.caregiver : UserRole.patient;
+
         final user = UserModel(
           id: data['userId'].toString(),
           email: email,
           name: name,
-          role: UserRole.patient,
+          role: userRole,
           subscriptionTier: SubscriptionTier.free,
         );
 
@@ -150,9 +175,7 @@ class AuthService {
     try {
       final response = await _apiService.post(
         '/auth/verify-email',
-        data: {
-          'token': token,
-        },
+        data: {'token': token},
       );
 
       if (response.statusCode == 200) {
@@ -186,9 +209,7 @@ class AuthService {
 
       final response = await _apiService.post(
         '/auth/refresh-token',
-        data: {
-          'refreshToken': refreshToken,
-        },
+        data: {'refreshToken': refreshToken},
       );
 
       if (response.statusCode == 200) {
@@ -218,14 +239,18 @@ class AuthService {
 
         // Convert role string to enum
         UserRole role = UserRole.patient;
-        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        final roleStr = (userData['role'] ?? 'patient')
+            .toString()
+            .toLowerCase();
         if (roleStr == 'caregiver') {
           role = UserRole.caregiver;
         }
 
         // Convert subscription tier string to enum
         SubscriptionTier subscriptionTier = SubscriptionTier.free;
-        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        final tierStr = (userData['subscriptionTier'] ?? 'free')
+            .toString()
+            .toLowerCase();
         if (tierStr == 'premium') {
           subscriptionTier = SubscriptionTier.premium;
         }
@@ -257,6 +282,7 @@ class AuthService {
   // Update user profile
   Future<UserModel> updateProfile({
     String? name,
+    String? age,
     String? phoneNumber,
     String? dateOfBirth,
     String? address,
@@ -269,18 +295,20 @@ class AuthService {
     try {
       final data = <String, dynamic>{};
       if (name != null) data['name'] = name;
-      if (phoneNumber != null) data['phoneNumber'] = phoneNumber;
+      if (phoneNumber != null) {
+        data['phoneNumber'] = phoneNumber;
+        data['phone'] = phoneNumber;
+      }
       if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth;
       if (address != null) data['address'] = address;
       if (city != null) data['city'] = city;
       if (country != null) data['country'] = country;
-      if (medicalConditions != null) data['medicalConditions'] = medicalConditions;
+      if (medicalConditions != null)
+        data['medicalConditions'] = medicalConditions;
       if (emergencyContact != null) data['emergencyContact'] = emergencyContact;
+      if (age != null) data['age'] = age;
 
-      final response = await _apiService.patch(
-        '/users/profile',
-        data: data,
-      );
+      final response = await _apiService.patch('/users/profile', data: data);
 
       if (response.statusCode == 200) {
         _log('✅ [AUTH] Profile updated successfully');
@@ -288,14 +316,18 @@ class AuthService {
 
         // Convert role string to enum
         UserRole role = UserRole.patient;
-        final roleStr = (userData['role'] ?? 'patient').toString().toLowerCase();
+        final roleStr = (userData['role'] ?? 'patient')
+            .toString()
+            .toLowerCase();
         if (roleStr == 'caregiver') {
           role = UserRole.caregiver;
         }
 
         // Convert subscription tier string to enum
         SubscriptionTier subscriptionTier = SubscriptionTier.free;
-        final tierStr = (userData['subscriptionTier'] ?? 'free').toString().toLowerCase();
+        final tierStr = (userData['subscriptionTier'] ?? 'free')
+            .toString()
+            .toLowerCase();
         if (tierStr == 'premium') {
           subscriptionTier = SubscriptionTier.premium;
         }

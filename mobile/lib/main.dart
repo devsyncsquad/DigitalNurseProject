@@ -8,6 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/routes.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/providers/care_context_provider.dart';
 import 'core/providers/caregiver_provider.dart';
 import 'core/providers/medication_provider.dart';
 import 'core/providers/health_provider.dart';
@@ -59,6 +60,14 @@ class DigitalNurseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProxyProvider<AuthProvider, CareContextProvider>(
+          create: (_) => CareContextProvider(),
+          update: (context, authProvider, careContext) {
+            final provider = careContext ?? CareContextProvider();
+            provider.updateAuth(authProvider);
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => CaregiverProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => HealthProvider()),

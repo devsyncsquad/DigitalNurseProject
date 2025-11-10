@@ -80,7 +80,10 @@ class VitalMapper {
   }
 
   /// Convert VitalMeasurementModel to backend API request format
-  static Map<String, dynamic> toApiRequest(VitalMeasurementModel vital) {
+  static Map<String, dynamic> toApiRequest(
+    VitalMeasurementModel vital, {
+    String? elderUserId,
+  }) {
     // Convert type enum to string
     String type;
     switch (vital.type) {
@@ -113,6 +116,10 @@ class VitalMapper {
 
     if (vital.notes != null) {
       request['notes'] = vital.notes;
+    }
+
+    if (elderUserId != null && elderUserId.isNotEmpty) {
+      request['elderUserId'] = elderUserId;
     }
 
     return request;

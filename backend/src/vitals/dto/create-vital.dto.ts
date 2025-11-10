@@ -17,6 +17,14 @@ export enum VitalType {
 }
 
 export class CreateVitalDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required when caregiver)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ enum: VitalType, example: VitalType.BLOOD_PRESSURE })
   @IsEnum(VitalType)
   type!: VitalType;

@@ -9,6 +9,14 @@ export enum MealType {
 }
 
 export class CreateDietLogDto {
+  @ApiPropertyOptional({
+    example: '1',
+    description: 'Target elder user ID (required for caregivers)',
+  })
+  @IsString()
+  @IsOptional()
+  elderUserId?: string;
+
   @ApiProperty({ enum: MealType, example: MealType.BREAKFAST })
   @IsEnum(MealType)
   mealType!: MealType;

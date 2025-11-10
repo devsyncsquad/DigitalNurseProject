@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../core/models/user_model.dart';
 import '../core/providers/auth_provider.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
@@ -21,6 +22,7 @@ import '../features/documents/screens/upload_document_screen.dart';
 import '../features/documents/screens/document_viewer_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
 import '../core/services/notification_test.dart';
+import '../features/notifications/screens/notifications_screen.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/welcome',
@@ -130,6 +132,14 @@ final goRouter = GoRouter(
     // Caregiver routes
     GoRoute(
       path: '/caregiver/add',
+      redirect: (context, state) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final role = authProvider.currentUser?.role;
+        if (role == UserRole.caregiver) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) => const AddCaregiverScreen(),
     ),
     GoRoute(
@@ -171,6 +181,12 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+
+    // Notifications
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
     ),
 
     // Notification Test (for debugging)

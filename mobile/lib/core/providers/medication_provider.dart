@@ -19,19 +19,25 @@ class MedicationProvider with ChangeNotifier {
   int get adherenceStreak => _adherenceStreak;
 
   // Load medicines
-  Future<void> loadMedicines(String userId) async {
+  Future<void> loadMedicines(String userId, {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      _medicines = await _medicationService.getMedicines(userId);
+      _medicines = await _medicationService.getMedicines(
+        userId,
+        elderUserId: elderUserId,
+      );
       _upcomingReminders = await _medicationService.getUpcomingReminders(
         userId,
+        elderUserId: elderUserId,
       );
       _adherencePercentage = await _medicationService.getAdherencePercentage(
         userId,
+        elderUserId: elderUserId,
       );
-      _adherenceStreak = await _medicationService.getAdherenceStreak(userId);
+      _adherenceStreak =
+          await _medicationService.getAdherenceStreak(userId, elderUserId: elderUserId);
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -90,14 +96,18 @@ class MedicationProvider with ChangeNotifier {
   }
 
   // Delete medicine
-  Future<bool> deleteMedicine(String medicineId, String userId) async {
+  Future<bool> deleteMedicine(String medicineId, String userId,
+      {String? elderUserId}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _medicationService.deleteMedicine(medicineId);
+      await _medicationService.deleteMedicine(
+        medicineId,
+        elderUserId: elderUserId ?? userId,
+      );
       _medicines.removeWhere((m) => m.id == medicineId);
-      await _refreshReminders(userId);
+      await _refreshReminders(userId, elderUserId: elderUserId);
       _error = null;
       _isLoading = false;
       notifyListeners();
@@ -116,17 +126,21 @@ class MedicationProvider with ChangeNotifier {
     required DateTime scheduledTime,
     required IntakeStatus status,
     required String userId,
+    String? elderUserId,
   }) async {
     try {
       await _medicationService.logIntake(
         medicineId: medicineId,
         scheduledTime: scheduledTime,
         status: status,
+        elderUserId: elderUserId ?? userId,
       );
       _adherencePercentage = await _medicationService.getAdherencePercentage(
         userId,
+        elderUserId: elderUserId,
       );
-      _adherenceStreak = await _medicationService.getAdherenceStreak(userId);
+      _adherenceStreak =
+          await _medicationService.getAdherenceStreak(userId, elderUserId: elderUserId);
       notifyListeners();
       return true;
     } catch (e) {
@@ -137,13 +151,21 @@ class MedicationProvider with ChangeNotifier {
   }
 
   // Get intake history
-  Future<List<MedicineIntake>> getIntakeHistory(String medicineId) async {
-    return await _medicationService.getIntakeHistory(medicineId);
+  Future<List<MedicineIntake>> getIntakeHistory(String medicineId,
+      {String? elderUserId}) async {
+    return await _medicationService.getIntakeHistory(
+      medicineId,
+      elderUserId: elderUserId,
+    );
   }
 
   // Refresh reminders
-  Future<void> _refreshReminders(String userId) async {
-    _upcomingReminders = await _medicationService.getUpcomingReminders(userId);
+  Future<void> _refreshReminders(String userId,
+      {String? elderUserId}) async {
+    _upcomingReminders = await _medicationService.getUpcomingReminders(
+      userId,
+      elderUserId: elderUserId,
+    );
   }
 
   // Initialize mock data (deprecated - no longer needed with API integration)

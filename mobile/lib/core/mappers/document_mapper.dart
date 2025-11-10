@@ -136,6 +136,7 @@ class DocumentMapper {
       'type': type,
       'visibility': visibility,
       if (document.description != null) 'description': document.description,
+      if (document.userId.isNotEmpty) 'elderUserId': document.userId,
     };
   }
 }
