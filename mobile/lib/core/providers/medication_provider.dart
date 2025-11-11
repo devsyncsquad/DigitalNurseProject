@@ -266,7 +266,10 @@ class MedicationProvider with ChangeNotifier {
     );
 
     // Get intake history for this specific medicine and time
-    final intakeHistory = await getIntakeHistory(medicine.id);
+    final intakeHistory = await getIntakeHistory(
+      medicine.id,
+      elderUserId: medicine.userId,
+    );
 
     // Check if there's an intake record for this specific scheduled time
     final intake = intakeHistory.firstWhere(
