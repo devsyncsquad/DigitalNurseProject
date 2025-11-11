@@ -24,10 +24,8 @@ class CaregiverDashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardSpacing = 18.h;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: CaregiverDashboardTheme.backgroundGradient(),
-      ),
+    return ColoredBox(
+      color: Colors.white,
       child: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
