@@ -15,9 +15,9 @@ class CaregiverDashboardTheme {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        midnight,
-        Color(0xFF0C3E3A),
-        Color(0xFFF3F8F7),
+        Color(0xFF0F5C52),
+        Color(0xFFECF6F4),
+        Colors.white,
       ],
     );
   }
@@ -55,8 +55,8 @@ class CaregiverDashboardTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withOpacity(highlighted ? 0.85 : 0.9),
-          Colors.white.withOpacity(highlighted ? 0.7 : 0.75),
+          Colors.white.withOpacity(highlighted ? 0.9 : 0.95),
+          Colors.white.withOpacity(highlighted ? 0.82 : 0.9),
         ],
       ),
       border: Border.all(
@@ -74,22 +74,23 @@ class CaregiverDashboardTheme {
   }
 
   static BoxDecoration tintedCard(Color accent) {
+    final Color blended = Color.alphaBlend(accent.withOpacity(0.18), Colors.white);
     return BoxDecoration(
       borderRadius: BorderRadius.circular(24),
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          accent.withOpacity(0.16),
-          accent.withOpacity(0.06),
+          blended,
+          Colors.white.withOpacity(0.92),
         ],
       ),
       border: Border.all(
-        color: accent.withOpacity(0.18),
+        color: accent.withOpacity(0.14),
       ),
       boxShadow: [
         BoxShadow(
-          color: accent.withOpacity(0.16),
+          color: accent.withOpacity(0.12),
           blurRadius: 24,
           offset: const Offset(0, 18),
         ),

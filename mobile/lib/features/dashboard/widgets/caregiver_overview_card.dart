@@ -215,7 +215,7 @@ class _OverviewMetric extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.sm.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: accent,
+                        color: CaregiverDashboardTheme.deepTeal,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -224,7 +224,7 @@ class _OverviewMetric extends StatelessWidget {
                       style: textTheme.xs.copyWith(
                         fontWeight: FontWeight.w600,
                         color: CaregiverDashboardTheme.deepTeal
-                            .withOpacity(0.75),
+                            .withOpacity(0.7),
                       ),
                     ),
                   ],
