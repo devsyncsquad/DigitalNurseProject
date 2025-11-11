@@ -42,15 +42,18 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
               ),
             )
           else
-            ...abnormalVitals.map((vital) {
+            ...abnormalVitals.asMap().entries.map((entry) {
+              final index = entry.key;
+              final vital = entry.value;
               final status = vital.getHealthStatus();
               final statusColor = switch (status) {
                 VitalHealthStatus.danger => AppTheme.getErrorColor(context),
                 VitalHealthStatus.warning => AppTheme.getWarningColor(context),
                 _ => AppTheme.getSuccessColor(context),
               };
+              final isLast = index == abnormalVitals.length - 1;
               return Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

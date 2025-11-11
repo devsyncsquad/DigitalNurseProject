@@ -105,7 +105,6 @@ model Medication {
   // Relations
   elderUser User          @relation(fields: [elderUserId], references: [userId], onDelete: Cascade)
   schedules MedSchedule[]
-  intakes   MedIntake[]
 
   @@index([elderUserId])
   @@map("medications")
@@ -147,8 +146,6 @@ model MedIntake {
 
   // Relations
   schedule               MedSchedule @relation(fields: [medScheduleId], references: [medScheduleId], onDelete: Cascade)
-  Medication             Medication? @relation(fields: [medicationMedicationId], references: [medicationId])
-  medicationMedicationId BigInt?
 
   @@index([medScheduleId])
   @@map("med_intakes")

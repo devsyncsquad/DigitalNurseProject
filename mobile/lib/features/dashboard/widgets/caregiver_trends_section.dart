@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
@@ -27,28 +28,27 @@ class CaregiverAdherenceAndVitalsRow extends StatelessWidget {
         if (isWide) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: children
-                .map(
-                  (child) => Expanded(
-                    child: Padding(
-                      padding:
-                          EdgeInsets.only(right: child == children.last ? 0 : 12.w),
-                      child: child,
-                    ),
-                  ),
-                )
-                .toList(),
+            children: List.generate(children.length, (index) {
+              final child = children[index];
+              final isLast = index == children.length - 1;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: isLast ? 0 : 12.w),
+                  child: child,
+                ),
+              );
+            }),
           );
         }
         return Column(
-          children: children
-              .map(
-                (child) => Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: child,
-                ),
-              )
-              .toList(),
+          children: List.generate(children.length, (index) {
+            final child = children[index];
+            final isLast = index == children.length - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
+              child: child,
+            );
+          }),
         );
       },
     );
@@ -141,19 +141,28 @@ class _AdherenceSparklineCard extends StatelessWidget {
     final points = <_TrendPoint>[];
 
     for (final medicine in medicines.take(3)) {
-      final history = await medicationProvider.getIntakeHistory(medicine.id);
-      for (final intake in history) {
-        final status = intake.status;
-        final value = status == IntakeStatus.taken
-            ? 1.0
-            : status == IntakeStatus.skipped
-                ? 0.5
-                : 0.0;
-        points.add(
-          _TrendPoint(
-            timestamp: intake.scheduledTime,
-            value: value,
-          ),
+      try {
+        final history = await medicationProvider.getIntakeHistory(
+          medicine.id,
+          elderUserId: medicine.userId,
+        );
+        for (final intake in history) {
+          final status = intake.status;
+          final value = status == IntakeStatus.taken
+              ? 1.0
+              : status == IntakeStatus.skipped
+                  ? 0.5
+                  : 0.0;
+          points.add(
+            _TrendPoint(
+              timestamp: intake.scheduledTime,
+              value: value,
+            ),
+          );
+        }
+      } catch (e, stackTrace) {
+        debugPrint(
+          'Failed to load intake history for medicine ${medicine.id}: $e\n$stackTrace',
         );
       }
     }

@@ -22,6 +22,7 @@ class CaregiverDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardSpacing = 16.h;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -32,17 +33,17 @@ class CaregiverDashboardView extends StatelessWidget {
           error: careContext.error,
           onSelect: onRecipientSelected,
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverOverviewCard(),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverActionShortcuts(),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverAdherenceAndVitalsRow(),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverUpcomingMedicationsCard(),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverVitalsWatchlistCard(),
-        SizedBox(height: 16.h),
+        SizedBox(height: cardSpacing),
         const CaregiverAlertsFeed(),
         SizedBox(height: 24.h),
       ],

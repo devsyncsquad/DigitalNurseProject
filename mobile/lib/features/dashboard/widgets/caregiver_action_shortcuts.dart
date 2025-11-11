@@ -40,31 +40,41 @@ class CaregiverActionShortcuts extends StatelessWidget {
       ),
     ];
 
-    return FCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick actions',
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        final crossAxisSpacing = 12.w;
+        final itemWidth = isWide
+            ? (constraints.maxWidth - crossAxisSpacing) / 2
+            : constraints.maxWidth;
+
+        return FCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Quick actions',
+                style: context.theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: crossAxisSpacing,
+                runSpacing: 12.h,
+                children: actions
+                    .map(
+                      (action) => SizedBox(
+                        width: itemWidth,
+                        child: action,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 12.w,
-            runSpacing: 12.h,
-            children: actions
-                .map(
-                  (action) => SizedBox(
-                    width: (ScreenUtil().screenWidth - 64.w) / 2,
-                    child: action,
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

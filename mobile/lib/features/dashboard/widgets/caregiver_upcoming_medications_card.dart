@@ -27,6 +27,8 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
       return !time.isBefore(now);
     }).toList();
 
+    final visibleReminders = nextReminders.take(4).toList();
+
     return FCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,66 +51,24 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
               ),
             )
           else
-            ...nextReminders.take(4).map((reminder) {
+            ...visibleReminders.asMap().entries.map((entry) {
+              final index = entry.key;
+              final reminder = entry.value;
               final medicine = reminder['medicine'] as MedicineModel;
               final time = reminder['reminderTime'] as DateTime;
               final isSoon = time.difference(now).inMinutes <= 30;
+
               return Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.theme.colors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.medication,
-                        color: context.theme.colors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            medicine.name,
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            '${medicine.dosage} • ${DateFormat('MMM d, h:mm a').format(time)}',
-                            style: context.theme.typography.xs.copyWith(
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        if (isSoon) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text('Reminder sent for ${medicine.name}'),
-                            ),
-                          );
-                        } else {
-                          context.push('/medications');
-                        }
-                      },
-                      child: Text(isSoon ? 'Remind now' : 'Details'),
-                    ),
-                  ],
+                padding: EdgeInsets.only(
+                  bottom: index == visibleReminders.length - 1 ? 0 : 12.h,
+                ),
+                child: _UpcomingReminderRow(
+                  medicine: medicine,
+                  time: time,
+                  isSoon: isSoon,
                 ),
               );
-            }).toList(),
+            }),
           if (nextReminders.length > 4)
             Align(
               alignment: Alignment.centerLeft,
@@ -119,6 +79,73 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _UpcomingReminderRow extends StatelessWidget {
+  final MedicineModel medicine;
+  final DateTime time;
+  final bool isSoon;
+
+  const _UpcomingReminderRow({
+    required this.medicine,
+    required this.time,
+    required this.isSoon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: context.theme.colors.primary.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.medication,
+            color: context.theme.colors.primary,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                medicine.name,
+                style: context.theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                '${medicine.dosage} • ${DateFormat('MMM d, h:mm a').format(time)}',
+                style: context.theme.typography.xs.copyWith(
+                  color: context.theme.colors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            if (isSoon) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Reminder sent for ${medicine.name}'),
+                ),
+              );
+            } else {
+              context.push('/medications');
+            }
+          },
+          child: Text(isSoon ? 'Remind now' : 'Details'),
+        ),
+      ],
     );
   }
 }

@@ -47,9 +47,12 @@ class CaregiverAlertsFeed extends StatelessWidget {
               ),
             )
           else
-            ...notifications.map((notification) {
+            ...notifications.asMap().entries.map((entry) {
+              final index = entry.key;
+              final notification = entry.value;
+              final isLast = index == notifications.length - 1;
               return Padding(
-                padding: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

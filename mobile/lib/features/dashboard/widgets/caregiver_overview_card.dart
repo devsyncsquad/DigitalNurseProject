@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:digital_nurse/core/extensions/vital_type_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
@@ -78,31 +77,42 @@ class CaregiverOverviewCard extends StatelessWidget {
         ),
     ];
 
-    return FCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Care overview',
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        final crossAxisCount = isWide ? 2 : 1;
+        final crossAxisSpacing = 12.w;
+
+        return FCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Care overview',
+                style: context.theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: crossAxisSpacing,
+                runSpacing: 12.h,
+                children: cards
+                    .map(
+                      (metric) => SizedBox(
+                        width: crossAxisCount == 1
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - crossAxisSpacing) /
+                                crossAxisCount,
+                        child: metric,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 12.w,
-            runSpacing: 12.h,
-            children: cards
-                .map(
-                  (metric) => SizedBox(
-                    width: min(160.w, (ScreenUtil().screenWidth - 64.w) / 2),
-                    child: metric,
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
