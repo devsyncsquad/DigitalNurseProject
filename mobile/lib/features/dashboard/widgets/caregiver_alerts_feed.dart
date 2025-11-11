@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/models/notification_model.dart';
 import '../../../core/providers/notification_provider.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverAlertsFeed extends StatelessWidget {
   const CaregiverAlertsFeed({super.key});
@@ -15,35 +17,94 @@ class CaregiverAlertsFeed extends StatelessWidget {
     final notificationProvider = context.watch<NotificationProvider>();
     final notifications = notificationProvider.notifications.take(5).toList();
 
-    return FCard(
+    return Container(
+      padding: CaregiverDashboardTheme.cardPadding(),
+      decoration: CaregiverDashboardTheme.glassCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Care alerts',
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: CaregiverDashboardTheme.iconBadge(
+                  CaregiverDashboardTheme.accentYellow,
+                ),
+                child: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Care alerts',
+                      style: CaregiverDashboardTheme.sectionTitleStyle(
+                        context,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Latest updates about medications, vitals, and tasks.',
+                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                        context,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (notifications.isNotEmpty)
                 TextButton(
                   onPressed: () => context.push('/notifications'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: CaregiverDashboardTheme.accentYellow,
+                    textStyle: context.theme.typography.xs.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   child: const Text('View all'),
                 ),
             ],
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 20.h),
           if (notifications.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              child: Text(
-                'No new alerts.',
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
-                ),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 18.h,
+              ),
+              decoration: CaregiverDashboardTheme.tintedCard(
+                CaregiverDashboardTheme.primaryTeal,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.primaryTeal,
+                    ),
+                    child: const Icon(
+                      Icons.mark_email_read_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      'No new alerts.',
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           else
@@ -52,58 +113,10 @@ class CaregiverAlertsFeed extends StatelessWidget {
               final notification = entry.value;
               final isLast = index == notifications.length - 1;
               return Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.theme.colors.secondary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        notification.isRead
-                            ? Icons.mark_email_read_outlined
-                            : Icons.mark_email_unread_outlined,
-                        color: context.theme.colors.secondary,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notification.title,
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            notification.body,
-                            style: context.theme.typography.xs.copyWith(
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            DateFormat('MMM d, h:mm a')
-                                .format(notification.timestamp),
-                            style: context.theme.typography.xs.copyWith(
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => context.push('/notifications'),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+                child: _AlertRow(
+                  notification: notification,
+                  onTap: () => context.push('/notifications'),
                 ),
               );
             }).toList(),
@@ -112,4 +125,89 @@ class CaregiverAlertsFeed extends StatelessWidget {
     );
   }
 }
+
+class _AlertRow extends StatelessWidget {
+  final NotificationModel notification;
+  final VoidCallback onTap;
+
+  const _AlertRow({
+    required this.notification,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = notification.isRead
+        ? CaregiverDashboardTheme.accentBlue
+        : CaregiverDashboardTheme.accentCoral;
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                child: Icon(
+                  notification.isRead
+                      ? Icons.mark_email_read_rounded
+                      : Icons.mark_email_unread_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      notification.body,
+                      style: context.theme.typography.xs.copyWith(
+                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
+                          0.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: onTap,
+                style: TextButton.styleFrom(
+                  foregroundColor: accent,
+                  textStyle: context.theme.typography.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: const Text('Open'),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            DateFormat('MMM d, h:mm a').format(notification.timestamp),
+            style: context.theme.typography.xs.copyWith(
+              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 

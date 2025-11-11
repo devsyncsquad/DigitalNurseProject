@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/models/medicine_model.dart';
 import '../../../core/providers/medication_provider.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverUpcomingMedicationsCard extends StatelessWidget {
   const CaregiverUpcomingMedicationsCard({super.key});
@@ -29,25 +30,82 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
 
     final visibleReminders = nextReminders.take(4).toList();
 
-    return FCard(
+    return Container(
+      padding: CaregiverDashboardTheme.cardPadding(),
+      decoration: CaregiverDashboardTheme.glassCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Upcoming medicines',
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          if (nextReminders.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              child: Text(
-                'No upcoming doses scheduled.',
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: CaregiverDashboardTheme.iconBadge(
+                  CaregiverDashboardTheme.accentBlue,
                 ),
+                child: const Icon(
+                  Icons.medication_liquid_outlined,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upcoming medicines',
+                      style: CaregiverDashboardTheme.sectionTitleStyle(
+                        context,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Stay prepared with the next doses in the queue.',
+                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                        context,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          if (nextReminders.isEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 18.h,
+              ),
+              decoration: CaregiverDashboardTheme.tintedCard(
+                CaregiverDashboardTheme.primaryTeal,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.primaryTeal,
+                    ),
+                    child: const Icon(
+                      Icons.inbox_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      'No upcoming doses scheduled.',
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           else
@@ -60,7 +118,7 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
 
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: index == visibleReminders.length - 1 ? 0 : 12.h,
+                  bottom: index == visibleReminders.length - 1 ? 0 : 14.h,
                 ),
                 child: _UpcomingReminderRow(
                   medicine: medicine,
@@ -69,14 +127,22 @@ class CaregiverUpcomingMedicationsCard extends StatelessWidget {
                 ),
               );
             }),
-          if (nextReminders.length > 4)
+          if (nextReminders.length > 4) ...[
+            SizedBox(height: 16.h),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: () => context.push('/medications'),
+                style: TextButton.styleFrom(
+                  foregroundColor: CaregiverDashboardTheme.accentBlue,
+                  textStyle: context.theme.typography.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 child: const Text('View all medicines'),
               ),
             ),
+          ],
         ],
       ),
     );
@@ -96,56 +162,116 @@ class _UpcomingReminderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: context.theme.colors.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.medication,
-            color: context.theme.colors.primary,
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: Column(
+    final accent = isSoon
+        ? CaregiverDashboardTheme.accentCoral
+        : CaregiverDashboardTheme.accentBlue;
+    final timeLabel = DateFormat('h:mm a').format(time);
+    final dayLabel = DateFormat('MMM d').format(time);
+    final diff = time.difference(DateTime.now());
+    final relative = diff.inMinutes <= 0
+        ? 'Due now'
+        : diff.inMinutes < 60
+            ? 'In ${diff.inMinutes} min'
+            : diff.inHours < 24
+                ? 'In ${diff.inHours} hrs'
+                : 'In ${diff.inDays} days';
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                medicine.name,
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                child: const Icon(
+                  Icons.medication_rounded,
+                  color: Colors.white,
+                  size: 22,
                 ),
               ),
-              SizedBox(height: 2.h),
-              Text(
-                '${medicine.dosage} • ${DateFormat('MMM d, h:mm a').format(time)}',
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      medicine.name,
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      medicine.dosage,
+                      style: context.theme.typography.xs.copyWith(
+                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
+                          0.7,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 6.h,
+                ),
+                decoration: CaregiverDashboardTheme.frostedChip(
+                  baseColor: Colors.white,
+                ),
+                child: Text(
+                  relative,
+                  style: context.theme.typography.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        TextButton(
-          onPressed: () {
-            if (isSoon) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Reminder sent for ${medicine.name}'),
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$dayLabel • $timeLabel',
+                style: context.theme.typography.xs.copyWith(
+                  color:
+                      CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
                 ),
-              );
-            } else {
-              context.push('/medications');
-            }
-          },
-          child: Text(isSoon ? 'Remind now' : 'Details'),
-        ),
-      ],
+              ),
+              TextButton(
+                onPressed: () {
+                  if (isSoon) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Reminder sent for ${medicine.name}'),
+                      ),
+                    );
+                  } else {
+                    context.push('/medications');
+                  }
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: accent,
+                  textStyle: context.theme.typography.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: Text(isSoon ? 'Remind now' : 'Details'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

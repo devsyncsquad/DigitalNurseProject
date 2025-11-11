@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dashboard_theme.dart';
+
 class CaregiverActionShortcuts extends StatelessWidget {
   const CaregiverActionShortcuts({super.key});
 
@@ -21,21 +23,29 @@ class CaregiverActionShortcuts extends StatelessWidget {
       _ActionShortcut(
         icon: Icons.phone,
         label: 'Call patient',
+        caption: 'Connect instantly with a tap.',
+        accent: CaregiverDashboardTheme.accentBlue,
         onTap: () => _showComingSoon(context, 'Calling'),
       ),
       _ActionShortcut(
         icon: Icons.notifications_active_outlined,
         label: 'Send reminder',
+        caption: 'Nudge caregivers or recipients.',
+        accent: CaregiverDashboardTheme.primaryTeal,
         onTap: () => _showComingSoon(context, 'Reminder'),
       ),
       _ActionShortcut(
         icon: Icons.note_alt,
         label: 'Log observation',
+        caption: 'Document vitals or incidents.',
+        accent: CaregiverDashboardTheme.accentYellow,
         onTap: () => context.push('/documents'),
       ),
       _ActionShortcut(
         icon: Icons.calendar_month,
         label: 'View schedule',
+        caption: 'See upcoming medicines.',
+        accent: CaregiverDashboardTheme.accentCoral,
         onTap: () => context.push('/medications'),
       ),
     ];
@@ -43,25 +53,57 @@ class CaregiverActionShortcuts extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 600;
-        final crossAxisSpacing = 12.w;
+        final crossAxisSpacing = 14.w;
         final itemWidth = isWide
             ? (constraints.maxWidth - crossAxisSpacing) / 2
             : constraints.maxWidth;
 
-        return FCard(
+        return Container(
+          padding: CaregiverDashboardTheme.cardPadding(),
+          decoration: CaregiverDashboardTheme.glassCard(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Quick actions',
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.accentBlue,
+                    ),
+                    child: const Icon(
+                      Icons.flash_on_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Quick actions',
+                          style: CaregiverDashboardTheme.sectionTitleStyle(
+                            context,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Reach out, log observations, or review schedules without leaving the dashboard.',
+                          style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                            context,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 20.h),
               Wrap(
                 spacing: crossAxisSpacing,
-                runSpacing: 12.h,
+                runSpacing: 14.h,
                 children: actions
                     .map(
                       (action) => SizedBox(
@@ -79,56 +121,116 @@ class CaregiverActionShortcuts extends StatelessWidget {
   }
 }
 
-class _ActionShortcut extends StatelessWidget {
+class _ActionShortcut extends StatefulWidget {
   final IconData icon;
   final String label;
+  final String caption;
+  final Color accent;
   final VoidCallback onTap;
 
   const _ActionShortcut({
     required this.icon,
     required this.label,
+    required this.caption,
+    required this.accent,
     required this.onTap,
   });
 
   @override
+  State<_ActionShortcut> createState() => _ActionShortcutState();
+}
+
+class _ActionShortcutState extends State<_ActionShortcut> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  void _handleHover(bool value) {
+    if (!mounted) return;
+    setState(() {
+      _isHovered = value;
+    });
+  }
+
+  void _handlePressed(bool value) {
+    if (!mounted) return;
+    setState(() {
+      _isPressed = value;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Ink(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: context.theme.colors.muted.withOpacity(0.4),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: context.theme.colors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
+    final scale = _isPressed
+        ? 0.98
+        : _isHovered
+            ? 1.02
+            : 1.0;
+
+    final textTheme = context.theme.typography;
+
+    return MouseRegion(
+      onEnter: (_) => _handleHover(true),
+      onExit: (_) => _handleHover(false),
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(28),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: widget.onTap,
+            onHighlightChanged: _handlePressed,
+            child: Ink(
+              padding: EdgeInsets.symmetric(
+                horizontal: 18.w,
+                vertical: 18.h,
               ),
-              child: Icon(
-                icon,
-                color: context.theme.colors.primary,
+              decoration: CaregiverDashboardTheme.pillButton(widget.accent),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration:
+                        CaregiverDashboardTheme.iconBadge(Colors.white),
+                    child: Icon(
+                      widget.icon,
+                      color: widget.accent,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.label,
+                          style: textTheme.sm.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          widget.caption,
+                          style: textTheme.xs.copyWith(
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.north_east_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ],
               ),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                label,
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: 18,
-            ),
-          ],
+          ),
         ),
       ),
     );

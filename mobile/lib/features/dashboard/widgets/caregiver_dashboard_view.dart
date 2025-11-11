@@ -9,6 +9,7 @@ import 'caregiver_overview_card.dart';
 import 'caregiver_trends_section.dart';
 import 'caregiver_upcoming_medications_card.dart';
 import 'caregiver_vitals_watchlist_card.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverDashboardView extends StatelessWidget {
   final CareContextProvider careContext;
@@ -22,31 +23,158 @@ class CaregiverDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardSpacing = 16.h;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CareRecipientSelector(
-          isLoading: careContext.isLoading,
-          recipients: careContext.careRecipients,
-          selectedRecipient: careContext.selectedRecipient,
-          error: careContext.error,
-          onSelect: onRecipientSelected,
+    final cardSpacing = 18.h;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: CaregiverDashboardTheme.backgroundGradient(),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 20.w,
+            right: 20.w,
+            top: 24.h,
+            bottom: 40.h,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DashboardHero(
+                contextProvider: careContext,
+                onRecipientSelected: onRecipientSelected,
+              ),
+              SizedBox(height: cardSpacing),
+              const CaregiverOverviewCard(),
+              SizedBox(height: cardSpacing),
+              const CaregiverActionShortcuts(),
+              SizedBox(height: cardSpacing),
+              const CaregiverAdherenceAndVitalsRow(),
+              SizedBox(height: cardSpacing),
+              const CaregiverUpcomingMedicationsCard(),
+              SizedBox(height: cardSpacing),
+              const CaregiverVitalsWatchlistCard(),
+              SizedBox(height: cardSpacing),
+              const CaregiverAlertsFeed(),
+            ],
+          ),
         ),
-        SizedBox(height: cardSpacing),
-        const CaregiverOverviewCard(),
-        SizedBox(height: cardSpacing),
-        const CaregiverActionShortcuts(),
-        SizedBox(height: cardSpacing),
-        const CaregiverAdherenceAndVitalsRow(),
-        SizedBox(height: cardSpacing),
-        const CaregiverUpcomingMedicationsCard(),
-        SizedBox(height: cardSpacing),
-        const CaregiverVitalsWatchlistCard(),
-        SizedBox(height: cardSpacing),
-        const CaregiverAlertsFeed(),
-        SizedBox(height: 24.h),
-      ],
+      ),
+    );
+  }
+}
+
+class _DashboardHero extends StatelessWidget {
+  final CareContextProvider contextProvider;
+  final ValueChanged<String> onRecipientSelected;
+
+  const _DashboardHero({
+    required this.contextProvider,
+    required this.onRecipientSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedRecipient = contextProvider.selectedRecipient;
+    final recipients = contextProvider.careRecipients;
+
+    final headline = selectedRecipient != null
+        ? 'Caring for ${selectedRecipient.name}'
+        : 'Welcome back';
+    final subtitle = selectedRecipient != null
+        ? 'Stay ahead with today’s schedule and vital updates.'
+        : 'Select a care recipient to see personalised insights.';
+
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: CaregiverDashboardTheme.heroDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            headline,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withOpacity(0.85),
+                ),
+          ),
+          SizedBox(height: 16.h),
+          CareRecipientSelector(
+            isLoading: contextProvider.isLoading,
+            recipients: recipients,
+            selectedRecipient: selectedRecipient,
+            error: contextProvider.error,
+            onSelect: onRecipientSelected,
+          ),
+          if (recipients.isNotEmpty) ...[
+            SizedBox(height: 18.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: [
+                _HeroChip(
+                  label: '${recipients.length} in care',
+                  icon: Icons.group,
+                ),
+                _HeroChip(
+                  label: 'Live updates on vitals',
+                  icon: Icons.monitor_heart,
+                ),
+                _HeroChip(
+                  label: 'Smart medication reminders',
+                  icon: Icons.medication_liquid,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _HeroChip({
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 12.w,
+        vertical: 8.h,
+      ),
+      decoration: CaregiverDashboardTheme.frostedChip(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 16,
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }

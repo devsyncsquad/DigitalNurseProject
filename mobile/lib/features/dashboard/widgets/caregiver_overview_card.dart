@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/medication_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverOverviewCard extends StatelessWidget {
   const CaregiverOverviewCard({super.key});
@@ -35,44 +35,52 @@ class CaregiverOverviewCard extends StatelessWidget {
         ? healthProvider.vitals.first
         : null;
 
-    final cards = [
+    final adherenceAccent = adherencePercentage >= 90
+        ? CaregiverDashboardTheme.primaryTeal
+        : adherencePercentage >= 75
+            ? CaregiverDashboardTheme.accentYellow
+            : CaregiverDashboardTheme.accentCoral;
+    final alertsAccent = abnormalVitals.isEmpty
+        ? CaregiverDashboardTheme.primaryTeal
+        : CaregiverDashboardTheme.accentCoral;
+
+    final cards = <_OverviewMetric>[
       _OverviewMetric(
         label: 'Adherence',
         value: '${adherencePercentage.toStringAsFixed(0)}%',
+        description: 'On-time doses across the last 7 days.',
         icon: Icons.monitor_heart,
-        color: adherencePercentage >= 90
-            ? AppTheme.getSuccessColor(context)
-            : adherencePercentage >= 75
-                ? AppTheme.getWarningColor(context)
-                : AppTheme.getErrorColor(context),
+        accent: adherenceAccent,
       ),
       _OverviewMetric(
         label: 'Streak',
         value: '$adherenceStreak days',
+        description: 'Continuous adherence streak.',
         icon: Icons.local_fire_department,
-        color: context.theme.colors.primary,
+        accent: CaregiverDashboardTheme.accentYellow,
       ),
       _OverviewMetric(
         label: 'Upcoming doses',
         value: '$upcomingToday today',
+        description: 'Scheduled after right now.',
         icon: Icons.schedule,
-        color: context.theme.colors.secondary,
+        accent: CaregiverDashboardTheme.accentBlue,
       ),
       _OverviewMetric(
         label: 'Alerts',
         value: '${abnormalVitals.length}',
+        description: 'Abnormal vitals needing attention.',
         icon: Icons.warning_amber_rounded,
-        color: abnormalVitals.isEmpty
-            ? AppTheme.getSuccessColor(context)
-            : AppTheme.getErrorColor(context),
+        accent: alertsAccent,
       ),
       if (latestVital != null)
         _OverviewMetric(
           label: 'Last vital',
           value:
               '${latestVital.type.displayName}: ${latestVital.value} ${latestVital.type.unit}',
+          description: 'Most recent recording.',
           icon: Icons.favorite,
-          color: context.theme.colors.mutedForeground,
+          accent: CaregiverDashboardTheme.primaryTeal,
           maxLines: 2,
         ),
     ];
@@ -83,20 +91,55 @@ class CaregiverOverviewCard extends StatelessWidget {
         final crossAxisCount = isWide ? 2 : 1;
         final crossAxisSpacing = 12.w;
 
-        return FCard(
+        return Container(
+          padding: CaregiverDashboardTheme.cardPadding(),
+          decoration:
+              CaregiverDashboardTheme.glassCard(highlighted: true),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Care overview',
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.primaryTeal,
+                    ),
+                    child: const Icon(
+                      Icons.dashboard_customize_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Care overview',
+                          style: CaregiverDashboardTheme.sectionTitleStyle(
+                            context,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Real-time snapshot of adherence, alerts, and vitals for your recipients.',
+                          style:
+                              CaregiverDashboardTheme.sectionSubtitleStyle(
+                            context,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 20.h),
               Wrap(
                 spacing: crossAxisSpacing,
-                runSpacing: 12.h,
+                runSpacing: 16.h,
                 children: cards
                     .map(
                       (metric) => SizedBox(
@@ -120,64 +163,80 @@ class CaregiverOverviewCard extends StatelessWidget {
 class _OverviewMetric extends StatelessWidget {
   final String label;
   final String value;
+  final String description;
   final IconData icon;
-  final Color color;
+  final Color accent;
   final int maxLines;
 
   const _OverviewMetric({
     required this.label,
     required this.value,
+    required this.description,
     required this.icon,
-    required this.color,
+    required this.accent,
     this.maxLines = 1,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: color.withOpacity(0.08),
+    final textTheme = context.theme.typography;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.symmetric(
+        horizontal: 16.w,
+        vertical: 18.h,
       ),
-      child: Row(
+      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.6),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: color,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      maxLines: maxLines,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.sm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      label,
+                      style: textTheme.xs.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: CaregiverDashboardTheme.deepTeal
+                            .withOpacity(0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  maxLines: maxLines,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  label,
-                  style: context.theme.typography.xs.copyWith(
-                    color: context.theme.colors.mutedForeground,
-                  ),
-                ),
-              ],
+          SizedBox(height: 12.h),
+          Text(
+            description,
+            style: textTheme.xs.copyWith(
+              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
             ),
           ),
         ],

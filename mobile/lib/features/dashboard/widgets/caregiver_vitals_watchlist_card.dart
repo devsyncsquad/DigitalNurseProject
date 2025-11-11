@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverVitalsWatchlistCard extends StatelessWidget {
   const CaregiverVitalsWatchlistCard({super.key});
@@ -20,25 +21,82 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
         .take(5)
         .toList();
 
-    return FCard(
+    return Container(
+      padding: CaregiverDashboardTheme.cardPadding(),
+      decoration: CaregiverDashboardTheme.glassCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Vitals watchlist',
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          if (abnormalVitals.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              child: Text(
-                'All vitals are within normal range.',
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: CaregiverDashboardTheme.iconBadge(
+                  CaregiverDashboardTheme.accentCoral,
                 ),
+                child: const Icon(
+                  Icons.monitor_heart_outlined,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vitals watchlist',
+                      style: CaregiverDashboardTheme.sectionTitleStyle(
+                        context,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Track readings that fall outside normal ranges.',
+                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                        context,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          if (abnormalVitals.isEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 18.h,
+              ),
+              decoration: CaregiverDashboardTheme.tintedCard(
+                CaregiverDashboardTheme.primaryTeal,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.primaryTeal,
+                    ),
+                    child: const Icon(
+                      Icons.verified_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      'All vitals are within normal range.',
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           else
@@ -47,62 +105,19 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
               final vital = entry.value;
               final status = vital.getHealthStatus();
               final statusColor = switch (status) {
-                VitalHealthStatus.danger => AppTheme.getErrorColor(context),
-                VitalHealthStatus.warning => AppTheme.getWarningColor(context),
+                VitalHealthStatus.danger =>
+                  AppTheme.getErrorColor(context),
+                VitalHealthStatus.warning =>
+                  AppTheme.getWarningColor(context),
                 _ => AppTheme.getSuccessColor(context),
               };
               final isLast = index == abnormalVitals.length - 1;
               return Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.monitor_heart,
-                        color: statusColor,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            vital.type.displayName,
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            '${vital.value} ${vital.type.unit}',
-                            style: context.theme.typography.xs.copyWith(
-                              color: statusColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            DateFormat('MMM d, h:mm a').format(vital.timestamp),
-                            style: context.theme.typography.xs.copyWith(
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => context.push('/health'),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+                child: _VitalRow(
+                  vital: vital,
+                  accent: statusColor,
+                  onTap: () => context.push('/health'),
                 ),
               );
             }).toList(),
@@ -111,4 +126,85 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
     );
   }
 }
+
+class _VitalRow extends StatelessWidget {
+  final VitalMeasurementModel vital;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _VitalRow({
+    required this.vital,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                child: const Icon(
+                  Icons.monitor_heart,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vital.type.displayName,
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      '${vital.value} ${vital.type.unit}',
+                      style: context.theme.typography.xs.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: onTap,
+                style: TextButton.styleFrom(
+                  foregroundColor: accent,
+                  textStyle: context.theme.typography.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: const Text('Review'),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            DateFormat('MMM d, h:mm a').format(vital.timestamp),
+            style: context.theme.typography.xs.copyWith(
+              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 

@@ -11,7 +11,7 @@ import '../../../core/models/medicine_model.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/medication_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import 'dashboard_theme.dart';
 
 class CaregiverAdherenceAndVitalsRow extends StatelessWidget {
   const CaregiverAdherenceAndVitalsRow({super.key});
@@ -33,7 +33,7 @@ class CaregiverAdherenceAndVitalsRow extends StatelessWidget {
               final isLast = index == children.length - 1;
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: isLast ? 0 : 12.w),
+                  padding: EdgeInsets.only(right: isLast ? 0 : 14.w),
                   child: child,
                 ),
               );
@@ -45,7 +45,7 @@ class CaregiverAdherenceAndVitalsRow extends StatelessWidget {
             final child = children[index];
             final isLast = index == children.length - 1;
             return Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 12.h),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
               child: child,
             );
           }),
@@ -64,59 +64,130 @@ class _VitalsTrendCard extends StatelessWidget {
 
     final trendData = _TrendData.fromVitals(healthProvider.vitals);
 
-    return FCard(
+    return Container(
+      padding: CaregiverDashboardTheme.cardPadding(),
+      decoration: CaregiverDashboardTheme.glassCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Vitals trend',
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          if (trendData == null)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              child: Text(
-                'Not enough data to display trends yet.',
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: CaregiverDashboardTheme.iconBadge(
+                  CaregiverDashboardTheme.accentBlue,
                 ),
+                child: const Icon(
+                  Icons.show_chart_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vitals trend',
+                      style: CaregiverDashboardTheme.sectionTitleStyle(
+                        context,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Visualise the latest vital that has enough history.',
+                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                        context,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          if (trendData == null)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 18.h,
+              ),
+              decoration: CaregiverDashboardTheme.tintedCard(
+                CaregiverDashboardTheme.accentBlue,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.accentBlue,
+                    ),
+                    child: const Icon(
+                      Icons.info_outline_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      'Not enough data to display trends yet.',
+                      style: context.theme.typography.sm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: CaregiverDashboardTheme.deepTeal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           else ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  trendData.label,
-                  style: context.theme.typography.xs.copyWith(
-                    color: context.theme.colors.mutedForeground,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: CaregiverDashboardTheme.frostedChip(
+                    baseColor: Colors.white,
+                  ),
+                  child: Text(
+                    trendData.label,
+                    style: context.theme.typography.xs.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: CaregiverDashboardTheme.accentBlue,
+                    ),
                   ),
                 ),
                 Text(
                   '${trendData.points.last.value.toStringAsFixed(1)} ${trendData.unit}',
                   style: context.theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    color: CaregiverDashboardTheme.deepTeal,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12.h),
-            SizedBox(
-              height: 120.h,
+            SizedBox(height: 16.h),
+            Container(
+              height: 140.h,
+              padding: EdgeInsets.all(12.w),
+              decoration: CaregiverDashboardTheme.tintedCard(
+                CaregiverDashboardTheme.accentBlue,
+              ),
               child: SparklineChart(
                 values: trendData.points.map((point) => point.value).toList(),
-                color: context.theme.colors.primary,
+                color: CaregiverDashboardTheme.accentBlue,
               ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 14.h),
             Text(
-              'Last updated: ${DateFormat('MMM d, h:mm a').format(trendData.points.last.timestamp)}',
+              'Last updated • ${DateFormat('MMM d, h:mm a').format(trendData.points.last.timestamp)}',
               style: context.theme.typography.xs.copyWith(
-                color: context.theme.colors.mutedForeground,
+                color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
               ),
             ),
           ],
@@ -179,45 +250,115 @@ class _AdherenceSparklineCard extends StatelessWidget {
       future: _loadAdherenceHistory(context, medicationProvider.medicines),
       builder: (context, snapshot) {
         final points = snapshot.data ?? [];
-        return FCard(
+        return Container(
+          padding: CaregiverDashboardTheme.cardPadding(),
+          decoration: CaregiverDashboardTheme.glassCard(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Medication adherence',
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      CaregiverDashboardTheme.primaryTeal,
+                    ),
+                    child: const Icon(
+                      Icons.auto_graph_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Medication adherence',
+                          style: CaregiverDashboardTheme.sectionTitleStyle(
+                            context,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Last 14 doses across top medicines.',
+                          style: CaregiverDashboardTheme.sectionSubtitleStyle(
+                            context,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 20.h),
               if (snapshot.connectionState == ConnectionState.waiting)
-                SizedBox(
-                  height: 120.h,
-                  child: const Center(child: CircularProgressIndicator()),
-                )
-              else if (points.length < 2)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
-                  child: Text(
-                    'Not enough adherence history yet.',
-                    style: context.theme.typography.xs.copyWith(
-                      color: context.theme.colors.mutedForeground,
+                Container(
+                  height: 140.h,
+                  decoration: CaregiverDashboardTheme.tintedCard(
+                    CaregiverDashboardTheme.primaryTeal,
+                  ),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        CaregiverDashboardTheme.primaryTeal,
+                      ),
                     ),
                   ),
                 )
+              else if (points.length < 2)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 18.h,
+                  ),
+                  decoration: CaregiverDashboardTheme.tintedCard(
+                    CaregiverDashboardTheme.primaryTeal,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: CaregiverDashboardTheme.iconBadge(
+                          CaregiverDashboardTheme.primaryTeal,
+                        ),
+                        child: const Icon(
+                          Icons.info_outline_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          'Not enough adherence history yet.',
+                          style: context.theme.typography.sm.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: CaregiverDashboardTheme.deepTeal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               else ...[
-                SizedBox(
-                  height: 120.h,
+                Container(
+                  height: 140.h,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: CaregiverDashboardTheme.tintedCard(
+                    CaregiverDashboardTheme.primaryTeal,
+                  ),
                   child: SparklineChart(
                     values: points.map((point) => point.value * 100).toList(),
-                    color: AppTheme.getSuccessColor(context),
+                    color: CaregiverDashboardTheme.primaryTeal,
                   ),
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 14.h),
                 Text(
                   'Last 14 doses • ${points.last.value == 1.0 ? 'Taken' : points.last.value == 0.5 ? 'Skipped' : 'Missed'}',
                   style: context.theme.typography.xs.copyWith(
-                    color: context.theme.colors.mutedForeground,
+                    color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
                   ),
                 ),
               ],
