@@ -1,5 +1,5 @@
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm config set cache /tmp/.npm", "npm ci"]
 
 [phases.build]
 cmds = ["npm run build", "npx prisma generate"]
