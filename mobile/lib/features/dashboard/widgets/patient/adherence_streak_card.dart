@@ -97,22 +97,34 @@ class AdherenceStreakCard extends StatelessWidget {
                 child: Center(
                   child: AnimatedHeartIcon(
                     percentage: adherencePercentage,
-                    size: 50.0,
-                    fillColor: Colors.white,
-                    strokeColor: accent,
+                    size: 56.0,
+                    fillColor: Colors.red,
+                    strokeColor: Colors.black,
                   ),
                 ),
               ),
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                decoration: CaregiverDashboardTheme.frostedChip(
-                  baseColor: accent,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: accent.withOpacity(0.25),
+                  border: Border.all(
+                    color: accent.withOpacity(0.4),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withOpacity(0.15),
+                      blurRadius: 14,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Text(
                   '${adherencePercentage.toInt()}%',
                   style: context.theme.typography.sm.copyWith(
-                    color: Colors.white,
+                    color: CaregiverDashboardTheme.deepTeal,
                     fontWeight: FontWeight.w700,
                     fontSize: 12.sp,
                   ),

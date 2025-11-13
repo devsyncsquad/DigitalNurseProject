@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/theme/app_theme.dart';
 import 'animated_heart_icon.dart';
 import 'dashboard_theme.dart';
 
@@ -98,22 +97,34 @@ class AdherenceStreakCard extends StatelessWidget {
                 child: Center(
                   child: AnimatedHeartIcon(
                     percentage: adherencePercentage,
-                    size: 50.0,
-                    fillColor: Colors.white,
-                    strokeColor: accent,
+                    size: 56.0,
+                    fillColor: Colors.red,
+                    strokeColor: Colors.black,
                   ),
                 ),
               ),
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                decoration: CaregiverDashboardTheme.frostedChip(
-                  baseColor: accent,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: accent.withOpacity(0.25),
+                  border: Border.all(
+                    color: accent.withOpacity(0.4),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withOpacity(0.15),
+                      blurRadius: 14,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
                 child: Text(
                   '${adherencePercentage.toInt()}%',
                   style: context.theme.typography.sm.copyWith(
-                    color: Colors.white,
+                    color: CaregiverDashboardTheme.deepTeal,
                     fontWeight: FontWeight.w700,
                     fontSize: 12.sp,
                   ),
