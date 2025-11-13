@@ -5,11 +5,7 @@ import '../../../../core/providers/care_context_provider.dart';
 import '../dashboard_theme.dart';
 import 'care_recipient_selector.dart';
 import 'caregiver_action_shortcuts.dart';
-import 'caregiver_alerts_feed.dart';
 import 'caregiver_overview_card.dart';
-import 'caregiver_trends_section.dart';
-import 'caregiver_upcoming_medications_card.dart';
-import 'caregiver_vitals_watchlist_card.dart';
 
 class CaregiverDashboardView extends StatelessWidget {
   final CareContextProvider careContext;
@@ -48,14 +44,6 @@ class CaregiverDashboardView extends StatelessWidget {
               const CaregiverOverviewCard(),
               SizedBox(height: cardSpacing),
               const CaregiverActionShortcuts(),
-              SizedBox(height: cardSpacing),
-              const CaregiverAdherenceAndVitalsRow(),
-              SizedBox(height: cardSpacing),
-              const CaregiverUpcomingMedicationsCard(),
-              SizedBox(height: cardSpacing),
-              const CaregiverVitalsWatchlistCard(),
-              SizedBox(height: cardSpacing),
-              const CaregiverAlertsFeed(),
             ],
           ),
         ),
@@ -114,25 +102,25 @@ class _DashboardHero extends StatelessWidget {
             onSelect: onRecipientSelected,
           ),
           if (recipients.isNotEmpty) ...[
-            SizedBox(height: 18.h),
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: [
-                _HeroChip(
-                  label: '${recipients.length} in care',
-                  icon: Icons.group,
-                ),
-                _HeroChip(
-                  label: 'Live updates on vitals',
-                  icon: Icons.monitor_heart,
-                ),
-                _HeroChip(
-                  label: 'Smart medication reminders',
-                  icon: Icons.medication_liquid,
-                ),
-              ],
-            ),
+            // SizedBox(height: 18.h),
+            // Wrap(
+            //   spacing: 8.w,
+            //   runSpacing: 8.h,
+            //   children: [
+            //     _HeroChip(
+            //       label: '${recipients.length} in care',
+            //       icon: Icons.group,
+            //     ),
+            //     _HeroChip(
+            //       label: 'Live updates on vitals',
+            //       icon: Icons.monitor_heart,
+            //     ),
+            //     _HeroChip(
+            //       label: 'Smart medication reminders',
+            //       icon: Icons.medication_liquid,
+            //     ),
+            //   ],
+            // ),
           ],
         ],
       ),
@@ -140,42 +128,4 @@ class _DashboardHero extends StatelessWidget {
   }
 }
 
-class _HeroChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _HeroChip({
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 12.w,
-        vertical: 8.h,
-      ),
-      decoration: CaregiverDashboardTheme.frostedChip(),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 16,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 

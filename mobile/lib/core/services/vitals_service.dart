@@ -275,7 +275,8 @@ Future<List<VitalMeasurementModel>> getVitalsByType(
         throw Exception(
             'Failed to calculate trends: ${response.statusMessage}');
       }
-    } catch (e) {
+    } 
+    catch (e) {
       _log('❌ Error calculating trends: $e');
       throw Exception(e.toString());
     }

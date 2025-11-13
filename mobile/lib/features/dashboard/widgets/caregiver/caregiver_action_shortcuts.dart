@@ -36,7 +36,7 @@ class CaregiverActionShortcuts extends StatelessWidget {
       ),
       _ActionShortcut(
         icon: Icons.note_alt,
-        label: 'Log observation',
+        label: 'View Documents',
         caption: 'Document vitals or incidents.',
         accent: CaregiverDashboardTheme.accentYellow,
         onTap: () => context.push('/documents'),

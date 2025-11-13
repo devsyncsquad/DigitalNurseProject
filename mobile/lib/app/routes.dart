@@ -13,6 +13,7 @@ import '../features/medication/screens/add_medicine_screen.dart';
 import '../features/medication/screens/medicine_detail_screen.dart';
 import '../features/health/screens/add_vital_screen.dart';
 import '../features/health/screens/health_trends_screen.dart';
+import '../features/health/screens/abnormal_vitals_screen.dart';
 import '../features/caregiver/screens/add_caregiver_screen.dart';
 import '../features/caregiver/screens/caregiver_list_screen.dart';
 import '../features/caregiver/screens/invitation_accept_screen.dart';
@@ -128,6 +129,10 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/health/trends',
       builder: (context, state) => const HealthTrendsScreen(),
+    ),
+    GoRoute(
+      path: '/health/abnormal',
+      builder: (context, state) => const AbnormalVitalsScreen(),
     ),
 
     // Caregiver routes

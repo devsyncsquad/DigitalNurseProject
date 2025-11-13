@@ -134,11 +134,21 @@ class CareRecipientSelector extends StatelessWidget {
           ),
           if (selectedRecipient?.relationship != null) ...[
             const SizedBox(height: 8),
-            Text(
-              selectedRecipient!.relationship!,
-              style: context.theme.typography.xs.copyWith(
-                color: context.theme.colors.mutedForeground,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.people_outline,
+                  size: 14,
+                  color: context.theme.colors.mutedForeground,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Relation: ${selectedRecipient!.relationship!}',
+                  style: context.theme.typography.xs.copyWith(
+                    color: context.theme.colors.mutedForeground,
+                  ),
+                ),
+              ],
             ),
           ],
         ],

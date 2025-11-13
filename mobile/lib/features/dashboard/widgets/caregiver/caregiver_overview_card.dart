@@ -2,6 +2,7 @@ import 'package:digital_nurse/core/extensions/vital_type_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/providers/health_provider.dart';
@@ -18,16 +19,6 @@ class CaregiverOverviewCard extends StatelessWidget {
 
     final adherencePercentage =
         medicationProvider.adherencePercentage.clamp(0, 100).toDouble();
-    final adherenceStreak = medicationProvider.adherenceStreak;
-
-    final upcomingToday = medicationProvider.upcomingReminders.where((reminder) {
-      final time = reminder['reminderTime'] as DateTime;
-      final now = DateTime.now();
-      return time.year == now.year &&
-          time.month == now.month &&
-          time.day == now.day &&
-          !time.isBefore(now);
-    }).length;
 
     final abnormalVitals =
         healthProvider.vitals.where((vital) => vital.isAbnormal()).toList();
@@ -52,26 +43,27 @@ class CaregiverOverviewCard extends StatelessWidget {
         icon: Icons.monitor_heart,
         accent: adherenceAccent,
       ),
-      _OverviewMetric(
-        label: 'Streak',
-        value: '$adherenceStreak days',
-        description: 'Continuous adherence streak.',
-        icon: Icons.local_fire_department,
-        accent: CaregiverDashboardTheme.accentYellow,
-      ),
-      _OverviewMetric(
-        label: 'Upcoming doses',
-        value: '$upcomingToday today',
-        description: 'Scheduled after right now.',
-        icon: Icons.schedule,
-        accent: CaregiverDashboardTheme.accentBlue,
-      ),
+      // _OverviewMetric(
+      //   label: 'Streak',
+      //   value: '$adherenceStreak days',
+      //   description: 'Continuous adherence streak.',
+      //   icon: Icons.local_fire_department,
+      //   accent: CaregiverDashboardTheme.accentYellow,
+      // ),
+      // _OverviewMetric(
+      //   label: 'Upcoming doses',
+      //   value: '$upcomingToday today',
+      //   description: 'Scheduled after right now.',
+      //   icon: Icons.schedule,
+      //   accent: CaregiverDashboardTheme.accentBlue,
+      // ),
       _OverviewMetric(
         label: 'Alerts',
         value: '${abnormalVitals.length}',
         description: 'Abnormal vitals needing attention.',
         icon: Icons.warning_amber_rounded,
         accent: alertsAccent,
+        onTap: () => context.push('/health/abnormal'),
       ),
       if (latestVital != null)
         _OverviewMetric(
@@ -167,6 +159,7 @@ class _OverviewMetric extends StatelessWidget {
   final IconData icon;
   final Color accent;
   final int maxLines;
+  final VoidCallback? onTap;
 
   const _OverviewMetric({
     required this.label,
@@ -175,12 +168,13 @@ class _OverviewMetric extends StatelessWidget {
     required this.icon,
     required this.accent,
     this.maxLines = 1,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = context.theme.typography;
-    return AnimatedContainer(
+    final content = AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       padding: EdgeInsets.symmetric(
@@ -242,6 +236,19 @@ class _OverviewMetric extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 }
 
