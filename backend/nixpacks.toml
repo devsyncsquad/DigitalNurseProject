@@ -1,5 +1,5 @@
 [phases.install]
-cmds = ["npm config set cache /tmp/.npm", "rm -rf /app/node_modules/.cache || true", "npm ci"]
+cmds = ["npm config set cache /tmp/.npm", "npm install --prefer-offline --no-audit"]
 
 [phases.build]
 cmds = ["npm run build", "npx prisma generate"]
