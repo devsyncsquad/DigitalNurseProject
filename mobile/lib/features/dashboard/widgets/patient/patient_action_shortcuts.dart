@@ -35,6 +35,13 @@ class PatientActionShortcuts extends StatelessWidget {
         onTap: () => context.push('/health'),
       ),
       _ActionShortcut(
+        icon: Icons.directions_run,
+        label: 'Lifestyle',
+        caption: 'Track diet and exercise.',
+        accent: CaregiverDashboardTheme.accentBlue,
+        onTap: () => context.push('/lifestyle'),
+      ),
+      _ActionShortcut(
         icon: Icons.calendar_month,
         label: 'View schedule',
         caption: 'See upcoming medicines.',

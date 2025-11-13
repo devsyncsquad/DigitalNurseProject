@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:easy_localization/easy_localization.dart';
-import '../../../core/theme/app_theme.dart';
 import 'animated_heart_icon.dart';
-import 'dashboard_theme.dart';
+import '../dashboard_theme.dart';
 
 class AdherenceStreakCard extends StatelessWidget {
   final int streakDays;
@@ -126,3 +125,4 @@ class AdherenceStreakCard extends StatelessWidget {
     );
   }
 }
+

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/health_provider.dart';
 import '../../../../core/providers/medication_provider.dart';
 import '../dashboard_theme.dart';
+import 'adherence_streak_card.dart';
 
 class PatientOverviewCard extends StatelessWidget {
   const PatientOverviewCard({super.key});
@@ -91,69 +92,81 @@ class PatientOverviewCard extends StatelessWidget {
         final crossAxisCount = isWide ? 2 : 1;
         final crossAxisSpacing = 12.w;
 
-        return Container(
-          padding: CaregiverDashboardTheme.cardPadding(),
-          decoration:
-              CaregiverDashboardTheme.glassCard(highlighted: true),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Adherence Streak Card - Prominent display
+            AdherenceStreakCard(
+              streakDays: adherenceStreak,
+              adherencePercentage: adherencePercentage,
+            ),
+            SizedBox(height: 18.h),
+            // Overview metrics card
+            Container(
+              padding: CaregiverDashboardTheme.cardPadding(),
+              decoration:
+                  CaregiverDashboardTheme.glassCard(highlighted: true),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: CaregiverDashboardTheme.iconBadge(
-                      CaregiverDashboardTheme.primaryTeal,
-                    ),
-                    child: const Icon(
-                      Icons.dashboard_customize_rounded,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: CaregiverDashboardTheme.iconBadge(
+                          CaregiverDashboardTheme.primaryTeal,
+                        ),
+                        child: const Icon(
+                          Icons.dashboard_customize_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Health overview',
+                              style: CaregiverDashboardTheme.sectionTitleStyle(
+                                context,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Real-time snapshot of your adherence, alerts, and vitals.',
+                              style:
+                                  CaregiverDashboardTheme.sectionSubtitleStyle(
+                                context,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Health overview',
-                          style: CaregiverDashboardTheme.sectionTitleStyle(
-                            context,
+                  SizedBox(height: 20.h),
+                  Wrap(
+                    spacing: crossAxisSpacing,
+                    runSpacing: 16.h,
+                    children: cards
+                        .map(
+                          (metric) => SizedBox(
+                            width: crossAxisCount == 1
+                                ? constraints.maxWidth
+                                : (constraints.maxWidth - crossAxisSpacing) /
+                                    crossAxisCount,
+                            child: metric,
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Real-time snapshot of your adherence, alerts, and vitals.',
-                          style:
-                              CaregiverDashboardTheme.sectionSubtitleStyle(
-                            context,
-                          ),
-                        ),
-                      ],
-                    ),
+                        )
+                        .toList(),
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
-              Wrap(
-                spacing: crossAxisSpacing,
-                runSpacing: 16.h,
-                children: cards
-                    .map(
-                      (metric) => SizedBox(
-                        width: crossAxisCount == 1
-                            ? constraints.maxWidth
-                            : (constraints.maxWidth - crossAxisSpacing) /
-                                crossAxisCount,
-                        child: metric,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

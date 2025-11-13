@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/extensions/activity_type_extensions.dart';
@@ -9,6 +10,7 @@ import '../../../../core/extensions/meal_type_extensions.dart';
 import '../../../../core/providers/lifestyle_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../dashboard_theme.dart';
+import 'expandable_patient_card.dart';
 
 class PatientLifestyleCard extends StatelessWidget {
   const PatientLifestyleCard({super.key});
@@ -32,51 +34,15 @@ class PatientLifestyleCard extends StatelessWidget {
 
     final todayTotalLogs = todayDietLogs.length + todayExerciseLogs.length;
 
-    return Container(
-      padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.glassCard(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: CaregiverDashboardTheme.iconBadge(
-                  CaregiverDashboardTheme.accentBlue,
-                ),
-                child: const Icon(
-                  Icons.directions_run_outlined,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today\'s activity',
-                      style: CaregiverDashboardTheme.sectionTitleStyle(
-                        context,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'Track your diet and exercise for today.',
-                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
-                        context,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          if (todayTotalLogs == 0)
-            Container(
+    return ExpandablePatientCard(
+      icon: Icons.directions_run_outlined,
+      title: 'Your lifestyle',
+      subtitle: 'Track your diet and exercise activities.',
+      count: '$todayTotalLogs',
+      accentColor: CaregiverDashboardTheme.accentBlue,
+      routeForViewDetails: '/lifestyle',
+      expandedChild: todayTotalLogs == 0
+          ? Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 16.w,
                 vertical: 18.h,
@@ -93,14 +59,14 @@ class PatientLifestyleCard extends StatelessWidget {
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
-                      Icons.track_changes_outlined,
+                      Icons.check_circle_outline_rounded,
                       color: Colors.white,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Text(
-                      'No activities logged for today yet.',
+                      'No diet or exercise logs for today.',
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
                         color: CaregiverDashboardTheme.deepTeal,
@@ -110,61 +76,81 @@ class PatientLifestyleCard extends StatelessWidget {
                 ],
               ),
             )
-          else ...[
-            if (todayDietLogs.isNotEmpty) ...[
-              ...todayDietLogs.take(3).toList().asMap().entries.map((entry) {
-                final index = entry.key;
-                final log = entry.value;
-                final isLast = index == todayDietLogs.take(3).toList().length - 1 &&
-                    todayExerciseLogs.isEmpty;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
-                  child: _DietRow(log: log),
-                );
-              }).toList(),
-            ],
-            if (todayExerciseLogs.isNotEmpty) ...[
-              ...todayExerciseLogs.take(3).toList().asMap().entries.map((entry) {
-                final index = entry.key;
-                final log = entry.value;
-                final isLast = index == todayExerciseLogs.take(3).toList().length - 1;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
-                  child: _ExerciseRow(log: log),
-                );
-              }).toList(),
-            ],
-          ],
-          if (todayTotalLogs > 0) ...[
-            SizedBox(height: 16.h),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => context.push('/lifestyle'),
-                style: TextButton.styleFrom(
-                  foregroundColor: CaregiverDashboardTheme.accentBlue,
-                  textStyle: context.theme.typography.xs.copyWith(
-                    fontWeight: FontWeight.w600,
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (todayDietLogs.isNotEmpty) ...[
+                  Text(
+                    'Meals',
+                    style: context.theme.typography.sm.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: CaregiverDashboardTheme.deepTeal,
+                    ),
                   ),
-                ),
-                child: const Text('View all activities'),
-              ),
+                  SizedBox(height: 12.h),
+                  ...todayDietLogs.take(2).map((log) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 14.h),
+                      child: _LifestyleLogRow(
+                        icon: Icons.restaurant,
+                        title: log.mealType.displayName,
+                        subtitle: log.description,
+                        value: '${log.calories} cal',
+                        accent: AppTheme.getSuccessColor(context),
+                        onTap: () => context.push('/lifestyle'),
+                      ),
+                    );
+                  }),
+                  if (todayDietLogs.length > 2) SizedBox(height: 12.h),
+                ],
+                if (todayExerciseLogs.isNotEmpty) ...[
+                  Text(
+                    'Exercise',
+                    style: context.theme.typography.sm.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: CaregiverDashboardTheme.deepTeal,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  ...todayExerciseLogs.take(2).map((log) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 14.h),
+                      child: _LifestyleLogRow(
+                        icon: Icons.fitness_center,
+                        title: log.activityType.displayName,
+                        subtitle: '${log.durationMinutes} min, ${log.caloriesBurned} cal',
+                        value: DateFormat('h:mm a').format(log.timestamp),
+                        accent: context.theme.colors.secondary,
+                        onTap: () => context.push('/lifestyle'),
+                      ),
+                    );
+                  }),
+                ],
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
 
-class _DietRow extends StatelessWidget {
-  final dynamic log;
+class _LifestyleLogRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String value;
+  final Color accent;
+  final VoidCallback onTap;
 
-  const _DietRow({required this.log});
+  const _LifestyleLogRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.accent,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final accent = AppTheme.getSuccessColor(context);
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: CaregiverDashboardTheme.tintedCard(accent),
@@ -175,8 +161,8 @@ class _DietRow extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: CaregiverDashboardTheme.iconBadge(accent),
-            child: const Icon(
-              Icons.restaurant,
+            child: Icon(
+              icon,
               color: Colors.white,
               size: 22,
             ),
@@ -187,107 +173,38 @@ class _DietRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  log.mealType.displayName,
+                  title,
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w700,
                     color: CaregiverDashboardTheme.deepTeal,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  log.description,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  subtitle,
                   style: context.theme.typography.xs.copyWith(
                     color: CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          Text(
-            '${log.calories} cal',
-            style: context.theme.typography.xs.copyWith(
-              fontWeight: FontWeight.w700,
-              color: accent,
+          TextButton(
+            onPressed: onTap,
+            style: TextButton.styleFrom(
+              foregroundColor: accent,
+              textStyle: context.theme.typography.xs.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            child: Text(value),
           ),
         ],
       ),
     );
   }
 }
-
-class _ExerciseRow extends StatelessWidget {
-  final dynamic log;
-
-  const _ExerciseRow({required this.log});
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = CaregiverDashboardTheme.accentBlue;
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: CaregiverDashboardTheme.iconBadge(accent),
-            child: const Icon(
-              Icons.fitness_center,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  log.activityType.displayName,
-                  style: context.theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: CaregiverDashboardTheme.deepTeal,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  log.description,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.theme.typography.xs.copyWith(
-                    color: CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${log.durationMinutes}m',
-                style: context.theme.typography.xs.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: accent,
-                ),
-              ),
-              Text(
-                '${log.caloriesBurned} cal',
-                style: context.theme.typography.xs.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: accent,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-

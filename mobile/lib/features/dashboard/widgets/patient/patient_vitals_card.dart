@@ -10,6 +10,7 @@ import '../../../../core/models/vital_measurement_model.dart';
 import '../../../../core/providers/health_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../dashboard_theme.dart';
+import 'expandable_patient_card.dart';
 
 class PatientVitalsCard extends StatelessWidget {
   const PatientVitalsCard({super.key});
@@ -23,53 +24,17 @@ class PatientVitalsCard extends StatelessWidget {
         .take(5)
         .toList();
 
-    return Container(
-      padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.glassCard(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: CaregiverDashboardTheme.iconBadge(
-                  CaregiverDashboardTheme.accentCoral,
-                ),
-                child: const Icon(
-                  Icons.monitor_heart_outlined,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recent vitals',
-                      style: CaregiverDashboardTheme.sectionTitleStyle(
-                        context,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      abnormalVitals.isNotEmpty
-                          ? 'Track readings that fall outside normal ranges.'
-                          : 'Your latest health measurements.',
-                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
-                        context,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          if (recentVitals.isEmpty)
-            Container(
+    return ExpandablePatientCard(
+      icon: Icons.monitor_heart_outlined,
+      title: 'Your vitals',
+      subtitle: abnormalVitals.isNotEmpty
+          ? 'Track readings that fall outside normal ranges.'
+          : 'Your latest health measurements.',
+      count: '${recentVitals.length}',
+      accentColor: CaregiverDashboardTheme.accentCoral,
+      routeForViewDetails: '/health',
+      expandedChild: recentVitals.isEmpty
+          ? Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 16.w,
                 vertical: 18.h,
@@ -103,47 +68,35 @@ class PatientVitalsCard extends StatelessWidget {
                 ],
               ),
             )
-          else
-            ...recentVitals.asMap().entries.map((entry) {
-              final index = entry.key;
-              final vital = entry.value;
-              final isAbnormal = vital.isAbnormal();
-              final status = vital.getHealthStatus();
-              final statusColor = switch (status) {
-                VitalHealthStatus.danger =>
-                  AppTheme.getErrorColor(context),
-                VitalHealthStatus.warning =>
-                  AppTheme.getWarningColor(context),
-                _ => CaregiverDashboardTheme.primaryTeal,
-              };
-              final isLast = index == recentVitals.length - 1;
-              return Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
-                child: _VitalRow(
-                  vital: vital,
-                  accent: isAbnormal ? statusColor : CaregiverDashboardTheme.primaryTeal,
-                  onTap: () => context.push('/health'),
-                ),
-              );
-            }).toList(),
-          if (recentVitals.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => context.push('/health'),
-                style: TextButton.styleFrom(
-                  foregroundColor: CaregiverDashboardTheme.accentCoral,
-                  textStyle: context.theme.typography.xs.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                child: const Text('View all vitals'),
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...recentVitals.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final vital = entry.value;
+                  final isAbnormal = vital.isAbnormal();
+                  final status = vital.getHealthStatus();
+                  final statusColor = switch (status) {
+                    VitalHealthStatus.danger =>
+                      AppTheme.getErrorColor(context),
+                    VitalHealthStatus.warning =>
+                      AppTheme.getWarningColor(context),
+                    _ => CaregiverDashboardTheme.primaryTeal,
+                  };
+                  final isLast = index == recentVitals.length - 1;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+                    child: _VitalRow(
+                      vital: vital,
+                      accent: isAbnormal
+                          ? statusColor
+                          : CaregiverDashboardTheme.primaryTeal,
+                      onTap: () => context.push('/health'),
+                    ),
+                  );
+                }).toList(),
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -227,4 +180,3 @@ class _VitalRow extends StatelessWidget {
     );
   }
 }
-

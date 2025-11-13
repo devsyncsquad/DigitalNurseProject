@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/models/medicine_model.dart';
 import '../../../../core/providers/medication_provider.dart';
 import '../dashboard_theme.dart';
+import 'expandable_patient_card.dart';
 
 class PatientUpcomingMedicationsCard extends StatelessWidget {
   const PatientUpcomingMedicationsCard({super.key});
@@ -30,51 +31,15 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
 
     final visibleReminders = nextReminders.take(4).toList();
 
-    return Container(
-      padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.glassCard(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: CaregiverDashboardTheme.iconBadge(
-                  CaregiverDashboardTheme.accentBlue,
-                ),
-                child: const Icon(
-                  Icons.medication_liquid_outlined,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Upcoming medicines',
-                      style: CaregiverDashboardTheme.sectionTitleStyle(
-                        context,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'Stay prepared with your next doses in the queue.',
-                      style: CaregiverDashboardTheme.sectionSubtitleStyle(
-                        context,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          if (nextReminders.isEmpty)
-            Container(
+    return ExpandablePatientCard(
+      icon: Icons.medication_liquid_outlined,
+      title: 'Upcoming medicines',
+      subtitle: 'Stay prepared with your next doses in the queue.',
+      count: '${nextReminders.length}',
+      accentColor: CaregiverDashboardTheme.accentBlue,
+      routeForViewDetails: '/medications',
+      expandedChild: nextReminders.isEmpty
+          ? Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 16.w,
                 vertical: 18.h,
@@ -108,43 +73,29 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
                 ],
               ),
             )
-          else
-            ...visibleReminders.asMap().entries.map((entry) {
-              final index = entry.key;
-              final reminder = entry.value;
-              final medicine = reminder['medicine'] as MedicineModel;
-              final time = reminder['reminderTime'] as DateTime;
-              final isSoon = time.difference(now).inMinutes <= 30;
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...visibleReminders.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final reminder = entry.value;
+                  final medicine = reminder['medicine'] as MedicineModel;
+                  final time = reminder['reminderTime'] as DateTime;
+                  final isSoon = time.difference(now).inMinutes <= 30;
 
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == visibleReminders.length - 1 ? 0 : 14.h,
-                ),
-                child: _UpcomingReminderRow(
-                  medicine: medicine,
-                  time: time,
-                  isSoon: isSoon,
-                ),
-              );
-            }),
-          if (nextReminders.length > 4) ...[
-            SizedBox(height: 16.h),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => context.push('/medications'),
-                style: TextButton.styleFrom(
-                  foregroundColor: CaregiverDashboardTheme.accentBlue,
-                  textStyle: context.theme.typography.xs.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                child: const Text('View all medicines'),
-              ),
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == visibleReminders.length - 1 ? 0 : 14.h,
+                    ),
+                    child: _UpcomingReminderRow(
+                      medicine: medicine,
+                      time: time,
+                      isSoon: isSoon,
+                    ),
+                  );
+                }),
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -256,7 +207,7 @@ class _UpcomingReminderRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: const Text('Details'),
+                child: Text(isSoon ? 'Remind now' : 'Details'),
               ),
             ],
           ),
@@ -265,4 +216,3 @@ class _UpcomingReminderRow extends StatelessWidget {
     );
   }
 }
-
