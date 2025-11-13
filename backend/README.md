@@ -237,7 +237,12 @@ Create `.vscode/launch.json`:
 
 ## 🚢 Deployment
 
-For production deployment instructions, see the main `ProjectPlan.md` in the root directory.
+### Railway Deployment (Recommended for Testing)
+
+Deploy to Railway's free tier for testing with your mobile app:
+
+- **[Railway Deployment Guide](./DEPLOYMENT.md)** - Complete step-by-step guide
+- **[Mobile App Configuration](./MOBILE_CONFIG.md)** - Configure mobile app to use deployed API
 
 ### Production Build
 
@@ -247,6 +252,15 @@ npm run build
 
 # Start in production mode
 NODE_ENV=production npm run start:prod
+```
+
+### Environment Variables
+
+See `.env.example` for all required environment variables. Copy it to `.env` and configure:
+
+```bash
+cp .env.example .env
+# Edit .env with your actual values
 ```
 
 ## 📖 Additional Documentation
