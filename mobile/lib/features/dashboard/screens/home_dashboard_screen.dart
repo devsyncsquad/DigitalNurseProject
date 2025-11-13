@@ -15,12 +15,8 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/user_model.dart';
-import '../widgets/adherence_streak_card.dart';
-import '../widgets/medicine_reminder_section.dart';
-import '../widgets/vitals_section.dart';
-import '../widgets/documents_section.dart';
-import '../widgets/diet_exercise_section.dart';
-import '../widgets/caregiver_dashboard_view.dart';
+import '../widgets/caregiver/caregiver_dashboard_view.dart';
+import '../widgets/patient/patient_dashboard_view.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -219,54 +215,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       ),
       child: RefreshIndicator(
         onRefresh: () => _loadData(force: true),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16.w),
-          child: isCaregiver
-              ? CaregiverDashboardView(
-                  careContext: careContextProvider,
-                  onRecipientSelected: (elderId) {
-                    careContextProvider.selectRecipient(elderId);
-                    _loadData(force: true);
-                  },
-                )
-              : _PatientDashboardContent(
-                  onRefreshRequested: () => _loadData(force: true),
-                ),
-        ),
+        child: isCaregiver
+            ? CaregiverDashboardView(
+                careContext: careContextProvider,
+                onRecipientSelected: (elderId) {
+                  careContextProvider.selectRecipient(elderId);
+                  _loadData(force: true);
+                },
+              )
+            : const PatientDashboardView(),
       ),
-    );
-  }
-}
-
-class _PatientDashboardContent extends StatelessWidget {
-  final VoidCallback onRefreshRequested;
-
-  const _PatientDashboardContent({
-    required this.onRefreshRequested,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Consumer<MedicationProvider>(
-          builder: (context, medicationProvider, child) {
-            return AdherenceStreakCard(
-              streakDays: medicationProvider.adherenceStreak,
-              adherencePercentage: medicationProvider.adherencePercentage,
-            );
-          },
-        ),
-        SizedBox(height: 24.h),
-        const MedicineReminderSection(),
-        SizedBox(height: 16.h),
-        const VitalsSection(),
-        SizedBox(height: 16.h),
-        const DocumentsSection(),
-        SizedBox(height: 16.h),
-        const DietExerciseSection(),
-      ],
     );
   }
 }

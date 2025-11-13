@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
-import 'dashboard_theme.dart';
+import '../dashboard_theme.dart';
 
 class CaregiverActionShortcuts extends StatelessWidget {
   const CaregiverActionShortcuts({super.key});

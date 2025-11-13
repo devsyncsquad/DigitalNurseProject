@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/models/care_recipient_model.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../../core/models/care_recipient_model.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class CareRecipientSelector extends StatelessWidget {
   final bool isLoading;

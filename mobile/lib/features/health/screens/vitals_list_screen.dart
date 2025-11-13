@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/care_context_provider.dart';
+import '../../../core/extensions/vital_type_extensions.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/models/user_model.dart';

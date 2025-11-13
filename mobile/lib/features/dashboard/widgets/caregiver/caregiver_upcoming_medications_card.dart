@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/models/medicine_model.dart';
-import '../../../core/providers/medication_provider.dart';
-import 'dashboard_theme.dart';
+import '../../../../core/models/medicine_model.dart';
+import '../../../../core/providers/medication_provider.dart';
+import '../dashboard_theme.dart';
 
 class CaregiverUpcomingMedicationsCard extends StatelessWidget {
   const CaregiverUpcomingMedicationsCard({super.key});

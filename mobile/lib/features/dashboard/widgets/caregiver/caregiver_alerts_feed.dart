@@ -5,21 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/models/vital_measurement_model.dart';
-import '../../../core/providers/health_provider.dart';
-import '../../../core/theme/app_theme.dart';
-import 'dashboard_theme.dart';
+import '../../../../core/models/notification_model.dart';
+import '../../../../core/providers/notification_provider.dart';
+import '../dashboard_theme.dart';
 
-class CaregiverVitalsWatchlistCard extends StatelessWidget {
-  const CaregiverVitalsWatchlistCard({super.key});
+class CaregiverAlertsFeed extends StatelessWidget {
+  const CaregiverAlertsFeed({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final healthProvider = context.watch<HealthProvider>();
-    final abnormalVitals = healthProvider.vitals
-        .where((vital) => vital.isAbnormal())
-        .take(5)
-        .toList();
+    final notificationProvider = context.watch<NotificationProvider>();
+    final notifications = notificationProvider.notifications.take(5).toList();
 
     return Container(
       padding: CaregiverDashboardTheme.cardPadding(),
@@ -28,15 +24,16 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 40,
                 height: 40,
                 decoration: CaregiverDashboardTheme.iconBadge(
-                  CaregiverDashboardTheme.accentCoral,
+                  CaregiverDashboardTheme.accentYellow,
                 ),
                 child: const Icon(
-                  Icons.monitor_heart_outlined,
+                  Icons.notifications_active_outlined,
                   color: Colors.white,
                 ),
               ),
@@ -46,14 +43,14 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Vitals watchlist',
+                      'Care alerts',
                       style: CaregiverDashboardTheme.sectionTitleStyle(
                         context,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      'Track readings that fall outside normal ranges.',
+                      'Latest updates about medications, vitals, and tasks.',
                       style: CaregiverDashboardTheme.sectionSubtitleStyle(
                         context,
                       ),
@@ -61,10 +58,21 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (notifications.isNotEmpty)
+                TextButton(
+                  onPressed: () => context.push('/notifications'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: CaregiverDashboardTheme.accentYellow,
+                    textStyle: context.theme.typography.xs.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: const Text('View all'),
+                ),
             ],
           ),
           SizedBox(height: 20.h),
-          if (abnormalVitals.isEmpty)
+          if (notifications.isEmpty)
             Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 16.w,
@@ -82,14 +90,14 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
-                      Icons.verified_rounded,
+                      Icons.mark_email_read_outlined,
                       color: Colors.white,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Text(
-                      'All vitals are within normal range.',
+                      'No new alerts.',
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
                         color: CaregiverDashboardTheme.deepTeal,
@@ -100,24 +108,15 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
               ),
             )
           else
-            ...abnormalVitals.asMap().entries.map((entry) {
+            ...notifications.asMap().entries.map((entry) {
               final index = entry.key;
-              final vital = entry.value;
-              final status = vital.getHealthStatus();
-              final statusColor = switch (status) {
-                VitalHealthStatus.danger =>
-                  AppTheme.getErrorColor(context),
-                VitalHealthStatus.warning =>
-                  AppTheme.getWarningColor(context),
-                _ => AppTheme.getSuccessColor(context),
-              };
-              final isLast = index == abnormalVitals.length - 1;
+              final notification = entry.value;
+              final isLast = index == notifications.length - 1;
               return Padding(
                 padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
-                child: _VitalRow(
-                  vital: vital,
-                  accent: statusColor,
-                  onTap: () => context.push('/health'),
+                child: _AlertRow(
+                  notification: notification,
+                  onTap: () => context.push('/notifications'),
                 ),
               );
             }).toList(),
@@ -127,19 +126,20 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
   }
 }
 
-class _VitalRow extends StatelessWidget {
-  final VitalMeasurementModel vital;
-  final Color accent;
+class _AlertRow extends StatelessWidget {
+  final NotificationModel notification;
   final VoidCallback onTap;
 
-  const _VitalRow({
-    required this.vital,
-    required this.accent,
+  const _AlertRow({
+    required this.notification,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final accent = notification.isRead
+        ? CaregiverDashboardTheme.accentBlue
+        : CaregiverDashboardTheme.accentCoral;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: CaregiverDashboardTheme.tintedCard(accent),
@@ -153,8 +153,10 @@ class _VitalRow extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: CaregiverDashboardTheme.iconBadge(accent),
-                child: const Icon(
-                  Icons.monitor_heart,
+                child: Icon(
+                  notification.isRead
+                      ? Icons.mark_email_read_rounded
+                      : Icons.mark_email_unread_rounded,
                   color: Colors.white,
                   size: 22,
                 ),
@@ -165,7 +167,7 @@ class _VitalRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      vital.type.displayName,
+                      notification.title,
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w700,
                         color: CaregiverDashboardTheme.deepTeal,
@@ -173,10 +175,11 @@ class _VitalRow extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${vital.value} ${vital.type.unit}',
+                      notification.body,
                       style: context.theme.typography.xs.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: accent,
+                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
+                          0.7,
+                        ),
                       ),
                     ),
                   ],
@@ -190,13 +193,13 @@ class _VitalRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: const Text('Review'),
+                child: const Text('Open'),
               ),
             ],
           ),
           SizedBox(height: 12.h),
           Text(
-            DateFormat('MMM d, h:mm a').format(vital.timestamp),
+            DateFormat('MMM d, h:mm a').format(notification.timestamp),
             style: context.theme.typography.xs.copyWith(
               color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
             ),
@@ -206,5 +209,4 @@ class _VitalRow extends StatelessWidget {
     );
   }
 }
-
 

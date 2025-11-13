@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:digital_nurse/core/extensions/vital_type_extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,11 +8,11 @@ import 'package:forui/forui.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/models/medicine_model.dart';
-import '../../../core/models/vital_measurement_model.dart';
-import '../../../core/providers/health_provider.dart';
-import '../../../core/providers/medication_provider.dart';
-import 'dashboard_theme.dart';
+import '../../../../core/models/medicine_model.dart';
+import '../../../../core/models/vital_measurement_model.dart';
+import '../../../../core/providers/health_provider.dart';
+import '../../../../core/providers/medication_provider.dart';
+import '../dashboard_theme.dart';
 
 class CaregiverAdherenceAndVitalsRow extends StatelessWidget {
   const CaregiverAdherenceAndVitalsRow({super.key});

@@ -4,12 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/providers/health_provider.dart';
-import '../../../core/providers/medication_provider.dart';
-import 'dashboard_theme.dart';
+import '../../../../core/providers/health_provider.dart';
+import '../../../../core/providers/medication_provider.dart';
+import '../dashboard_theme.dart';
 
-class CaregiverOverviewCard extends StatelessWidget {
-  const CaregiverOverviewCard({super.key});
+class PatientOverviewCard extends StatelessWidget {
+  const PatientOverviewCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -118,14 +118,14 @@ class CaregiverOverviewCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Care overview',
+                          'Health overview',
                           style: CaregiverDashboardTheme.sectionTitleStyle(
                             context,
                           ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          'Real-time snapshot of adherence, alerts, and vitals for your recipients.',
+                          'Real-time snapshot of your adherence, alerts, and vitals.',
                           style:
                               CaregiverDashboardTheme.sectionSubtitleStyle(
                             context,

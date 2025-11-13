@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/extensions/vital_type_extensions.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/auth_provider.dart';

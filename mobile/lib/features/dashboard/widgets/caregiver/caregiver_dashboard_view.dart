@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../core/providers/care_context_provider.dart';
+import '../../../../core/providers/care_context_provider.dart';
+import '../dashboard_theme.dart';
 import 'care_recipient_selector.dart';
 import 'caregiver_action_shortcuts.dart';
 import 'caregiver_alerts_feed.dart';
@@ -9,7 +10,6 @@ import 'caregiver_overview_card.dart';
 import 'caregiver_trends_section.dart';
 import 'caregiver_upcoming_medications_card.dart';
 import 'caregiver_vitals_watchlist_card.dart';
-import 'dashboard_theme.dart';
 
 class CaregiverDashboardView extends StatelessWidget {
   final CareContextProvider careContext;
@@ -82,7 +82,7 @@ class _DashboardHero extends StatelessWidget {
         ? 'Caring for ${selectedRecipient.name}'
         : 'Welcome back';
     final subtitle = selectedRecipient != null
-        ? 'Stay ahead with today’s schedule and vital updates.'
+        ? 'Stay ahead with today\'s schedule and vital updates.'
         : 'Select a care recipient to see personalised insights.';
 
     return Container(
@@ -178,3 +178,4 @@ class _HeroChip extends StatelessWidget {
     );
   }
 }
+
