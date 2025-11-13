@@ -5,13 +5,14 @@ class AppConfig {
   static const String _apiBaseUrlKey = 'api_base_url';
   
   // Default URLs for different environments
-  static const String _defaultLocalhost = 'http://localhost:3000/api';
-  static const String _defaultAndroidEmulator = 'http://10.0.2.2:3000/api';
+  static const String _defaultLocalhost = 'http://100.42.177.77:3000/api';
+  static const String _defaultAndroidEmulator = 'http://100.42.177.77:3000/api';
   
   // Convert localhost URLs to Android emulator URL (10.0.2.2)
   // This is needed because Android emulators can't access host machine's localhost directly
+  // Note: Only converts localhost/127.0.0.1 URLs, not IP addresses
   static String _convertToAndroidEmulatorUrl(String url) {
-    // Check if URL contains localhost or 127.0.0.1
+    // Check if URL contains localhost or 127.0.0.1 (not needed for IP addresses)
     if (url.contains('localhost') || url.contains('127.0.0.1')) {
       // Replace localhost/127.0.0.1 with 10.0.2.2 while preserving port and path
       final converted = url
@@ -20,6 +21,7 @@ class AppConfig {
       print('🔄 [CONFIG] Converted localhost URL to Android emulator URL: $url -> $converted');
       return converted;
     }
+    // Return as-is for IP addresses (like 100.42.177.77)
     return url;
   }
   
@@ -43,18 +45,16 @@ class AppConfig {
       } else {
         // Smart defaults based on platform
         if (Platform.isAndroid) {
-          // Android emulator uses 10.0.2.2 to access host machine's localhost
-          print('🔍 [CONFIG] Android detected, using emulator URL: $_defaultAndroidEmulator');
-          print('⚠️ [CONFIG] For physical device, set API URL using setApiBaseUrl()');
+          // Use deployed API URL for Android
+          print('🔍 [CONFIG] Android detected, using API URL: $_defaultAndroidEmulator');
           finalUrl = _defaultAndroidEmulator;
         } else if (Platform.isIOS) {
-          // iOS simulator can use localhost
-          print('🔍 [CONFIG] iOS detected, using localhost: $_defaultLocalhost');
-          print('⚠️ [CONFIG] For physical device, set API URL using setApiBaseUrl()');
+          // Use deployed API URL for iOS
+          print('🔍 [CONFIG] iOS detected, using API URL: $_defaultLocalhost');
           finalUrl = _defaultLocalhost;
         } else {
           // Fallback
-          print('🔍 [CONFIG] Using default localhost: $_defaultLocalhost');
+          print('🔍 [CONFIG] Using default API URL: $_defaultLocalhost');
           finalUrl = _defaultLocalhost;
         }
       }
