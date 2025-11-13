@@ -256,12 +256,7 @@ class ProfileViewScreen extends StatelessWidget {
                           color: context.theme.colors.mutedForeground,
                         ),
                         onTap: () {
-                          // Navigate to caregiver list (would need a separate route)
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Navigate to Caregivers tab'),
-                            ),
-                          );
+                          context.push('/caregivers');
                         },
                       ),
                       const Divider(height: 1),
