@@ -122,13 +122,32 @@ class MedicineItemTile extends StatelessWidget {
             ),
           );
         } else {
-          // Future time, show action button
+          // Future time, show neutral outlined action button
+          final theme = context.theme;
+          final borderColor = theme.colors.border;
           return SizedBox(
-            width: 32,
-            height: 32,
-            child: FButton(
-              onPress: () => _handleMarkTaken(context),
-              child: const Icon(FIcons.plus, size: 16),
+            width: 36,
+            height: 36,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _handleMarkTaken(context),
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colors.background,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      FIcons.plus,
+                      size: 16,
+                      color: theme.colors.foreground,
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         }
