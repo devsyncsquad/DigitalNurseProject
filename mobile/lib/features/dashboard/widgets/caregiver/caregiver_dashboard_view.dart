@@ -70,7 +70,7 @@ class _DashboardHero extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.all(20.w),
-      decoration: CaregiverDashboardTheme.heroDecoration(),
+      decoration: CaregiverDashboardTheme.heroDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

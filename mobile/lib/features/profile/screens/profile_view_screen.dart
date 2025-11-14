@@ -25,17 +25,26 @@ class ProfileViewScreen extends StatelessWidget {
 
     final isCaregiver = user.role == UserRole.caregiver;
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+
     return ModernScaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Profile',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: textTheme.titleLarge?.copyWith(
+            color: onPrimary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: onPrimary),
             onPressed: () => context.push('/settings'),
           ),
         ],
@@ -46,18 +55,18 @@ class ProfileViewScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              decoration: ModernSurfaceTheme.heroDecoration(),
+              decoration: ModernSurfaceTheme.heroDecoration(context),
               padding: ModernSurfaceTheme.heroPadding(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   CircleAvatar(
                     radius: 48,
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    backgroundColor: onPrimary.withValues(alpha: 0.15),
                     child: Text(
                       user.name[0].toUpperCase(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
+                      style: textTheme.headlineMedium?.copyWith(
+                            color: onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -65,8 +74,8 @@ class ProfileViewScreen extends StatelessWidget {
                   SizedBox(height: 16.h),
                   Text(
                     user.name,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
+                    style: textTheme.headlineSmall?.copyWith(
+                          color: onPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                     textAlign: TextAlign.center,
@@ -74,14 +83,14 @@ class ProfileViewScreen extends StatelessWidget {
                   SizedBox(height: 4.h),
                   Text(
                     user.email,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
+                    style: textTheme.bodySmall?.copyWith(
+                          color: onPrimary.withValues(alpha: 0.85),
                         ),
                   ),
                   SizedBox(height: 16.h),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    decoration: ModernSurfaceTheme.frostedChip(),
+                    decoration: ModernSurfaceTheme.frostedChip(context),
                     child: Text(
                       user.subscriptionTier == SubscriptionTier.premium
                           ? 'Premium Member'
@@ -106,7 +115,7 @@ class ProfileViewScreen extends StatelessWidget {
             SizedBox(height: 12),
 
             Container(
-              decoration: ModernSurfaceTheme.glassCard(),
+              decoration: ModernSurfaceTheme.glassCard(context),
               padding: EdgeInsets.all(16.w),
               child: Column(
                 children: [
@@ -121,24 +130,23 @@ class ProfileViewScreen extends StatelessWidget {
                           Icon(
                             FIcons.userPen,
                             size: 48,
-                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
+                            color: onSurface.withValues(alpha: 0.4),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No personal information added yet',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: ModernSurfaceTheme.deepTeal,
-                                ),
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: onSurface,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Tap "Edit Profile" to add your details',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: ModernSurfaceTheme.deepTeal
-                                      .withValues(alpha: 0.7),
-                                ),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: muted,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -155,7 +163,7 @@ class ProfileViewScreen extends StatelessWidget {
                       if (user.age != null)
                         Divider(
                           height: 24,
-                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
+                          color: onSurface.withValues(alpha: 0.1),
                         ),
                       _ProfileInfoRow(
                         icon: FIcons.phone,
@@ -167,7 +175,7 @@ class ProfileViewScreen extends StatelessWidget {
                       if (user.age != null || user.phone != null)
                         Divider(
                           height: 24,
-                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
+                          color: onSurface.withValues(alpha: 0.1),
                         ),
                       _ProfileInfoRow(
                         icon: FIcons.phone,
@@ -181,7 +189,7 @@ class ProfileViewScreen extends StatelessWidget {
                           user.emergencyContact != null)
                         Divider(
                           height: 24,
-                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
+                          color: onSurface.withValues(alpha: 0.1),
                         ),
                       _ProfileInfoRow(
                         icon: FIcons.heartPulse,
@@ -202,7 +210,7 @@ class ProfileViewScreen extends StatelessWidget {
             SizedBox(height: 12),
 
             Container(
-              decoration: ModernSurfaceTheme.glassCard(),
+              decoration: ModernSurfaceTheme.glassCard(context),
               child: Material(
                 color: Colors.transparent,
                 child: Column(
@@ -289,7 +297,7 @@ class ProfileViewScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 backgroundColor: ModernSurfaceTheme.accentCoral,
-                foregroundColor: Colors.white,
+              foregroundColor: onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),
                 ),
@@ -315,14 +323,20 @@ class _ProfileInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: ModernSurfaceTheme.iconBadge(
+            context,
             ModernSurfaceTheme.primaryTeal,
           ),
-          child: Icon(icon, size: 16, color: Colors.white),
+          child: Icon(icon, size: 16, color: colorScheme.onPrimary),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -331,17 +345,17 @@ class _ProfileInfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
-                    ),
+                style: textTheme.bodySmall?.copyWith(
+                  color: muted,
+                ),
               ),
               SizedBox(height: 2),
               Text(
                 value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: ModernSurfaceTheme.deepTeal,
-                    ),
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: onSurface,
+                ),
               ),
             ],
           ),
@@ -431,12 +445,13 @@ class _ModernListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return ListTile(
-      leading: Icon(icon, color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7)),
+      leading: Icon(icon, color: onSurface.withValues(alpha: 0.7)),
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: ModernSurfaceTheme.deepTeal,
+              color: onSurface,
               fontWeight: FontWeight.w600,
             ),
       ),
@@ -445,12 +460,12 @@ class _ModernListTile extends StatelessWidget {
           : Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.65),
+                    color: onSurface.withValues(alpha: 0.65),
                   ),
             ),
       trailing: Icon(
         FIcons.chevronsRight,
-        color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
+        color: onSurface.withValues(alpha: 0.4),
       ),
       onTap: onTap,
     );

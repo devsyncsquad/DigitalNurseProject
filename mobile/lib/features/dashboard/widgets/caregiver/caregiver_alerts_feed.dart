@@ -16,10 +16,11 @@ class CaregiverAlertsFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     final notificationProvider = context.watch<NotificationProvider>();
     final notifications = notificationProvider.notifications.take(5).toList();
+    final brightness = Theme.of(context).brightness;
 
     return Container(
       padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.glassCard(),
+      decoration: CaregiverDashboardTheme.glassCard(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -30,6 +31,7 @@ class CaregiverAlertsFeed extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: CaregiverDashboardTheme.iconBadge(
+                  context,
                   CaregiverDashboardTheme.accentYellow,
                 ),
                 child: const Icon(
@@ -79,6 +81,7 @@ class CaregiverAlertsFeed extends StatelessWidget {
                 vertical: 18.h,
               ),
               decoration: CaregiverDashboardTheme.tintedCard(
+                context,
                 CaregiverDashboardTheme.primaryTeal,
               ),
               child: Row(
@@ -87,6 +90,7 @@ class CaregiverAlertsFeed extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
@@ -100,7 +104,10 @@ class CaregiverAlertsFeed extends StatelessWidget {
                       'No new alerts.',
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: CaregiverDashboardTheme.tintedForegroundColor(
+                          CaregiverDashboardTheme.primaryTeal,
+                          brightness: brightness,
+                        ),
                       ),
                     ),
                   ),
@@ -140,9 +147,19 @@ class _AlertRow extends StatelessWidget {
     final accent = notification.isRead
         ? CaregiverDashboardTheme.accentBlue
         : CaregiverDashboardTheme.accentCoral;
+    final brightness = Theme.of(context).brightness;
+    final onTint = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final onTintMuted = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -152,7 +169,7 @@ class _AlertRow extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                decoration: CaregiverDashboardTheme.iconBadge(context, accent),
                 child: Icon(
                   notification.isRead
                       ? Icons.mark_email_read_rounded
@@ -170,16 +187,14 @@ class _AlertRow extends StatelessWidget {
                       notification.title,
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: onTint,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       notification.body,
                       style: context.theme.typography.xs.copyWith(
-                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
-                          0.7,
-                        ),
+                        color: onTintMuted,
                       ),
                     ),
                   ],
@@ -201,7 +216,7 @@ class _AlertRow extends StatelessWidget {
           Text(
             DateFormat('MMM d, h:mm a').format(notification.timestamp),
             style: context.theme.typography.xs.copyWith(
-              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
+              color: onTintMuted,
             ),
           ),
         ],

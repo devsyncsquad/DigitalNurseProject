@@ -104,6 +104,8 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     );
 
     final documentProvider = context.watch<DocumentProvider>();
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final documents = documentProvider.documents;
     final isLoading = documentProvider.isLoading;
     final error = documentProvider.error;
@@ -112,17 +114,17 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Health Documents',
-          style: TextStyle(
-            color: Colors.white,
+          style: textTheme.titleLarge?.copyWith(
+            color: onPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
           if (!isCaregiver)
             IconButton(
-              icon: const Icon(Icons.cloud_upload_outlined, color: Colors.white),
+              icon: Icon(Icons.cloud_upload_outlined, color: onPrimary),
               onPressed: () => context.push('/documents/upload'),
             ),
         ],
@@ -155,6 +157,11 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     required String? error,
     required List<DocumentModel> documents,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+
     if (isCaregiver) {
       if (isCareContextLoading && !hasAssignments) {
         return const Center(child: CircularProgressIndicator());
@@ -221,10 +228,10 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                   itemBuilder: (context, index) {
                     final document = documents[index];
                     final accent = _getDocumentColor(context, document.type);
-                final chipForeground =
-                    ModernSurfaceTheme.chipForegroundColor(accent);
+                    final chipForeground =
+                        ModernSurfaceTheme.chipForegroundColor(accent);
                     return Container(
-                      decoration: ModernSurfaceTheme.glassCard(accent: accent),
+                      decoration: ModernSurfaceTheme.glassCard(context, accent: accent),
                       padding: EdgeInsets.all(16.w),
                       child: InkWell(
                         onTap: () => context.push('/documents/${document.id}'),
@@ -235,7 +242,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                             Container(
                               width: double.infinity,
                               height: 90,
-                              decoration: ModernSurfaceTheme.tintedCard(accent),
+                              decoration: ModernSurfaceTheme.tintedCard(context, accent),
                               child: Icon(
                                 _getDocumentIcon(document.type),
                                 size: 36,
@@ -245,9 +252,9 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                             SizedBox(height: 12.h),
                             Text(
                               document.title,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: ModernSurfaceTheme.deepTeal,
+                                    color: onSurface,
                                   ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -259,23 +266,23 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                                 vertical: 6.h,
                               ),
                               decoration: ModernSurfaceTheme.frostedChip(
+                                context,
                                 baseColor: accent,
                               ),
                               child: Text(
                                 document.type.name,
-                              style: TextStyle(
-                                color: chipForeground,
-                                fontWeight: FontWeight.w600,
-                              ),
+                                style: TextStyle(
+                                  color: chipForeground,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             const Spacer(),
                             Text(
                               DateFormat('MMM d, yyyy')
                                   .format(document.uploadDate),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: ModernSurfaceTheme.deepTeal
-                                        .withValues(alpha: 0.6),
+                              style: textTheme.bodySmall?.copyWith(
+                                    color: muted,
                                   ),
                             ),
                           ],
@@ -290,8 +297,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context, {required bool isCaregiver}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -299,14 +312,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
           Icon(
             FIcons.fileText,
             size: 56,
-            color: ModernSurfaceTheme.primaryTeal,
+            color: colorScheme.primary,
           ),
           SizedBox(height: 12.h),
           Text(
             'No documents uploaded yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: onSurface,
                 ),
           ),
           SizedBox(height: 8.h),
@@ -315,8 +328,8 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                 ? 'This patient has not shared any records.'
                 : 'Upload prescriptions, lab reports, and more.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.65),
+            style: textTheme.bodySmall?.copyWith(
+                  color: muted,
                 ),
           ),
           if (!isCaregiver) ...[
@@ -324,14 +337,20 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
             ElevatedButton(
               onPressed: () => context.push('/documents/upload'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: onPrimary,
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: const Text('Upload Document'),
+              child: Text(
+                'Upload Document',
+                style: textTheme.labelLarge?.copyWith(
+                  color: onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
@@ -346,27 +365,33 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     required String message,
     VoidCallback? onRetry,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 48, color: ModernSurfaceTheme.primaryTeal),
+          Icon(icon, size: 48, color: colorScheme.primary),
           SizedBox(height: 16.h),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+            style: textTheme.bodySmall?.copyWith(
+                  color: muted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -375,10 +400,16 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: onPrimary,
               ),
-              child: const Text('Retry'),
+              child: Text(
+                'Retry',
+                style: textTheme.labelLarge?.copyWith(
+                  color: onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
@@ -433,7 +464,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = AppTheme.getErrorColor(context);
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(accent: color),
+      decoration: ModernSurfaceTheme.glassCard(context, accent: color),
       padding: EdgeInsets.all(16.w),
       child: Row(
         children: [
@@ -470,24 +501,28 @@ class _DocumentsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
       width: double.infinity,
-      decoration: ModernSurfaceTheme.heroDecoration(),
+      decoration: ModernSurfaceTheme.heroDecoration(context),
       padding: ModernSurfaceTheme.heroPadding(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             isCaregiver ? 'Shared records' : 'Your health vault',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
+            style: textTheme.bodyMedium?.copyWith(
+                  color: onPrimary.withValues(alpha: 0.85),
                 ),
           ),
           SizedBox(height: 8.h),
           Text(
             '$documentCount documents stored',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+            style: textTheme.headlineSmall?.copyWith(
+                  color: onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
           ),
@@ -514,11 +549,12 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const chipBase = Colors.white;
     final chipForeground =
-        ModernSurfaceTheme.chipForegroundColor(Colors.white);
+        ModernSurfaceTheme.chipForegroundColor(chipBase);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: ModernSurfaceTheme.frostedChip(),
+      decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

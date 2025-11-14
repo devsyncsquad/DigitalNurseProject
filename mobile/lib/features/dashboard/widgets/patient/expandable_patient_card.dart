@@ -81,7 +81,7 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
         CaregiverDashboardTheme.chipForegroundColor(widget.accentColor);
     return Container(
       padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.glassCard(),
+      decoration: CaregiverDashboardTheme.glassCard(context),
       child: Column(
         children: [
           // Header - expandable area and navigation button
@@ -104,6 +104,7 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
                               width: 40,
                               height: 40,
                               decoration: CaregiverDashboardTheme.iconBadge(
+                                context,
                                 widget.accentColor,
                               ),
                               child: Icon(
@@ -152,6 +153,7 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
                         vertical: 8.h,
                       ),
                       decoration: CaregiverDashboardTheme.frostedChip(
+                        context,
                         baseColor: widget.accentColor,
                       ),
                       child: Row(

@@ -39,7 +39,7 @@ class ModernScaffold extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: ModernSurfaceTheme.backgroundGradient(),
+        gradient: ModernSurfaceTheme.backgroundGradient(context),
       ),
       child: scaffold,
     );

@@ -81,6 +81,7 @@ class DocumentViewerScreen extends StatelessWidget {
             Container(
               height: 220,
               decoration: ModernSurfaceTheme.glassCard(
+                context,
                 accent: AppTheme.getDocumentColor(context, document.type.name),
               ),
               child: Column(
@@ -103,7 +104,7 @@ class DocumentViewerScreen extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             Container(
-              decoration: ModernSurfaceTheme.glassCard(),
+              decoration: ModernSurfaceTheme.glassCard(context),
               padding: EdgeInsets.all(20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

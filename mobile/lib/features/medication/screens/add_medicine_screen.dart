@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -255,6 +254,7 @@ class _ProgressHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: ModernSurfaceTheme.glassCard(
+        context,
         accent: ModernSurfaceTheme.primaryTeal,
         highlighted: true,
       ),
@@ -297,7 +297,7 @@ class _ErrorNotice extends StatelessWidget {
     final color = Theme.of(context).colorScheme.error;
     return Container(
       width: double.infinity,
-      decoration: ModernSurfaceTheme.glassCard(accent: color),
+      decoration: ModernSurfaceTheme.glassCard(context, accent: color),
       padding: EdgeInsets.all(16.w),
       child: Row(
         children: [

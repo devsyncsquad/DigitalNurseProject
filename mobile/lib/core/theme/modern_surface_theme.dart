@@ -16,28 +16,54 @@ class ModernSurfaceTheme {
   static const Color accentBlue = Color(0xFF64C7FF);
   static const Color accentCoral = Color(0xFFFF8FA3);
 
+  static ColorScheme _scheme(BuildContext context) => Theme.of(context).colorScheme;
+
+  static bool _isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+
+  static Color _blendOnSurface({
+    required Color base,
+    required Color overlay,
+    required double overlayOpacity,
+  }) {
+    return Color.alphaBlend(overlay.withValues(alpha: overlayOpacity), base);
+  }
+
   /// Page-level gradient background used by dashboards and lifestyle surfaces.
-  static LinearGradient backgroundGradient() {
-    return const LinearGradient(
+  static LinearGradient backgroundGradient(BuildContext context) {
+    final scheme = _scheme(context);
+    final isDark = _isDark(context);
+
+    final top = isDark
+        ? _blendOnSurface(base: midnight, overlay: primaryTeal, overlayOpacity: 0.28)
+        : const Color(0xFF0F5C52);
+    final middle = isDark
+        ? _blendOnSurface(base: scheme.surfaceVariant, overlay: primaryTeal, overlayOpacity: 0.16)
+        : _blendOnSurface(base: scheme.surfaceVariant, overlay: primaryTeal, overlayOpacity: 0.05);
+    final bottom = scheme.background;
+
+    return LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [
-        Color(0xFF0F5C52),
-        Color(0xFFECF6F4),
-        Colors.white,
-      ],
+      colors: [top, middle, bottom],
     );
   }
 
   /// Primary hero section gradient.
-  static LinearGradient heroGradient() {
-    return const LinearGradient(
+  static LinearGradient heroGradient(BuildContext context) {
+    final scheme = _scheme(context);
+    final isDark = _isDark(context);
+
+    final start = isDark
+        ? _blendOnSurface(base: primaryTeal, overlay: Colors.white, overlayOpacity: 0.08)
+        : primaryTeal;
+    final end = isDark
+        ? _blendOnSurface(base: scheme.primary, overlay: Colors.black, overlayOpacity: 0.25)
+        : const Color(0xFF118074);
+
+    return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [
-        primaryTeal,
-        Color(0xFF118074),
-      ],
+      colors: [start, end],
     );
   }
 
@@ -54,13 +80,16 @@ class ModernSurfaceTheme {
 
   static double heroSpacing() => 18.h;
 
-  static BoxDecoration heroDecoration() {
+  static BoxDecoration heroDecoration(BuildContext context) {
+    final isDark = _isDark(context);
+    final shadowBase = isDark ? Colors.black : deepTeal;
+
     return BoxDecoration(
       borderRadius: BorderRadius.circular(28),
-      gradient: heroGradient(),
+      gradient: heroGradient(context),
       boxShadow: [
         BoxShadow(
-          color: deepTeal.withValues(alpha: 0.35),
+          color: shadowBase.withValues(alpha: isDark ? 0.55 : 0.35),
           blurRadius: 30,
           offset: const Offset(0, 20),
         ),
@@ -68,25 +97,44 @@ class ModernSurfaceTheme {
     );
   }
 
-  static BoxDecoration glassCard({Color? accent, bool highlighted = false}) {
-    final Color baseAccent = accent ?? primaryTeal;
+  static BoxDecoration glassCard(
+    BuildContext context, {
+    Color? accent,
+    bool highlighted = false,
+  }) {
+    final scheme = _scheme(context);
+    final isDark = _isDark(context);
+    final Color baseAccent = accent ?? scheme.primary;
+
+    final Color topLayer = _blendOnSurface(
+      base: isDark ? scheme.surfaceVariant : Colors.white,
+      overlay: baseAccent,
+      overlayOpacity: isDark
+          ? (highlighted ? 0.22 : 0.16)
+          : (highlighted ? 0.08 : 0.05),
+    );
+    final Color bottomLayer = _blendOnSurface(
+      base: scheme.surface,
+      overlay: Colors.white,
+      overlayOpacity: isDark
+          ? (highlighted ? 0.06 : 0.04)
+          : (highlighted ? 0.15 : 0.1),
+    );
+
     return BoxDecoration(
       borderRadius: cardRadius(),
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: highlighted ? 0.9 : 0.95),
-          Colors.white.withValues(alpha: highlighted ? 0.82 : 0.9),
-        ],
+        colors: [topLayer, bottomLayer],
       ),
       border: Border.all(
-        color: baseAccent.withValues(alpha: 0.08),
+        color: baseAccent.withValues(alpha: isDark ? 0.25 : 0.12),
         width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
-          color: baseAccent.withValues(alpha: 0.14),
+          color: baseAccent.withValues(alpha: isDark ? 0.45 : 0.2),
           blurRadius: highlighted ? 26 : 18,
           offset: const Offset(0, 18),
         ),
@@ -94,24 +142,34 @@ class ModernSurfaceTheme {
     );
   }
 
-  static BoxDecoration tintedCard(Color accent) {
-    final Color blended = Color.alphaBlend(accent.withValues(alpha: 0.18), Colors.white);
+  static BoxDecoration tintedCard(BuildContext context, Color accent) {
+    final scheme = _scheme(context);
+    final isDark = _isDark(context);
+
+    final Color blendedTop = _blendOnSurface(
+      base: scheme.surfaceVariant,
+      overlay: accent,
+      overlayOpacity: isDark ? 0.35 : 0.18,
+    );
+    final Color blendedBottom = _blendOnSurface(
+      base: scheme.surface,
+      overlay: accent,
+      overlayOpacity: isDark ? 0.22 : 0.1,
+    );
+
     return BoxDecoration(
       borderRadius: cardRadius(),
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          blended,
-          Colors.white.withValues(alpha: 0.92),
-        ],
+        colors: [blendedTop, blendedBottom],
       ),
       border: Border.all(
-        color: accent.withValues(alpha: 0.14),
+        color: accent.withValues(alpha: isDark ? 0.35 : 0.14),
       ),
       boxShadow: [
         BoxShadow(
-          color: accent.withValues(alpha: 0.12),
+          color: accent.withValues(alpha: isDark ? 0.4 : 0.18),
           blurRadius: 24,
           offset: const Offset(0, 18),
         ),
@@ -119,20 +177,22 @@ class ModernSurfaceTheme {
     );
   }
 
-  static BoxDecoration pillButton(Color accent) {
+  static BoxDecoration pillButton(BuildContext context, Color accent) {
+    final isDark = _isDark(context);
+
     return BoxDecoration(
       borderRadius: BorderRadius.circular(30),
       gradient: LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          accent.withValues(alpha: 0.9),
-          accent.withValues(alpha: 0.75),
+          accent.withValues(alpha: isDark ? 0.9 : 0.95),
+          accent.withValues(alpha: isDark ? 0.7 : 0.8),
         ],
       ),
       boxShadow: [
         BoxShadow(
-          color: accent.withValues(alpha: 0.25),
+          color: accent.withValues(alpha: isDark ? 0.5 : 0.25),
           blurRadius: 16,
           offset: const Offset(0, 12),
         ),
@@ -140,20 +200,22 @@ class ModernSurfaceTheme {
     );
   }
 
-  static BoxDecoration iconBadge(Color accent) {
+  static BoxDecoration iconBadge(BuildContext context, Color accent) {
+    final isDark = _isDark(context);
+
     return BoxDecoration(
       shape: BoxShape.circle,
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          accent.withValues(alpha: 0.95),
-          accent.withValues(alpha: 0.7),
+          accent.withValues(alpha: isDark ? 0.85 : 0.95),
+          accent.withValues(alpha: isDark ? 0.55 : 0.7),
         ],
       ),
       boxShadow: [
         BoxShadow(
-          color: accent.withValues(alpha: 0.25),
+          color: accent.withValues(alpha: isDark ? 0.45 : 0.25),
           blurRadius: 14,
           offset: const Offset(0, 10),
         ),
@@ -161,16 +223,30 @@ class ModernSurfaceTheme {
     );
   }
 
-  static BoxDecoration frostedChip({Color baseColor = Colors.white}) {
+  static BoxDecoration frostedChip(
+    BuildContext context, {
+    Color? baseColor,
+  }) {
+    final scheme = _scheme(context);
+    final isDark = _isDark(context);
+    final Color resolvedBase =
+        baseColor ?? (isDark ? Colors.white.withValues(alpha: 0.9) : Colors.white);
+
+    final Color fill = _blendOnSurface(
+      base: scheme.surface,
+      overlay: resolvedBase,
+      overlayOpacity: isDark ? 0.28 : 0.18,
+    );
+
     return BoxDecoration(
       borderRadius: BorderRadius.circular(22),
-      color: baseColor.withValues(alpha: 0.18),
+      color: fill,
       border: Border.all(
-        color: baseColor.withValues(alpha: 0.3),
+        color: resolvedBase.withValues(alpha: isDark ? 0.5 : 0.3),
       ),
       boxShadow: [
         BoxShadow(
-          color: baseColor.withValues(alpha: 0.12),
+          color: resolvedBase.withValues(alpha: isDark ? 0.45 : 0.16),
           blurRadius: 14,
           offset: const Offset(0, 10),
         ),
@@ -186,17 +262,57 @@ class ModernSurfaceTheme {
     return luminance > 0.38 ? deepTeal : Colors.white;
   }
 
+  /// Returns a foreground color that contrasts well against tinted cards
+  /// produced with [tintedCard] using the provided [accent].
+  static Color tintedForegroundColor(
+    Color accent, {
+    Brightness brightness = Brightness.light,
+  }) {
+    if (brightness == Brightness.dark) {
+      return Colors.white;
+    }
+    // Simulate the resulting tint by blending the accent over a representative
+    // surface color so we can base contrast calculations on the actual
+    // background users will see instead of the raw accent hue.
+    final Color simulatedTint = _blendOnSurface(
+      base: Colors.white,
+      overlay: accent,
+      overlayOpacity: 0.18,
+    );
+
+    final double luminance = simulatedTint.computeLuminance();
+
+    if (luminance > 0.8) {
+      return Colors.black87;
+    }
+    if (luminance > 0.6) {
+      return deepTeal;
+    }
+    return Colors.white;
+  }
+
+  static Color tintedMutedColor(
+    Color accent, {
+    double opacity = 0.75,
+    Brightness brightness = Brightness.light,
+  }) {
+    return tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    ).withValues(alpha: opacity);
+  }
+
   static TextStyle sectionTitleStyle(BuildContext context) {
     return Theme.of(context).textTheme.titleMedium!.copyWith(
           fontWeight: FontWeight.w700,
-          color: deepTeal,
+          color: Theme.of(context).colorScheme.onSurface,
           letterSpacing: 0.2,
         );
   }
 
   static TextStyle sectionSubtitleStyle(BuildContext context) {
     return Theme.of(context).textTheme.bodySmall!.copyWith(
-          color: deepTeal.withValues(alpha: 0.65),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         );
   }
 

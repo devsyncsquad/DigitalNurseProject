@@ -31,6 +31,8 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
 
     final visibleReminders = nextReminders.take(4).toList();
 
+    final brightness = Theme.of(context).brightness;
+
     return ExpandablePatientCard(
       icon: Icons.medication_liquid_outlined,
       title: 'Upcoming medicines',
@@ -45,6 +47,7 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
                 vertical: 18.h,
               ),
               decoration: CaregiverDashboardTheme.tintedCard(
+                context,
                 CaregiverDashboardTheme.primaryTeal,
               ),
               child: Row(
@@ -53,6 +56,7 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
@@ -62,13 +66,16 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Text(
-                      'No upcoming doses scheduled.',
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: CaregiverDashboardTheme.deepTeal,
-                      ),
+                child: Text(
+                  'No upcoming doses scheduled.',
+                  style: context.theme.typography.sm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: CaregiverDashboardTheme.tintedForegroundColor(
+                      CaregiverDashboardTheme.primaryTeal,
+                      brightness: brightness,
                     ),
+                  ),
+                ),
                   ),
                 ],
               ),
@@ -127,9 +134,19 @@ class _UpcomingReminderRow extends StatelessWidget {
                 ? 'In ${diff.inHours} hrs'
                 : 'In ${diff.inDays} days';
 
+    final brightness = Theme.of(context).brightness;
+    final onTint = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final onTintMuted = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -139,7 +156,7 @@ class _UpcomingReminderRow extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                decoration: CaregiverDashboardTheme.iconBadge(context, accent),
                 child: const Icon(
                   Icons.medication_rounded,
                   color: Colors.white,
@@ -155,16 +172,14 @@ class _UpcomingReminderRow extends StatelessWidget {
                       medicine.name,
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: onTint,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       medicine.dosage,
                       style: context.theme.typography.xs.copyWith(
-                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
-                          0.7,
-                        ),
+                        color: onTintMuted,
                       ),
                     ),
                   ],
@@ -176,6 +191,7 @@ class _UpcomingReminderRow extends StatelessWidget {
                   vertical: 6.h,
                 ),
                 decoration: CaregiverDashboardTheme.frostedChip(
+                  context,
                   baseColor: Colors.white,
                 ),
                 child: Text(
@@ -195,8 +211,7 @@ class _UpcomingReminderRow extends StatelessWidget {
               Text(
                 '$dayLabel • $timeLabel',
                 style: context.theme.typography.xs.copyWith(
-                  color:
-                      CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
+                  color: onTintMuted,
                 ),
               ),
               TextButton(

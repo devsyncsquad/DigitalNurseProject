@@ -94,6 +94,8 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
       userId: currentUser?.id,
     );
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final onPrimary = colorScheme.onPrimary;
     final healthProvider = context.watch<HealthProvider>();
     final vitals = healthProvider.getVitalsForDate(_selectedDate);
     final error = healthProvider.error;
@@ -102,14 +104,19 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        foregroundColor: onPrimary,
+        iconTheme: IconThemeData(color: onPrimary),
+        title: Text(
           'Health Vitals',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: onPrimary,
+                fontWeight: FontWeight.w600,
+              ),
         ),
         actions: [
           if (!isCaregiver)
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+              icon: Icon(Icons.add_circle_outline, color: onPrimary),
               onPressed: () => context.push('/vitals/add'),
             ),
         ],
@@ -139,6 +146,12 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     required List<VitalMeasurementModel> vitals,
     required String? error,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     if (isCaregiver) {
       if (isCareContextLoading && !hasAssignments) {
         return const Center(child: CircularProgressIndicator());
@@ -209,16 +222,22 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
           SizedBox(height: 16.h),
           Container(
             width: double.infinity,
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             padding: EdgeInsets.all(16.w),
             child: ElevatedButton.icon(
               onPressed: () => context.push('/health/trends'),
-              icon: const Icon(FIcons.trendingUp),
-              label: const Text('View Trends'),
+              icon: Icon(FIcons.trendingUp, color: onPrimary),
+              label: Text(
+                'View Trends',
+                style: textTheme.titleSmall?.copyWith(
+                  color: onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 14.h),
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),
                 ),
@@ -239,14 +258,14 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Container(
-                          decoration: ModernSurfaceTheme.glassCard(accent: accent),
+                          decoration: ModernSurfaceTheme.glassCard(context, accent: accent),
                           padding: EdgeInsets.all(16.w),
                           child: Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: ModernSurfaceTheme.iconBadge(accent),
-                                child: const Icon(FIcons.activity, color: Colors.white),
+                                decoration: ModernSurfaceTheme.iconBadge(context, accent),
+                                child: Icon(FIcons.activity, color: onPrimary),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -255,25 +274,24 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
                                   children: [
                                     Text(
                                       vital.type.displayName,
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      style: textTheme.bodyMedium?.copyWith(
                                             fontWeight: FontWeight.bold,
-                                            color: ModernSurfaceTheme.deepTeal,
+                                            color: onSurface,
                                           ),
                                     ),
                                     SizedBox(height: 4),
                                     Text(
                                       DateFormat('MMM d, yyyy - h:mm a').format(vital.timestamp),
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+                                      style: textTheme.bodySmall?.copyWith(
+                                            color: muted,
                                           ),
                                     ),
                                     if (vital.notes != null) ...[
                                       SizedBox(height: 4),
                                       Text(
                                         vital.notes!,
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: ModernSurfaceTheme.deepTeal
-                                                  .withValues(alpha: 0.65),
+                                        style: textTheme.bodySmall?.copyWith(
+                                              color: muted,
                                             ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -315,6 +333,11 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
   Widget _buildEmptyState(BuildContext context, {required bool isCaregiver}) {
     final healthProvider = context.watch<HealthProvider>();
     final allVitals = healthProvider.vitals;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
 
     if (allVitals.isEmpty) {
       return Center(
@@ -324,14 +347,14 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
             Icon(
               FIcons.activity,
               size: 64.r,
-              color: ModernSurfaceTheme.primaryTeal,
+              color: colorScheme.primary,
             ),
             SizedBox(height: 16.h),
             Text(
               'No vitals logged yet',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: ModernSurfaceTheme.deepTeal,
+                    color: onSurface,
                   ),
             ),
             SizedBox(height: 8.h),
@@ -339,8 +362,8 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
               isCaregiver
                   ? 'This patient has no vitals recorded yet.'
                   : 'Start tracking your health vitals',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+              style: textTheme.bodySmall?.copyWith(
+                    color: muted,
                   ),
             ),
             if (!isCaregiver) ...[
@@ -348,14 +371,20 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
               ElevatedButton(
                 onPressed: () => context.push('/vitals/add'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ModernSurfaceTheme.primaryTeal,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: onPrimary,
                   padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: const Text('Log Vitals'),
+                child: Text(
+                  'Log Vitals',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: onPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ],
@@ -369,21 +398,21 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
             Icon(
               FIcons.calendar,
               size: 64.r,
-              color: ModernSurfaceTheme.primaryTeal,
+              color: colorScheme.primary,
             ),
             SizedBox(height: 16.h),
             Text(
               'No vitals for ${_getFormattedDate(_selectedDate)}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: ModernSurfaceTheme.deepTeal,
+                    color: onSurface,
                   ),
             ),
             SizedBox(height: 8.h),
             Text(
               'Select another date or add vitals',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.65),
+              style: textTheme.bodySmall?.copyWith(
+                    color: muted,
                   ),
             ),
           ],
@@ -421,17 +450,6 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     }
   }
 
-  Color _getStatusBackgroundColor(VitalHealthStatus status) {
-    switch (status) {
-      case VitalHealthStatus.normal:
-        return AppTheme.getSuccessColor(context).withValues(alpha: 0.1);
-      case VitalHealthStatus.warning:
-        return AppTheme.getWarningColor(context).withValues(alpha: 0.1);
-      case VitalHealthStatus.danger:
-        return AppTheme.getErrorColor(context).withValues(alpha: 0.1);
-    }
-  }
-
   Widget _buildCaregiverNotice(
     BuildContext context, {
     required IconData icon,
@@ -439,27 +457,33 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     required String message,
     VoidCallback? onRetry,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 48, color: ModernSurfaceTheme.primaryTeal),
+          Icon(icon, size: 48, color: colorScheme.primary),
           SizedBox(height: 16.h),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+            style: textTheme.bodySmall?.copyWith(
+                  color: muted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -468,10 +492,16 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: onPrimary,
               ),
-              child: const Text('Retry'),
+              child: Text(
+                'Retry',
+                style: textTheme.labelLarge?.copyWith(
+                  color: onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
@@ -490,7 +520,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = AppTheme.getErrorColor(context);
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(accent: color),
+      decoration: ModernSurfaceTheme.glassCard(context, accent: color),
       padding: EdgeInsets.all(16.w),
       child: Row(
         children: [
@@ -533,24 +563,28 @@ class _VitalsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
       width: double.infinity,
-      decoration: ModernSurfaceTheme.heroDecoration(),
+      decoration: ModernSurfaceTheme.heroDecoration(context),
       padding: ModernSurfaceTheme.heroPadding(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             isCaregiver ? 'Patient vitals overview' : 'Today’s vitals snapshot',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
+            style: textTheme.bodyMedium?.copyWith(
+                  color: onPrimary.withValues(alpha: 0.85),
                 ),
           ),
           SizedBox(height: 8.h),
           Text(
             '$totalCount checks on $dateLabel',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+            style: textTheme.headlineSmall?.copyWith(
+                  color: onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
           ),
@@ -583,10 +617,11 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipForeground = ModernSurfaceTheme.deepTeal;
+    const chipBase = Colors.white;
+    final chipForeground = ModernSurfaceTheme.chipForegroundColor(chipBase);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: ModernSurfaceTheme.frostedChip(),
+      decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

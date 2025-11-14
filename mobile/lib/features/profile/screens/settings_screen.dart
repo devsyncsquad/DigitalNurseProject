@@ -38,7 +38,7 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 12.h),
 
           Container(
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             child: Column(
               children: [
                 _ModernSwitchTile(
@@ -76,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 12.h),
 
           Container(
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             child: Consumer<LocaleProvider>(
               builder: (context, localeProvider, child) {
                 return Column(
@@ -128,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 12.h),
 
           Container(
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             child: Column(
               children: [
                 _ModernListTile(
@@ -165,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 12.h),
 
           Container(
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             child: Column(
               children: [
                 ListTile(
@@ -214,6 +214,7 @@ class SettingsScreen extends StatelessWidget {
             SizedBox(height: 12.h),
             Container(
               decoration: ModernSurfaceTheme.glassCard(
+                context,
                 accent: AppTheme.getWarningColor(context),
               ),
               child: ListTile(

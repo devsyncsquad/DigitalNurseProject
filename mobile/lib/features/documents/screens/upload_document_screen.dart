@@ -336,7 +336,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     VoidCallback? onRetry,
   }) {
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -425,14 +425,17 @@ class _FileSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          decoration: ModernSurfaceTheme.glassCard(accent: accent),
+          decoration: ModernSurfaceTheme.glassCard(
+            context,
+            accent: accent,
+          ),
           padding: EdgeInsets.all(16.w),
           child: Row(
             children: [
               Container(
                 width: 52,
                 height: 52,
-                decoration: ModernSurfaceTheme.iconBadge(accent),
+                decoration: ModernSurfaceTheme.iconBadge(context, accent),
                 child: Icon(
                   selectedFile!.isImage
                       ? FIcons.image
@@ -506,7 +509,7 @@ class _GlassFormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

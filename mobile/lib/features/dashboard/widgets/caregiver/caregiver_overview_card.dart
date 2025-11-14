@@ -85,8 +85,10 @@ class CaregiverOverviewCard extends StatelessWidget {
 
         return Container(
           padding: CaregiverDashboardTheme.cardPadding(),
-          decoration:
-              CaregiverDashboardTheme.glassCard(highlighted: true),
+          decoration: CaregiverDashboardTheme.glassCard(
+            context,
+            highlighted: true,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -97,6 +99,7 @@ class CaregiverOverviewCard extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
@@ -174,6 +177,15 @@ class _OverviewMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.theme.typography;
+    final brightness = Theme.of(context).brightness;
+    final contentColor = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final mutedContent = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
     final content = AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
@@ -181,7 +193,7 @@ class _OverviewMetric extends StatelessWidget {
         horizontal: 16.w,
         vertical: 18.h,
       ),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -191,7 +203,7 @@ class _OverviewMetric extends StatelessWidget {
               Container(
                 width: 38,
                 height: 38,
-                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                decoration: CaregiverDashboardTheme.iconBadge(context, accent),
                 child: Icon(
                   icon,
                   size: 20,
@@ -209,7 +221,7 @@ class _OverviewMetric extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.sm.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: contentColor,
                       ),
                     ),
                     SizedBox(height: 4.h),
@@ -217,8 +229,7 @@ class _OverviewMetric extends StatelessWidget {
                       label,
                       style: textTheme.xs.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: CaregiverDashboardTheme.deepTeal
-                            .withOpacity(0.7),
+                        color: mutedContent,
                       ),
                     ),
                   ],
@@ -230,7 +241,7 @@ class _OverviewMetric extends StatelessWidget {
           Text(
             description,
             style: textTheme.xs.copyWith(
-              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
+              color: mutedContent,
             ),
           ),
         ],

@@ -18,6 +18,7 @@ class PatientDocumentsCard extends StatelessWidget {
     final documentProvider = context.watch<DocumentProvider>();
     final documents = documentProvider.documents;
     final recentDocuments = documents.take(4).toList();
+    final brightness = Theme.of(context).brightness;
 
     return ExpandablePatientCard(
       icon: Icons.article_outlined,
@@ -33,6 +34,7 @@ class PatientDocumentsCard extends StatelessWidget {
                 vertical: 18.h,
               ),
               decoration: CaregiverDashboardTheme.tintedCard(
+                context,
                 CaregiverDashboardTheme.primaryTeal,
               ),
               child: Row(
@@ -41,6 +43,7 @@ class PatientDocumentsCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
@@ -50,13 +53,16 @@ class PatientDocumentsCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Text(
-                      'No documents found.',
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: CaregiverDashboardTheme.deepTeal,
-                      ),
+                child: Text(
+                  'No documents found.',
+                  style: context.theme.typography.sm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: CaregiverDashboardTheme.tintedForegroundColor(
+                      CaregiverDashboardTheme.primaryTeal,
+                      brightness: brightness,
                     ),
+                  ),
+                ),
                   ),
                 ],
               ),
@@ -94,9 +100,19 @@ class _DocumentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = CaregiverDashboardTheme.accentBlue; // Default accent for documents
+    final brightness = Theme.of(context).brightness;
+    final onTint = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final onTintMuted = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -106,7 +122,7 @@ class _DocumentRow extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                decoration: CaregiverDashboardTheme.iconBadge(context, accent),
                 child: Icon(
                   _getDocumentIcon(document.type),
                   color: Colors.white,
@@ -122,7 +138,7 @@ class _DocumentRow extends StatelessWidget {
                       document.title,
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: onTint,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -131,9 +147,7 @@ class _DocumentRow extends StatelessWidget {
                     Text(
                       document.type.displayName,
                       style: context.theme.typography.xs.copyWith(
-                        color: CaregiverDashboardTheme.deepTeal.withOpacity(
-                          0.7,
-                        ),
+                        color: onTintMuted,
                       ),
                     ),
                   ],
@@ -155,7 +169,7 @@ class _DocumentRow extends StatelessWidget {
           Text(
             DateFormat('MMM d, h:mm a').format(document.uploadDate),
             style: context.theme.typography.xs.copyWith(
-              color: CaregiverDashboardTheme.deepTeal.withOpacity(0.6),
+              color: onTintMuted,
             ),
           ),
         ],

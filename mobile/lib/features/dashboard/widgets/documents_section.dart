@@ -55,6 +55,7 @@ class DocumentsSection extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(14.0),
                         decoration: ModernSurfaceTheme.glassCard(
+                          context,
                           accent: _getDocumentColor(context, document.type),
                         ),
                         child: Row(

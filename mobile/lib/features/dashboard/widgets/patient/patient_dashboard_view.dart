@@ -54,25 +54,28 @@ class _PatientHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
     final userName = user?.name ?? 'there';
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
 
     return Container(
       padding: EdgeInsets.all(20.w),
-      decoration: CaregiverDashboardTheme.heroDecoration(),
+      decoration: CaregiverDashboardTheme.heroDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Welcome back, $userName!',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+            style: textTheme.headlineSmall?.copyWith(
+                  color: onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
           ),
           SizedBox(height: 8.h),
           Text(
             'Stay on track with your health journey. Monitor medications, vitals, and wellness all in one place.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.85),
+            style: textTheme.bodyMedium?.copyWith(
+                  color: onPrimary.withValues(alpha: 0.85),
                 ),
           ),
           // SizedBox(height: 18.h),
@@ -119,7 +122,7 @@ class _HeroChip extends StatelessWidget {
         horizontal: 12.w,
         vertical: 8.h,
       ),
-      decoration: CaregiverDashboardTheme.frostedChip(),
+      decoration: CaregiverDashboardTheme.frostedChip(context),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

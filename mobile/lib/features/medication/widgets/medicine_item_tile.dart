@@ -29,13 +29,19 @@ class MedicineItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final medicationProvider = context.read<MedicationProvider>();
     final timeDisplay = medicationProvider.getTimeOfDayString(reminderTime);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tileColor = colorScheme.surfaceVariant.withValues(alpha: isDark ? 0.55 : 0.35);
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 6.h),
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.white.withOpacity(0.6),
+        color: tileColor,
       ),
       child: Row(
         children: [
@@ -50,16 +56,16 @@ class MedicineItemTile extends StatelessWidget {
                   children: [
                     Text(
                       medicine.name,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: ModernSurfaceTheme.deepTeal,
+                            color: onSurface,
                           ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       '${medicine.dosage} • $timeDisplay',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: ModernSurfaceTheme.deepTeal.withOpacity(0.65),
+                      style: textTheme.bodySmall?.copyWith(
+                            color: muted,
                           ),
                     ),
                   ],
@@ -116,6 +122,7 @@ class MedicineItemTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(19),
                 child: Container(
                   decoration: ModernSurfaceTheme.frostedChip(
+                    context,
                     baseColor: ModernSurfaceTheme.primaryTeal,
                   ),
                   child: Icon(

@@ -18,7 +18,10 @@ class MedicineCalendarHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(12.w),
-      decoration: ModernSurfaceTheme.glassCard(accent: ModernSurfaceTheme.accentBlue),
+      decoration: ModernSurfaceTheme.glassCard(
+        context,
+        accent: ModernSurfaceTheme.accentBlue,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

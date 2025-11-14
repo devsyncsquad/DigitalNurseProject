@@ -96,7 +96,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  decoration: ModernSurfaceTheme.glassCard(),
+                  decoration: ModernSurfaceTheme.glassCard(context),
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

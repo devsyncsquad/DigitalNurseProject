@@ -77,9 +77,14 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
     final timeInfo = _getTimeInfo(context);
     final chipForeground =
         ModernSurfaceTheme.chipForegroundColor(timeInfo.color);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
 
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(accent: timeInfo.color),
+      decoration: ModernSurfaceTheme.glassCard(context, accent: timeInfo.color),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Column(
         children: [
@@ -96,10 +101,10 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
                 children: [
                   Container(
                     padding: EdgeInsets.all(12.w),
-                    decoration: ModernSurfaceTheme.iconBadge(timeInfo.color),
+                    decoration: ModernSurfaceTheme.iconBadge(context, timeInfo.color),
                     child: Icon(
                       timeInfo.icon,
-                      color: Colors.white,
+                      color: onPrimary,
                       size: 20,
                     ),
                   ),
@@ -110,16 +115,16 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
                       children: [
                         Text(
                           timeInfo.label,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: ModernSurfaceTheme.deepTeal,
+                          style: textTheme.titleMedium?.copyWith(
+                                color: onSurface,
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
                           _getStatusText(context),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
+                          style: textTheme.bodySmall?.copyWith(
+                                color: muted,
                               ),
                         ),
                       ],
@@ -130,6 +135,7 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                     decoration: ModernSurfaceTheme.frostedChip(
+                      context,
                       baseColor: timeInfo.color,
                     ),
                     child: Row(
@@ -158,7 +164,7 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
           if (_isExpanded) ...[
             Divider(
               height: 24.h,
-              color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.08),
+              color: onSurface.withValues(alpha: 0.08),
             ),
             Column(
               children: widget.medicines

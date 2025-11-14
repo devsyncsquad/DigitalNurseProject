@@ -34,6 +34,8 @@ class PatientLifestyleCard extends StatelessWidget {
 
     final todayTotalLogs = todayDietLogs.length + todayExerciseLogs.length;
 
+    final brightness = Theme.of(context).brightness;
+
     return ExpandablePatientCard(
       icon: Icons.directions_run_outlined,
       title: 'Your lifestyle',
@@ -48,6 +50,7 @@ class PatientLifestyleCard extends StatelessWidget {
                 vertical: 18.h,
               ),
               decoration: CaregiverDashboardTheme.tintedCard(
+                context,
                 CaregiverDashboardTheme.primaryTeal,
               ),
               child: Row(
@@ -56,6 +59,7 @@ class PatientLifestyleCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.primaryTeal,
                     ),
                     child: const Icon(
@@ -65,13 +69,16 @@ class PatientLifestyleCard extends StatelessWidget {
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Text(
-                      'No diet or exercise logs for today.',
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: CaregiverDashboardTheme.deepTeal,
-                      ),
+                child: Text(
+                  'No diet or exercise logs for today.',
+                  style: context.theme.typography.sm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: CaregiverDashboardTheme.tintedForegroundColor(
+                      CaregiverDashboardTheme.primaryTeal,
+                      brightness: brightness,
                     ),
+                  ),
+                ),
                   ),
                 ],
               ),
@@ -151,16 +158,26 @@ class _LifestyleLogRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final onTint = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final onTintMuted = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
+
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: CaregiverDashboardTheme.iconBadge(accent),
+            decoration: CaregiverDashboardTheme.iconBadge(context, accent),
             child: Icon(
               icon,
               color: Colors.white,
@@ -176,7 +193,7 @@ class _LifestyleLogRow extends StatelessWidget {
                   title,
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: CaregiverDashboardTheme.deepTeal,
+                    color: onTint,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -185,7 +202,7 @@ class _LifestyleLogRow extends StatelessWidget {
                 Text(
                   subtitle,
                   style: context.theme.typography.xs.copyWith(
-                    color: CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
+                    color: onTintMuted,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

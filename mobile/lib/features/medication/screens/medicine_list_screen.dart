@@ -105,6 +105,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     );
 
     final medicationProvider = context.watch<MedicationProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
     final medicines = medicationProvider.medicines;
     final errorMessage = medicationProvider.error;
 
@@ -117,16 +120,16 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
           children: [
             Text(
               'Medications',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: onPrimary,
                   ),
             ),
             if (isCaregiver && careContext?.selectedRecipient != null)
               Text(
                 'for ${careContext!.selectedRecipient!.name}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
+                style: textTheme.bodySmall?.copyWith(
+                      color: onPrimary.withValues(alpha: 0.7),
                     ),
               ),
           ],
@@ -134,7 +137,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
         actions: [
           if (!isCaregiver)
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+              icon: Icon(Icons.add_circle_outline, color: onPrimary),
               onPressed: () => context.push('/medicine/add'),
             ),
         ],
@@ -238,8 +241,14 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context, {required bool isCaregiver}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -247,14 +256,14 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
           Icon(
             FIcons.pill,
             size: 48,
-            color: ModernSurfaceTheme.deepTeal,
+            color: colorScheme.primary,
           ),
           SizedBox(height: 12.h),
           Text(
             'No medicines added yet',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: onSurface,
                 ),
           ),
           SizedBox(height: 8.h),
@@ -263,8 +272,8 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                 ? 'This patient has no medicines recorded yet.'
                 : 'Tap the button below to add your first medicine',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+            style: textTheme.bodySmall?.copyWith(
+                  color: muted,
                 ),
           ),
           if (!isCaregiver) ...[
@@ -277,11 +286,17 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: ModernSurfaceTheme.primaryTeal,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: onPrimary,
                 ),
                 onPressed: () => context.push('/medicine/add'),
-                child: const Text('Add Medicine'),
+                child: Text(
+                  'Add Medicine',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: onPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -391,27 +406,33 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     required String message,
     VoidCallback? onRetry,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onSurface = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(),
+      decoration: ModernSurfaceTheme.glassCard(context),
       padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 48, color: ModernSurfaceTheme.primaryTeal),
+          Icon(icon, size: 48, color: colorScheme.primary),
           SizedBox(height: 16.h),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: onSurface,
                 ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+            style: textTheme.bodySmall?.copyWith(
+                  color: muted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -420,14 +441,20 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             FilledButton(
               onPressed: onRetry,
               style: FilledButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: onPrimary,
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: const Text('Retry'),
+              child: Text(
+                'Retry',
+                style: textTheme.labelLarge?.copyWith(
+                  color: onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
@@ -446,7 +473,7 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final errorColor = AppTheme.getErrorColor(context);
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(accent: errorColor),
+      decoration: ModernSurfaceTheme.glassCard(context, accent: errorColor),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
         children: [
@@ -487,24 +514,28 @@ class _HeroSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateLabel =
         '${selectedDate.day} ${_monthLabel(selectedDate.month)}, ${selectedDate.year}';
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final onPrimary = colorScheme.onPrimary;
+
     return Container(
       width: double.infinity,
-      decoration: ModernSurfaceTheme.heroDecoration(),
+      decoration: ModernSurfaceTheme.heroDecoration(context),
       padding: ModernSurfaceTheme.heroPadding(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             isCaregiver ? 'Care schedule' : 'Today\'s plan',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.85),
+            style: textTheme.titleMedium?.copyWith(
+                  color: onPrimary.withValues(alpha: 0.85),
                 ),
           ),
           SizedBox(height: 8.h),
           Text(
             '$medicinesCount medicines on $dateLabel',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+            style: textTheme.headlineSmall?.copyWith(
+                  color: onPrimary,
                   fontWeight: FontWeight.w700,
                 ),
           ),
@@ -555,11 +586,11 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chipForeground =
-        ModernSurfaceTheme.chipForegroundColor(Colors.white);
+    const chipBase = Colors.white;
+    final chipForeground = ModernSurfaceTheme.chipForegroundColor(chipBase);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: ModernSurfaceTheme.frostedChip(),
+      decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

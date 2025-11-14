@@ -67,7 +67,7 @@ class PatientActionShortcuts extends StatelessWidget {
 
         return Container(
           padding: CaregiverDashboardTheme.cardPadding(),
-          decoration: CaregiverDashboardTheme.glassCard(),
+          decoration: CaregiverDashboardTheme.glassCard(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -77,6 +77,7 @@ class PatientActionShortcuts extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
                       CaregiverDashboardTheme.accentBlue,
                     ),
                     child: const Icon(
@@ -194,14 +195,19 @@ class _ActionShortcutState extends State<_ActionShortcut> {
                 horizontal: 18.w,
                 vertical: 18.h,
               ),
-              decoration: CaregiverDashboardTheme.pillButton(widget.accent),
+              decoration: CaregiverDashboardTheme.pillButton(
+                context,
+                widget.accent,
+              ),
               child: Row(
                 children: [
                   Container(
                     width: 40,
                     height: 40,
-                    decoration:
-                        CaregiverDashboardTheme.iconBadge(Colors.white),
+                    decoration: CaregiverDashboardTheme.iconBadge(
+                      context,
+                      Colors.white,
+                    ),
                     child: Icon(
                       widget.icon,
                       color: widget.accent,

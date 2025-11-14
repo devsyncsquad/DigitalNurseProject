@@ -79,6 +79,7 @@ class DietExerciseSection extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(12.0),
                           decoration: ModernSurfaceTheme.tintedCard(
+                            context,
                             AppTheme.getSuccessColor(context),
                           ),
                           child: Row(
@@ -147,8 +148,10 @@ class DietExerciseSection extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 6.0),
                         child: Container(
                           padding: const EdgeInsets.all(12.0),
-                          decoration:
-                              ModernSurfaceTheme.tintedCard(ModernSurfaceTheme.accentBlue),
+                          decoration: ModernSurfaceTheme.tintedCard(
+                            context,
+                            ModernSurfaceTheme.accentBlue,
+                          ),
                           child: Row(
                             children: [
                               Icon(

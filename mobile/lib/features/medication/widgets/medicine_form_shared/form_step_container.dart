@@ -29,7 +29,10 @@ class FormStepContainer extends StatelessWidget {
       },
       child: Container(
         key: ValueKey(stepNumber),
-        decoration: ModernSurfaceTheme.glassCard(highlighted: true),
+        decoration: ModernSurfaceTheme.glassCard(
+          context,
+          highlighted: true,
+        ),
         padding: EdgeInsets.all(20.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

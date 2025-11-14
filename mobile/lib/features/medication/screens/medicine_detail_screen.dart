@@ -142,7 +142,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               const Center(child: CircularProgressIndicator())
             else if (_intakeHistory!.isEmpty)
               Container(
-                decoration: ModernSurfaceTheme.glassCard(),
+                decoration: ModernSurfaceTheme.glassCard(context),
                 padding: EdgeInsets.all(24.w),
                 child: Center(
                   child: Text(
@@ -161,6 +161,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                         padding: EdgeInsets.only(bottom: 12.h),
                         child: Container(
                           decoration: ModernSurfaceTheme.glassCard(
+                            context,
                             accent: intake.status == IntakeStatus.taken
                                 ? AppTheme.getSuccessColor(context)
                                 : intake.status == IntakeStatus.missed
@@ -268,7 +269,10 @@ class _MedicineInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: ModernSurfaceTheme.glassCard(accent: ModernSurfaceTheme.primaryTeal),
+      decoration: ModernSurfaceTheme.glassCard(
+        context,
+        accent: ModernSurfaceTheme.primaryTeal,
+      ),
       padding: EdgeInsets.all(20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,6 +282,7 @@ class _MedicineInfoCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: ModernSurfaceTheme.iconBadge(
+                  context,
                   ModernSurfaceTheme.primaryTeal,
                 ),
                 child: const Icon(FIcons.pill, color: Colors.white, size: 28),

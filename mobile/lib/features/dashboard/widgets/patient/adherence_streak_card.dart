@@ -25,10 +25,20 @@ class AdherenceStreakCard extends StatelessWidget {
             ? CaregiverDashboardTheme.accentYellow
             : CaregiverDashboardTheme.accentCoral;
 
+    final brightness = Theme.of(context).brightness;
+    final onTint = CaregiverDashboardTheme.tintedForegroundColor(
+      accent,
+      brightness: brightness,
+    );
+    final onTintMuted = CaregiverDashboardTheme.tintedMutedColor(
+      accent,
+      brightness: brightness,
+    );
+
     return Container(
       width: double.infinity,
       padding: CaregiverDashboardTheme.cardPadding(),
-      decoration: CaregiverDashboardTheme.tintedCard(accent),
+      decoration: CaregiverDashboardTheme.tintedCard(context, accent),
       child: Row(
         children: [
           // Left side - Streak info
@@ -56,7 +66,7 @@ class AdherenceStreakCard extends StatelessWidget {
                     Text(
                       '$streakDays',
                       style: context.theme.typography.xl.copyWith(
-                        color: CaregiverDashboardTheme.deepTeal,
+                        color: onTint,
                         fontWeight: FontWeight.w700,
                         fontSize: 32.sp,
                       ),
@@ -69,7 +79,7 @@ class AdherenceStreakCard extends StatelessWidget {
                             ? 'dashboard.day'.tr()
                             : 'dashboard.days'.tr(),
                         style: context.theme.typography.sm.copyWith(
-                          color: CaregiverDashboardTheme.deepTeal.withOpacity(0.7),
+                          color: onTintMuted,
                           fontSize: 14.sp,
                         ),
                       ),
@@ -79,7 +89,8 @@ class AdherenceStreakCard extends StatelessWidget {
                 SizedBox(height: 8.h),
                 Text(
                   '${adherencePercentage.toInt()}% adherence rate',
-                  style: CaregiverDashboardTheme.sectionSubtitleStyle(context),
+                  style: CaregiverDashboardTheme.sectionSubtitleStyle(context)
+                      .copyWith(color: onTintMuted),
                 ),
               ],
             ),
@@ -93,7 +104,7 @@ class AdherenceStreakCard extends StatelessWidget {
               Container(
                 width: 60,
                 height: 60,
-                decoration: CaregiverDashboardTheme.iconBadge(accent),
+                decoration: CaregiverDashboardTheme.iconBadge(context, accent),
                 child: Center(
                   child: AnimatedHeartIcon(
                     percentage: adherencePercentage,
@@ -124,7 +135,7 @@ class AdherenceStreakCard extends StatelessWidget {
                 child: Text(
                   '${adherencePercentage.toInt()}%',
                   style: context.theme.typography.sm.copyWith(
-                    color: CaregiverDashboardTheme.deepTeal,
+                    color: onTint,
                     fontWeight: FontWeight.w700,
                     fontSize: 12.sp,
                   ),

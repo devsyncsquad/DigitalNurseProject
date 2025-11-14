@@ -54,7 +54,7 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
         children: [
           // Tab bar
           Container(
-            decoration: ModernSurfaceTheme.glassCard(),
+            decoration: ModernSurfaceTheme.glassCard(context),
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: TabBar(
               controller: _tabController,
@@ -73,7 +73,10 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
-                decoration: ModernSurfaceTheme.glassCard(highlighted: true),
+                decoration: ModernSurfaceTheme.glassCard(
+                  context,
+                  highlighted: true,
+                ),
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
@@ -160,17 +163,20 @@ class _MealsTab extends StatelessWidget {
                     final meal = meals[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        decoration: ModernSurfaceTheme.glassCard(
-                          accent: ModernSurfaceTheme.primaryTeal,
-                        ),
+                        child: Container(
+                          decoration: ModernSurfaceTheme.glassCard(
+                            context,
+                            accent: ModernSurfaceTheme.primaryTeal,
+                          ),
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration:
-                                  ModernSurfaceTheme.iconBadge(ModernSurfaceTheme.primaryTeal),
+                              decoration: ModernSurfaceTheme.iconBadge(
+                                context,
+                                ModernSurfaceTheme.primaryTeal,
+                              ),
                               child: const Icon(FIcons.utensils, color: Colors.white),
                             ),
                             const SizedBox(width: 16),
@@ -284,6 +290,7 @@ class _WorkoutsTab extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
                         decoration: ModernSurfaceTheme.glassCard(
+                          context,
                           accent: ModernSurfaceTheme.accentBlue,
                         ),
                         padding: const EdgeInsets.all(16),
@@ -291,9 +298,10 @@ class _WorkoutsTab extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(12),
-                              decoration: ModernSurfaceTheme.iconBadge(
-                                ModernSurfaceTheme.accentBlue,
-                              ),
+                            decoration: ModernSurfaceTheme.iconBadge(
+                              context,
+                              ModernSurfaceTheme.accentBlue,
+                            ),
                               child: const Icon(FIcons.activity, color: Colors.white),
                             ),
                             const SizedBox(width: 16),
