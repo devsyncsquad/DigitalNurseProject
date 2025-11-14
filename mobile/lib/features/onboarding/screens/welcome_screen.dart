@@ -12,11 +12,10 @@ class WelcomeScreen extends StatelessWidget {
     return FScaffold(
       child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
           child: Column(
             children: [
-              // Top spacer
-              Expanded(flex: 1, child: Container()),
+              SizedBox(height: 12.h),
 
               // App logo/icon
               Icon(
@@ -24,7 +23,7 @@ class WelcomeScreen extends StatelessWidget {
                 size: 80.h,
                 color: context.theme.colors.primary,
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 20.h),
 
               // App name
               Text(
@@ -59,32 +58,31 @@ class WelcomeScreen extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 12.h),
 
               // Features list - individual cards
-              Expanded(
-                flex: 3,
+              Flexible(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _FeatureItem(
                       icon: FIcons.pill,
                       title: 'onboarding.welcome.features.medicineReminders.title'.tr(),
                       description: 'onboarding.welcome.features.medicineReminders.description'.tr(),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     _FeatureItem(
                       icon: FIcons.activity,
                       title: 'onboarding.welcome.features.healthTracking.title'.tr(),
                       description: 'onboarding.welcome.features.healthTracking.description'.tr(),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     _FeatureItem(
                       icon: FIcons.users,
                       title: 'onboarding.welcome.features.caregiverCoordination.title'.tr(),
                       description: 'onboarding.welcome.features.caregiverCoordination.description'.tr(),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 6.h),
                     _FeatureItem(
                       icon: FIcons.fileText,
                       title: 'onboarding.welcome.features.documentManagement.title'.tr(),
@@ -94,14 +92,14 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 14.h),
 
               // Get started button
               FButton(
                 onPress: () => context.go('/register'),
                 child: Text('onboarding.welcome.getStarted'.tr()),
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: 6.h),
 
               // Login button
               TextButton(
@@ -112,8 +110,7 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
 
-              // Bottom spacer
-              Expanded(flex: 1, child: Container()),
+              SizedBox(height: 12.h),
             ],
           ),
         ),

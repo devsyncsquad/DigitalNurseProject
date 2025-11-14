@@ -80,25 +80,25 @@ class _PatientHero extends StatelessWidget {
                   color: Colors.white.withOpacity(0.85),
                 ),
           ),
-          SizedBox(height: 18.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: [
-              _HeroChip(
-                label: 'Medication tracking',
-                icon: Icons.medication_liquid,
-              ),
-              _HeroChip(
-                label: 'Vitals monitoring',
-                icon: Icons.monitor_heart,
-              ),
-              _HeroChip(
-                label: 'Health insights',
-                icon: Icons.insights,
-              ),
-            ],
-          ),
+          // SizedBox(height: 18.h),
+          // Wrap(
+          //   spacing: 8.w,
+          //   runSpacing: 8.h,
+          //   children: [
+          //     _HeroChip(
+          //       label: 'Medication tracking',
+          //       icon: Icons.medication_liquid,
+          //     ),
+          //     _HeroChip(
+          //       label: 'Vitals monitoring',
+          //       icon: Icons.monitor_heart,
+          //     ),
+          //     _HeroChip(
+          //       label: 'Health insights',
+          //       icon: Icons.insights,
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );

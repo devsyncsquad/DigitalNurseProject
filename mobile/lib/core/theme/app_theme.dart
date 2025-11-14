@@ -77,6 +77,11 @@ class AppTheme {
         typography: typography,
         style: fStyle,
       ),
+      lineCalendarStyle: (_) => FLineCalendarStyle.inherit(
+        colors: colors,
+        typography: typography,
+        style: fStyle,
+      ),
     );
   }
 
@@ -94,6 +99,11 @@ class AppTheme {
         style: fStyle,
       ),
       bottomNavigationBarStyle: bottomNavigationBarStyle(
+        colors: colors,
+        typography: typography,
+        style: fStyle,
+      ),
+      lineCalendarStyle: (_) => FLineCalendarStyle.inherit(
         colors: colors,
         typography: typography,
         style: fStyle,

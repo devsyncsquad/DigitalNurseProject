@@ -93,6 +93,11 @@ class DigitalNurseApp extends StatelessWidget {
             });
           }
 
+          final lightMaterialTheme =
+              _buildMaterialTheme(AppTheme.lightTheme, isDark: false);
+          final darkMaterialTheme =
+              _buildMaterialTheme(AppTheme.darkTheme, isDark: true);
+
           return ScaffoldMessenger(
             child: MaterialApp.router(
               title: 'Digital Nurse',
@@ -100,8 +105,8 @@ class DigitalNurseApp extends StatelessWidget {
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
               locale: localeProvider.locale,
-              theme: AppTheme.lightTheme.toApproximateMaterialTheme(),
-              darkTheme: AppTheme.darkTheme.toApproximateMaterialTheme(),
+              theme: lightMaterialTheme,
+              darkTheme: darkMaterialTheme,
               themeMode: themeProvider.themeMode,
               routerConfig: goRouter,
               builder: (context, child) {
@@ -128,4 +133,39 @@ class DigitalNurseApp extends StatelessWidget {
       ),
     );
   }
+}
+
+ThemeData _buildMaterialTheme(
+  FThemeData fTheme, {
+  required bool isDark,
+}) {
+  final base = fTheme.toApproximateMaterialTheme();
+  final colorScheme = base.colorScheme;
+  final primaryActionColor = isDark ? AppTheme.tealLight : AppTheme.tealDark;
+
+  final textButtonStyle = TextButton.styleFrom(
+    foregroundColor: primaryActionColor,
+    textStyle: base.textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w600,
+    ),
+  );
+
+  final dialogTheme = base.dialogTheme.copyWith(
+    backgroundColor: base.colorScheme.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    titleTextStyle: base.textTheme.titleLarge?.copyWith(
+      color: colorScheme.onSurface,
+      fontWeight: FontWeight.w600,
+    ),
+    contentTextStyle: base.textTheme.bodyMedium?.copyWith(
+      color: colorScheme.onSurfaceVariant,
+    ),
+  );
+
+  return base.copyWith(
+    textButtonTheme: TextButtonThemeData(style: textButtonStyle),
+    dialogTheme: dialogTheme,
+  );
 }
