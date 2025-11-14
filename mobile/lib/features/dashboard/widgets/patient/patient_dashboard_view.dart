@@ -17,37 +17,32 @@ class PatientDashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardSpacing = 18.h;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: CaregiverDashboardTheme.backgroundGradient(),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 20.w,
-            right: 20.w,
-            top: 24.h,
-            bottom: 40.h,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _PatientHero(),
-              SizedBox(height: cardSpacing),
-              const PatientOverviewCard(),
-              SizedBox(height: cardSpacing),
-              const PatientActionShortcuts(),
-              SizedBox(height: cardSpacing),
-              const PatientUpcomingMedicationsCard(),
-              SizedBox(height: cardSpacing),
-              const PatientVitalsCard(),
-              SizedBox(height: cardSpacing),
-              const PatientDocumentsCard(),
-              SizedBox(height: cardSpacing),
-              const PatientLifestyleCard(),
-            ],
-          ),
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 20.w,
+          right: 20.w,
+          top: 24.h,
+          bottom: 40.h,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PatientHero(),
+            SizedBox(height: cardSpacing),
+            const PatientOverviewCard(),
+            SizedBox(height: cardSpacing),
+            const PatientActionShortcuts(),
+            SizedBox(height: cardSpacing),
+            const PatientUpcomingMedicationsCard(),
+            SizedBox(height: cardSpacing),
+            const PatientVitalsCard(),
+            SizedBox(height: cardSpacing),
+            const PatientDocumentsCard(),
+            SizedBox(height: cardSpacing),
+            const PatientLifestyleCard(),
+          ],
         ),
       ),
     );
@@ -105,6 +100,7 @@ class _PatientHero extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _HeroChip extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -116,6 +112,8 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chipForeground =
+        CaregiverDashboardTheme.chipForegroundColor(Colors.white);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: 12.w,
@@ -127,14 +125,14 @@ class _HeroChip extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: Colors.white,
+            color: chipForeground,
             size: 16,
           ),
           SizedBox(width: 8.w),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
+                  color: chipForeground,
                   fontWeight: FontWeight.w600,
                 ),
           ),

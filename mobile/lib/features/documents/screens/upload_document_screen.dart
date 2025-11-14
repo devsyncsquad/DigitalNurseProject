@@ -10,6 +10,8 @@ import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/document_picker_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 import '../widgets/upload_options_bottom_sheet.dart';
 
 class UploadDocumentScreen extends StatefulWidget {
@@ -201,282 +203,127 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           context.pop();
         }
       },
-      child: FScaffold(
-        header: FHeader.nested(
-          title: const Text('Upload Document'),
-          prefixes: [FHeaderAction.back(onPress: () => context.pop())],
+      child: ModernScaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Upload Document',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
         ),
-        child: SafeArea(
-          child: caregiverNotice != null
-              ? caregiverNotice
-              : SingleChildScrollView(
-                  padding: EdgeInsets.all(16.w),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (_selectedFile == null) ...[
-                          FButton(
-                            style: FButtonStyle.outline(),
-                            onPress: isUploading ? null : _showFilePicker,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(FIcons.upload),
-                                const SizedBox(width: 8),
-                                const Text('Select Document or Photo'),
-                              ],
-                            ),
-                          ),
-                        ] else ...[
-                          FCard(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: _selectedFile!.isImage
-                                              ? context.theme.colors.primary
-                                                    .withOpacity(0.1)
-                                              : AppTheme.getWarningColor(
-                                                  context,
-                                                ).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          _selectedFile!.isImage
-                                              ? FIcons.image
-                                              : DocumentPickerService.getFileIcon(
-                                                  _selectedFile!.fileExtension,
-                                                ),
-                                          color: _selectedFile!.isImage
-                                              ? context.theme.colors.primary
-                                              : AppTheme.getWarningColor(
-                                                  context,
-                                                ),
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _selectedFile!.fileName,
-                                              style: context.theme.typography.sm
-                                                  .copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              DocumentPickerService.formatFileSize(
-                                                _selectedFile!.fileSize,
-                                              ),
-                                              style: context.theme.typography.xs
-                                                  .copyWith(
-                                                    color: context
-                                                        .theme
-                                                        .colors
-                                                        .mutedForeground,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      IconButton(
-                                        onPressed: isUploading
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  _selectedFile = null;
-                                                });
-                                              },
-                                        icon: const Icon(FIcons.x, size: 16),
-                                        style: IconButton.styleFrom(
-                                          backgroundColor: context
-                                              .theme
-                                              .colors
-                                              .destructive
-                                              .withOpacity(0.1),
-                                          foregroundColor:
-                                              context.theme.colors.destructive,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          FButton(
-                            style: FButtonStyle.outline(),
-                            onPress: isUploading ? null : _showFilePicker,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(FIcons.upload),
-                                const SizedBox(width: 8),
-                                const Text('Change File'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        FTextField(
-                          controller: _titleController,
-                          label: const Text('Document Title'),
-                          hint: 'e.g., Blood Test Results',
-                        ),
-                        const SizedBox(height: 16),
-                        FCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Document Type',
-                                  style: context.theme.typography.sm.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+        body: caregiverNotice != null
+            ? Padding(
+                padding: ModernSurfaceTheme.screenPadding(),
+                child: caregiverNotice,
+              )
+            : SingleChildScrollView(
+                padding: ModernSurfaceTheme.screenPadding(),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _FileSelector(
+                        selectedFile: _selectedFile,
+                        isUploading: isUploading,
+                        onClear: () => setState(() => _selectedFile = null),
+                        onSelect: _showFilePicker,
+                      ),
+                      SizedBox(height: 24.h),
+                      FTextField(
+                        controller: _titleController,
+                        label: const Text('Document Title'),
+                        hint: 'e.g., Blood Test Results',
+                      ),
+                      SizedBox(height: 16.h),
+                      _GlassFormSection(
+                        title: 'Document Type',
+                        child: DropdownButton<DocumentType>(
+                          value: _documentType,
+                          isExpanded: true,
+                          items: DocumentType.values
+                              .map(
+                                (type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type.displayName),
                                 ),
-                                const SizedBox(height: 8),
-                                Material(
-                                  child: DropdownButton<DocumentType>(
-                                    value: _documentType,
-                                    isExpanded: true,
-                                    items: DocumentType.values.map((type) {
-                                      return DropdownMenuItem(
-                                        value: type,
-                                        child: Text(type.displayName),
-                                      );
-                                    }).toList(),
-                                    onChanged: isUploading
-                                        ? null
-                                        : (value) {
-                                            if (value != null) {
-                                              setState(() {
-                                                _documentType = value;
-                                              });
-                                            }
-                                          },
-                                  ),
+                              )
+                              .toList(),
+                          onChanged: isUploading
+                              ? null
+                              : (value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _documentType = value;
+                                    });
+                                  }
+                                },
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      FTextField(
+                        controller: _descriptionController,
+                        label: const Text('Description (Optional)'),
+                        hint: 'Additional details',
+                        maxLines: 3,
+                      ),
+                      SizedBox(height: 16.h),
+                      _GlassFormSection(
+                        title: 'Visibility',
+                        child: Column(
+                          children: DocumentVisibility.values
+                              .map(
+                                (visibility) => RadioListTile<DocumentVisibility>(
+                                  title: Text(_visibilityLabel(visibility)),
+                                  value: visibility,
+                                  groupValue: _visibility,
+                                  onChanged: isUploading
+                                      ? null
+                                      : (value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              _visibility = value;
+                                            });
+                                          }
+                                        },
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
                                 ),
-                              ],
-                            ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      ElevatedButton(
+                        onPressed: isUploading ? null : _handleUpload,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          backgroundColor: ModernSurfaceTheme.primaryTeal,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        FTextField(
-                          controller: _descriptionController,
-                          label: const Text('Description (Optional)'),
-                          hint: 'Additional details',
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 16),
-                        FCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Visibility',
-                                  style: context.theme.typography.sm.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                        child: isUploading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
                                 ),
-                                const SizedBox(height: 8),
-                                Material(
-                                  child: Column(
-                                    children: [
-                                      RadioListTile<DocumentVisibility>(
-                                        title: const Text('Private (Only me)'),
-                                        value: DocumentVisibility.private,
-                                        groupValue: _visibility,
-                                        onChanged: isUploading
-                                            ? null
-                                            : (value) {
-                                                setState(() {
-                                                  _visibility = value!;
-                                                });
-                                              },
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                      RadioListTile<DocumentVisibility>(
-                                        title: const Text(
-                                          'Shared with caregivers',
-                                        ),
-                                        value: DocumentVisibility
-                                            .sharedWithCaregiver,
-                                        groupValue: _visibility,
-                                        onChanged: isUploading
-                                            ? null
-                                            : (value) {
-                                                setState(() {
-                                                  _visibility = value!;
-                                                });
-                                              },
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                      RadioListTile<DocumentVisibility>(
-                                        title: const Text(
-                                          'Public (Admin visible)',
-                                        ),
-                                        value: DocumentVisibility.public,
-                                        groupValue: _visibility,
-                                        onChanged: isUploading
-                                            ? null
-                                            : (value) {
-                                                setState(() {
-                                                  _visibility = value!;
-                                                });
-                                              },
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        FButton(
-                          onPress: isUploading ? null : _handleUpload,
-                          child: isUploading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Upload Document'),
-                        ),
-                      ],
-                    ),
+                              )
+                            : const Text('Upload Document'),
+                      ),
+                    ],
                   ),
                 ),
-        ),
+              ),
       ),
     );
   }
@@ -488,38 +335,192 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     required String message,
     VoidCallback? onRetry,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 48, color: context.theme.colors.primary),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: context.theme.typography.lg.copyWith(
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(),
+      padding: ModernSurfaceTheme.cardPadding(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 48, color: ModernSurfaceTheme.primaryTeal),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: ModernSurfaceTheme.deepTeal,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: context.theme.typography.sm.copyWith(
-                  color: context.theme.colors.mutedForeground,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
                 ),
-                textAlign: TextAlign.center,
+            textAlign: TextAlign.center,
+          ),
+          if (onRetry != null) ...[
+            SizedBox(height: 16.h),
+            FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(
+                backgroundColor: ModernSurfaceTheme.primaryTeal,
+                foregroundColor: Colors.white,
               ),
-              if (onRetry != null) ...[
-                const SizedBox(height: 16),
-                FButton(onPress: onRetry, child: const Text('Retry')),
-              ],
+              child: const Text('Retry'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _visibilityLabel(DocumentVisibility visibility) {
+    switch (visibility) {
+      case DocumentVisibility.private:
+        return 'Private (Only me)';
+      case DocumentVisibility.sharedWithCaregiver:
+        return 'Shared with caregivers';
+      case DocumentVisibility.public:
+        return 'Public (Admin visible)';
+    }
+  }
+}
+
+class _FileSelector extends StatelessWidget {
+  final DocumentPickerResult? selectedFile;
+  final bool isUploading;
+  final VoidCallback onSelect;
+  final VoidCallback onClear;
+
+  const _FileSelector({
+    required this.selectedFile,
+    required this.isUploading,
+    required this.onSelect,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (selectedFile == null) {
+      return OutlinedButton.icon(
+        onPressed: isUploading ? null : onSelect,
+        icon: const Icon(FIcons.upload),
+        label: const Text('Select Document or Photo'),
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+        ),
+      );
+    }
+
+    final accent = selectedFile!.isImage
+        ? ModernSurfaceTheme.primaryTeal
+        : AppTheme.getWarningColor(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: ModernSurfaceTheme.glassCard(accent: accent),
+          padding: EdgeInsets.all(16.w),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: ModernSurfaceTheme.iconBadge(accent),
+                child: Icon(
+                  selectedFile!.isImage
+                      ? FIcons.image
+                      : DocumentPickerService.getFileIcon(
+                          selectedFile!.fileExtension,
+                        ),
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      selectedFile!.fileName,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: ModernSurfaceTheme.deepTeal,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      DocumentPickerService.formatFileSize(
+                        selectedFile!.fileSize,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: isUploading ? null : onClear,
+                icon: const Icon(FIcons.x, size: 16),
+                style: IconButton.styleFrom(
+                  backgroundColor:
+                      AppTheme.getErrorColor(context).withOpacity(0.12),
+                  foregroundColor: AppTheme.getErrorColor(context),
+                ),
+              ),
             ],
           ),
         ),
+        SizedBox(height: 16.h),
+        OutlinedButton.icon(
+          onPressed: isUploading ? null : onSelect,
+          icon: const Icon(FIcons.upload),
+          label: const Text('Change File'),
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GlassFormSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _GlassFormSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(),
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: ModernSurfaceTheme.deepTeal,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          child,
+        ],
       ),
     );
   }

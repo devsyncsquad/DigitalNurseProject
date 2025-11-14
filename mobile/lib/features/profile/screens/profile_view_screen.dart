@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class ProfileViewScreen extends StatelessWidget {
   const ProfileViewScreen({super.key});
@@ -16,72 +18,82 @@ class ProfileViewScreen extends StatelessWidget {
     final user = authProvider.currentUser;
 
     if (user == null) {
-      return const FScaffold(child: Center(child: CircularProgressIndicator()));
+      return const ModernScaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final isCaregiver = user.role == UserRole.caregiver;
 
-    return FScaffold(
-      header: FHeader(
-        title: const Text('Profile'),
-        suffixes: [
-          FHeaderAction(
-            icon: const Icon(FIcons.settings),
-            onPress: () => context.push('/settings'),
+    return ModernScaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Profile',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
+      body: SingleChildScrollView(
+        padding: ModernSurfaceTheme.screenPadding(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Profile header
-            FCard(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 48,
-                      backgroundColor: context.theme.colors.primary.withValues(
-                        alpha: 0.2,
-                      ),
-                      child: Text(
-                        user.name[0].toUpperCase(),
-                        style: context.theme.typography.xl3.copyWith(
+            Container(
+              decoration: ModernSurfaceTheme.heroDecoration(),
+              padding: ModernSurfaceTheme.heroPadding(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    child: Text(
+                      user.name[0].toUpperCase(),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    user.name,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          color: context.theme.colors.primary,
                         ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      user.name,
-                      style: context.theme.typography.xl2.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      user.email,
-                      style: context.theme.typography.sm,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    Center(
-                      child: FBadge(
-                        child: Text(
-                          user.subscriptionTier == SubscriptionTier.premium
-                              ? 'Premium Member'
-                              : 'Free Plan',
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    user.email,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
                         ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: ModernSurfaceTheme.frostedChip(),
+                    child: Text(
+                      user.subscriptionTier == SubscriptionTier.premium
+                          ? 'Premium Member'
+                          : 'Free Plan',
+                      style: TextStyle(
+                        color:
+                            ModernSurfaceTheme.chipForegroundColor(Colors.white),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 24),
@@ -89,198 +101,141 @@ class ProfileViewScreen extends StatelessWidget {
             // Personal information
             Text(
               'Personal Information',
-              style: context.theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: ModernSurfaceTheme.sectionTitleStyle(context),
             ),
             SizedBox(height: 12),
 
-            FCard(
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  children: [
-                    // Check if all personal info fields are null
-                    if (user.age == null &&
-                        user.phone == null &&
-                        user.emergencyContact == null &&
-                        user.medicalConditions == null)
-                      // Empty state
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              FIcons.userPen,
-                              size: 48,
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No personal information added yet',
-                              style: context.theme.typography.lg.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: context.theme.colors.foreground,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tap "Edit Profile" to add your details',
-                              style: context.theme.typography.sm.copyWith(
-                                color: context.theme.colors.mutedForeground,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      )
-                    else ...[
-                      // Show personal information fields
+            Container(
+              decoration: ModernSurfaceTheme.glassCard(),
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                children: [
+                  if (user.age == null &&
+                      user.phone == null &&
+                      user.emergencyContact == null &&
+                      user.medicalConditions == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        children: [
+                          Icon(
+                            FIcons.userPen,
+                            size: 48,
+                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No personal information added yet',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: ModernSurfaceTheme.deepTeal,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap "Edit Profile" to add your details',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: ModernSurfaceTheme.deepTeal
+                                      .withValues(alpha: 0.7),
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    if (user.age != null)
+                      _ProfileInfoRow(
+                        icon: FIcons.calendar,
+                        label: 'Age',
+                        value: user.age!,
+                      ),
+                    if (user.phone != null) ...[
                       if (user.age != null)
-                        _ProfileInfoRow(
-                          icon: FIcons.calendar,
-                          label: 'Age',
-                          value: user.age!,
+                        Divider(
+                          height: 24,
+                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
                         ),
-                      if (user.phone != null) ...[
-                        if (user.age != null) const Divider(height: 24),
-                        _ProfileInfoRow(
-                          icon: FIcons.phone,
-                          label: 'Phone',
-                          value: user.phone!,
+                      _ProfileInfoRow(
+                        icon: FIcons.phone,
+                        label: 'Phone',
+                        value: user.phone!,
+                      ),
+                    ],
+                    if (user.emergencyContact != null) ...[
+                      if (user.age != null || user.phone != null)
+                        Divider(
+                          height: 24,
+                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
                         ),
-                      ],
-                      if (user.emergencyContact != null) ...[
-                        if (user.age != null || user.phone != null)
-                          const Divider(height: 24),
-                        _ProfileInfoRow(
-                          icon: FIcons.phone,
-                          label: 'Emergency Contact',
-                          value: user.emergencyContact!,
+                      _ProfileInfoRow(
+                        icon: FIcons.phone,
+                        label: 'Emergency Contact',
+                        value: user.emergencyContact!,
+                      ),
+                    ],
+                    if (user.medicalConditions != null) ...[
+                      if (user.age != null ||
+                          user.phone != null ||
+                          user.emergencyContact != null)
+                        Divider(
+                          height: 24,
+                            color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.1),
                         ),
-                      ],
-                      if (user.medicalConditions != null) ...[
-                        if (user.age != null ||
-                            user.phone != null ||
-                            user.emergencyContact != null)
-                          const Divider(height: 24),
-                        _ProfileInfoRow(
-                          icon: FIcons.heartPulse,
-                          label: 'Medical Conditions',
-                          value: user.medicalConditions!,
-                        ),
-                      ],
+                      _ProfileInfoRow(
+                        icon: FIcons.heartPulse,
+                        label: 'Medical Conditions',
+                        value: user.medicalConditions!,
+                      ),
                     ],
                   ],
-                ),
+                ],
               ),
             ),
             SizedBox(height: 24),
 
-            // Quick actions
             Text(
               'Quick Actions',
-              style: context.theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: ModernSurfaceTheme.sectionTitleStyle(context),
             ),
             SizedBox(height: 12),
 
-            FCard(
+            Container(
+              decoration: ModernSurfaceTheme.glassCard(),
               child: Material(
                 color: Colors.transparent,
                 child: Column(
                   children: [
-                    ListTile(
-                      leading: Icon(
-                        FIcons.userPen,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      title: Text(
-                        'Edit Profile',
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.foreground,
-                        ),
-                      ),
-                      trailing: Icon(
-                        FIcons.chevronsRight,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      onTap: () {
-                        context.push('/profile-setup');
-                      },
+                    _ModernListTile(
+                      icon: FIcons.userPen,
+                      title: 'Edit Profile',
+                      onTap: () => context.push('/profile-setup'),
                     ),
                     const Divider(height: 1),
                     if (!isCaregiver) ...[
-                      ListTile(
-                        leading: Icon(
-                          FIcons.creditCard,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                        title: Text(
-                          'Subscription',
-                          style: context.theme.typography.sm.copyWith(
-                            color: context.theme.colors.foreground,
-                          ),
-                        ),
-                        subtitle: Text(
-                          user.subscriptionTier == SubscriptionTier.premium
-                              ? 'Manage your premium subscription'
-                              : 'Upgrade to Premium',
-                          style: context.theme.typography.xs.copyWith(
-                            color: context.theme.colors.mutedForeground,
-                          ),
-                        ),
-                        trailing: Icon(
-                          FIcons.chevronsRight,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                        onTap: () {
-                          context.push('/subscription-plans');
-                        },
+                      _ModernListTile(
+                        icon: FIcons.creditCard,
+                        title: 'Subscription',
+                        subtitle: user.subscriptionTier == SubscriptionTier.premium
+                            ? 'Manage your premium subscription'
+                            : 'Upgrade to Premium',
+                        onTap: () => context.push('/subscription-plans'),
                       ),
                       const Divider(height: 1),
-                      ListTile(
-                        leading: Icon(
-                          FIcons.users,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                        title: Text(
-                          'Manage Caregivers',
-                          style: context.theme.typography.sm.copyWith(
-                            color: context.theme.colors.foreground,
-                          ),
-                        ),
-                        trailing: Icon(
-                          FIcons.chevronsRight,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                        onTap: () {
-                          context.push('/caregivers');
-                        },
+                      _ModernListTile(
+                        icon: FIcons.users,
+                        title: 'Manage Caregivers',
+                        onTap: () => context.push('/caregivers'),
                       ),
                       const Divider(height: 1),
-                    ],
+                  ],
                     _ThemeSelectorTile(),
                     const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        FIcons.settings,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      title: Text(
-                        'Settings',
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.foreground,
-                        ),
-                      ),
-                      trailing: Icon(
-                        FIcons.chevronsRight,
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                      onTap: () {
-                        context.push('/settings');
-                      },
+                    _ModernListTile(
+                      icon: FIcons.settings,
+                      title: 'Settings',
+                      onTap: () => context.push('/settings'),
                     ),
                   ],
                 ),
@@ -288,9 +243,8 @@ class ProfileViewScreen extends StatelessWidget {
             ),
             SizedBox(height: 24),
 
-            // Logout button
-            FButton(
-              onPress: () async {
+            ElevatedButton.icon(
+              onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -330,8 +284,16 @@ class ProfileViewScreen extends StatelessWidget {
                   }
                 }
               },
-              prefix: const Icon(FIcons.logOut),
-              child: const Text('Logout'),
+              icon: const Icon(FIcons.logOut),
+              label: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                backgroundColor: ModernSurfaceTheme.accentCoral,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
             ),
           ],
         ),
@@ -355,7 +317,13 @@ class _ProfileInfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: context.theme.colors.primary),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: ModernSurfaceTheme.iconBadge(
+            ModernSurfaceTheme.primaryTeal,
+          ),
+          child: Icon(icon, size: 16, color: Colors.white),
+        ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -363,16 +331,17 @@ class _ProfileInfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: context.theme.typography.xs.copyWith(
-                  color: context.theme.colors.mutedForeground,
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
+                    ),
               ),
               SizedBox(height: 2),
               Text(
                 value,
-                style: context.theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: ModernSurfaceTheme.deepTeal,
+                    ),
               ),
             ],
           ),
@@ -443,6 +412,47 @@ class _ThemeSelectorTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ModernListTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  const _ModernListTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7)),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: ModernSurfaceTheme.deepTeal,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.65),
+                  ),
+            ),
+      trailing: Icon(
+        FIcons.chevronsRight,
+        color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
+      ),
+      onTap: onTap,
     );
   }
 }

@@ -6,7 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/extensions/meal_type_extensions.dart';
 import '../../../core/extensions/activity_type_extensions.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class DietExerciseLogScreen extends StatefulWidget {
   const DietExerciseLogScreen({super.key});
@@ -36,17 +37,30 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
     final lifestyleProvider = context.watch<LifestyleProvider>();
     final summary = lifestyleProvider.dailySummary;
 
-    return FScaffold(
-      header: FHeader.nested(
-        title: const Text('Diet & Exercise'),
-        prefixes: [FHeaderAction.back(onPress: () => context.pop())],
+    return ModernScaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Diet & Exercise',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
       ),
-      child: Column(
+      body: Column(
         children: [
           // Tab bar
-          Material(
+          Container(
+            decoration: ModernSurfaceTheme.glassCard(),
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: TabBar(
               controller: _tabController,
+              indicatorColor: ModernSurfaceTheme.primaryTeal,
+              labelColor: ModernSurfaceTheme.primaryTeal,
+              unselectedLabelColor: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.5),
               tabs: const [
                 Tab(text: 'Meals'),
                 Tab(text: 'Workouts'),
@@ -56,75 +70,29 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
 
           // Daily summary
           if (summary != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: FCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Icon(
-                              FIcons.utensils,
-                              color: context.theme.colors.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${summary['caloriesIn']}',
-                              style: context.theme.typography.xl.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Calories In',
-                              style: context.theme.typography.xs,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Icon(
-                              FIcons.activity,
-                              color: context.theme.colors.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${summary['caloriesOut']}',
-                              style: context.theme.typography.xl.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Calories Out',
-                              style: context.theme.typography.xs,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Icon(
-                              FIcons.trendingUp,
-                              color: context.theme.colors.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${summary['netCalories']}',
-                              style: context.theme.typography.xl.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text('Net', style: context.theme.typography.xs),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                decoration: ModernSurfaceTheme.glassCard(highlighted: true),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    _SummaryMetric(
+                      icon: FIcons.utensils,
+                      label: 'Calories In',
+                      value: '${summary['caloriesIn']}',
+                    ),
+                    _SummaryMetric(
+                      icon: FIcons.activity,
+                      label: 'Calories Out',
+                      value: '${summary['caloriesOut']}',
+                    ),
+                    _SummaryMetric(
+                      icon: FIcons.trendingUp,
+                      label: 'Net',
+                      value: '${summary['netCalories']}',
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -152,10 +120,18 @@ class _MealsTab extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: FButton(
-            onPress: () => context.push('/lifestyle/meal/add'),
-            prefix: const Icon(FIcons.plus),
-            child: const Text('Add Meal'),
+          child: ElevatedButton.icon(
+            onPressed: () => context.push('/lifestyle/meal/add'),
+            icon: const Icon(FIcons.plus),
+            label: const Text('Add Meal'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ModernSurfaceTheme.primaryTeal,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
           ),
         ),
         Expanded(
@@ -184,66 +160,67 @@ class _MealsTab extends StatelessWidget {
                     final meal = meals[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: FCard(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: context.theme.colors.primary
-                                      .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  FIcons.utensils,
-                                  color: context.theme.colors.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                      child: Container(
+                        decoration: ModernSurfaceTheme.glassCard(
+                          accent: ModernSurfaceTheme.primaryTeal,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration:
+                                  ModernSurfaceTheme.iconBadge(ModernSurfaceTheme.primaryTeal),
+                              child: const Icon(FIcons.utensils, color: Colors.white),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    meal.mealType.displayName,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: ModernSurfaceTheme.deepTeal,
+                                        ),
+                                  ),
+                                  Text(
+                                    meal.description,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                     Text(
-                                      meal.mealType.displayName,
-                                      style: context.theme.typography.sm
-                                          .copyWith(
-                                            fontWeight: FontWeight.bold,
+                                      DateFormat('h:mm a').format(meal.timestamp),
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: ModernSurfaceTheme.deepTeal
+                                                .withValues(alpha: 0.6),
                                           ),
                                     ),
-                                    Text(
-                                      meal.description,
-                                      style: context.theme.typography.xs,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      DateFormat(
-                                        'h:mm a',
-                                      ).format(meal.timestamp),
-                                      style: context.theme.typography.xs
-                                          .copyWith(
-                                            color: context
-                                                .theme
-                                                .colors
-                                                .mutedForeground,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
-                              Text(
-                                '${meal.calories}',
-                                style: context.theme.typography.base.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: context.theme.colors.primary,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${meal.calories}',
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: ModernSurfaceTheme.primaryTeal,
+                                      ),
                                 ),
-                              ),
-                              Text(' cal', style: context.theme.typography.xs),
-                            ],
-                          ),
+                                Text(
+                                  'cal',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: ModernSurfaceTheme.deepTeal
+                                          .withValues(alpha: 0.6),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -265,10 +242,18 @@ class _WorkoutsTab extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: FButton(
-            onPress: () => context.push('/lifestyle/workout/add'),
-            prefix: const Icon(FIcons.plus),
-            child: const Text('Add Workout'),
+          child: ElevatedButton.icon(
+            onPressed: () => context.push('/lifestyle/workout/add'),
+            icon: const Icon(FIcons.plus),
+            label: const Text('Add Workout'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ModernSurfaceTheme.accentBlue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
           ),
         ),
         Expanded(
@@ -297,63 +282,66 @@ class _WorkoutsTab extends StatelessWidget {
                     final workout = workouts[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: FCard(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.getSuccessColor(context).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  FIcons.activity,
-                                  color: AppTheme.getSuccessColor(context),
-                                ),
+                      child: Container(
+                        decoration: ModernSurfaceTheme.glassCard(
+                          accent: ModernSurfaceTheme.accentBlue,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: ModernSurfaceTheme.iconBadge(
+                                ModernSurfaceTheme.accentBlue,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      workout.activityType.displayName,
-                                      style: context.theme.typography.sm
-                                          .copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    Text(
-                                      '${workout.durationMinutes} min',
-                                      style: context.theme.typography.xs,
-                                    ),
-                                    Text(
-                                      DateFormat(
-                                        'h:mm a',
-                                      ).format(workout.timestamp),
-                                      style: context.theme.typography.xs
-                                          .copyWith(
-                                            color: context
-                                                .theme
-                                                .colors
-                                                .mutedForeground,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                              child: const Icon(FIcons.activity, color: Colors.white),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    workout.activityType.displayName,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: ModernSurfaceTheme.deepTeal,
+                                        ),
+                                  ),
+                                  Text(
+                                    '${workout.durationMinutes} min',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  Text(
+                                    DateFormat('h:mm a').format(workout.timestamp),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: ModernSurfaceTheme.deepTeal
+                                              .withValues(alpha: 0.6),
+                                        ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${workout.caloriesBurned}',
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: ModernSurfaceTheme.accentBlue,
+                                      ),
+                                ),
                               Text(
-                                '${workout.caloriesBurned}',
-                                style: context.theme.typography.base.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.getSuccessColor(context),
-                                ),
+                                'cal',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: ModernSurfaceTheme.deepTeal
+                                          .withValues(alpha: 0.6),
+                                    ),
                               ),
-                              Text(' cal', style: context.theme.typography.xs),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -361,6 +349,43 @@ class _WorkoutsTab extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _SummaryMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+          ),
+        ],
+      ),
     );
   }
 }

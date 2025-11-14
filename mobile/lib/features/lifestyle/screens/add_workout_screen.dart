@@ -7,6 +7,8 @@ import '../../../core/models/exercise_log_model.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class AddWorkoutScreen extends StatefulWidget {
   const AddWorkoutScreen({super.key});
@@ -73,87 +75,96 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           context.pop();
         }
       },
-      child: FScaffold(
-        header: FHeader.nested(
-          title: const Text('Add Workout'),
-          prefixes: [FHeaderAction.back(onPress: () => context.pop())],
+      child: ModernScaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Add Workout',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Activity type dropdown
-                  FCard(
-                    child: Padding(
-                      padding: EdgeInsets.all(12.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Activity Type',
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          padding: ModernSurfaceTheme.screenPadding(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Activity Type',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: ModernSurfaceTheme.deepTeal,
                             ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Material(
-                            child: DropdownButton<ActivityType>(
-                              value: _activityType,
-                              isExpanded: true,
-                              items: ActivityType.values.map((type) {
-                                return DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.displayName),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _activityType = value;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
                       ),
+                      SizedBox(height: 8.h),
+                      DropdownButton<ActivityType>(
+                        value: _activityType,
+                        isExpanded: true,
+                        items: ActivityType.values
+                            .map(
+                              (type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type.displayName),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _activityType = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _descriptionController,
+                  label: const Text('Description'),
+                  hint: 'Additional details',
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _durationController,
+                  label: const Text('Duration (minutes)'),
+                  hint: 'How long did you exercise?',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _caloriesController,
+                  label: const Text('Calories Burned'),
+                  hint: 'Estimated calories',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 24.h),
+                ElevatedButton(
+                  onPressed: _handleSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ModernSurfaceTheme.accentBlue,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  SizedBox(height: 16.h),
-
-                  FTextField(
-                    controller: _descriptionController,
-                    label: const Text('Description'),
-                    hint: 'Additional details',
-                  ),
-                  SizedBox(height: 16.h),
-
-                  FTextField(
-                    controller: _durationController,
-                    label: const Text('Duration (minutes)'),
-                    hint: 'How long did you exercise?',
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  FTextField(
-                    controller: _caloriesController,
-                    label: const Text('Calories Burned'),
-                    hint: 'Estimated calories',
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: 24.h),
-
-                  FButton(
-                    onPress: _handleSave,
-                    child: const Text('Save Workout'),
-                  ),
-                ],
-              ),
+                  child: const Text('Save Workout'),
+                ),
+              ],
             ),
           ),
         ),

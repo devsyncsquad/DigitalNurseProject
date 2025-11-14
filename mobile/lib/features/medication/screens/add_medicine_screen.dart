@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 import '../providers/medicine_form_provider.dart';
 import '../widgets/medicine_form_shared/form_step_container.dart';
 import '../widgets/medicine_form_steps/step_medicine_name.dart';
@@ -30,81 +32,39 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       create: (context) => MedicineFormProvider(),
       child: Consumer<MedicineFormProvider>(
         builder: (context, formProvider, child) {
-          return FScaffold(
-            header: FHeader.nested(
-              title: const Text('Add Medicine'),
-              prefixes: [
-                FHeaderAction.back(
-                  onPress: () => _handleBack(context, formProvider),
+          return ModernScaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => _handleBack(context, formProvider),
+                color: Colors.white,
+              ),
+              title: const Text(
+                'Add Medicine',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
+              ),
             ),
-            child: Column(
-              children: [
-                // Progress indicator
-                Container(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Step ${formProvider.currentStep + 1} of ${formProvider.totalSteps}',
-                        style: context.theme.typography.sm.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4.r),
-                        child: LinearProgressIndicator(
-                          value: formProvider.progress,
-                          minHeight: 8.h,
-                          backgroundColor: context.theme.colors.muted,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            context.theme.colors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Error message
-                if (formProvider.errorMessage != null)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                      child: Text(
-                        formProvider.errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Step content
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
+            body: Container(
+              padding: ModernSurfaceTheme.screenPadding(),
+              child: Column(
+                children: [
+                  _ProgressHeader(progress: formProvider.progress, currentStep: formProvider.currentStep, totalSteps: formProvider.totalSteps),
+                  if (formProvider.errorMessage != null) ...[
+                    SizedBox(height: 16.h),
+                    _ErrorNotice(message: formProvider.errorMessage!),
+                  ],
+                  SizedBox(height: 16.h),
+                  Expanded(
                     child: _buildStepContent(formProvider),
                   ),
-                ),
-
-                // Navigation buttons
-                _buildNavigationButtons(context, formProvider),
-              ],
+                  _buildNavigationButtons(context, formProvider),
+                ],
+              ),
             ),
           );
         },
@@ -172,38 +132,43 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     BuildContext context,
     MedicineFormProvider formProvider,
   ) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-        ),
-      ),
-      child: SafeArea(
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(top: 16.h),
         child: Row(
           children: [
             if (!formProvider.isFirstStep)
               Expanded(
-                child: FButton(
-                  style: FButtonStyle.outline(),
-                  onPress: () => formProvider.previousStep(),
-                  child: Text(
-                    'Back',
-                    style: TextStyle(
-                      color: context.theme.colors.foreground,
+                child: OutlinedButton(
+                  onPressed: () => formProvider.previousStep(),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    side: BorderSide(
+                      color: ModernSurfaceTheme.deepTeal.withOpacity(0.4),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
+                  child: const Text('Back'),
                 ),
               ),
-
             if (!formProvider.isFirstStep) SizedBox(width: 12.w),
-
             Expanded(
-              child: FButton(
-                onPress: formProvider.isLastStep
+              child: ElevatedButton(
+                onPressed: formProvider.isLastStep
                     ? () => _handleSave(context, formProvider)
                     : () => formProvider.nextStep(),
-                child: Text(formProvider.isLastStep ? 'Save Medicine' : 'Next'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  backgroundColor: ModernSurfaceTheme.primaryTeal,
+                ),
+                child: Text(
+                  formProvider.isLastStep ? 'Save Medicine' : 'Next',
+                ),
               ),
             ),
           ],
@@ -272,5 +237,83 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         );
       }
     }
+  }
+}
+
+class _ProgressHeader extends StatelessWidget {
+  final double progress;
+  final int currentStep;
+  final int totalSteps;
+
+  const _ProgressHeader({
+    required this.progress,
+    required this.currentStep,
+    required this.totalSteps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(
+        accent: ModernSurfaceTheme.primaryTeal,
+        highlighted: true,
+      ),
+      padding: EdgeInsets.all(20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Step ${currentStep + 1} of $totalSteps',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          SizedBox(height: 12.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10.h,
+              backgroundColor: Colors.white.withOpacity(0.3),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                ModernSurfaceTheme.primaryTeal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorNotice extends StatelessWidget {
+  final String message;
+
+  const _ErrorNotice({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.error;
+    return Container(
+      width: double.infinity,
+      decoration: ModernSurfaceTheme.glassCard(accent: color),
+      padding: EdgeInsets.all(16.w),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: color),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

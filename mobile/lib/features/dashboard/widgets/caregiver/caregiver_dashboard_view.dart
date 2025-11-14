@@ -20,32 +20,27 @@ class CaregiverDashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardSpacing = 18.h;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: CaregiverDashboardTheme.backgroundGradient(),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 20.w,
-            right: 20.w,
-            top: 24.h,
-            bottom: 40.h,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _DashboardHero(
-                contextProvider: careContext,
-                onRecipientSelected: onRecipientSelected,
-              ),
-              SizedBox(height: cardSpacing),
-              const CaregiverOverviewCard(),
-              SizedBox(height: cardSpacing),
-              const CaregiverActionShortcuts(),
-            ],
-          ),
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 20.w,
+          right: 20.w,
+          top: 24.h,
+          bottom: 40.h,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _DashboardHero(
+              contextProvider: careContext,
+              onRecipientSelected: onRecipientSelected,
+            ),
+            SizedBox(height: cardSpacing),
+            const CaregiverOverviewCard(),
+            SizedBox(height: cardSpacing),
+            const CaregiverActionShortcuts(),
+          ],
         ),
       ),
     );

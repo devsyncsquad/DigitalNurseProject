@@ -6,6 +6,7 @@ import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/extensions/meal_type_extensions.dart';
 import '../../../core/extensions/activity_type_extensions.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 import 'expandable_section_tile.dart';
 
 class DietExerciseSection extends StatelessWidget {
@@ -50,7 +51,7 @@ class DietExerciseSection extends StatelessWidget {
                     child: Text(
                       'dashboard.noDietExercise'.tr(),
                       style: TextStyle(
-                        color: context.theme.colors.mutedForeground,
+                        color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
                         fontSize: 14,
                       ),
                     ),
@@ -58,9 +59,7 @@ class DietExerciseSection extends StatelessWidget {
                 ] else ...[
                   Text(
                     'dashboard.todaysActivity'.tr(),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: ModernSurfaceTheme.sectionTitleStyle(context),
                   ),
                   const SizedBox(height: 12),
 
@@ -69,22 +68,18 @@ class DietExerciseSection extends StatelessWidget {
                     Text(
                       'dashboard.meals'.tr(),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.getSuccessColor(context),
-                      ),
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.getSuccessColor(context),
+                          ),
                     ),
                     const SizedBox(height: 8),
                     ...todayDietLogs.take(2).map((log) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 6.0),
                         child: Container(
-                          padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                            color: AppTheme.getSuccessColor(context).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppTheme.getSuccessColor(context).withOpacity(0.3),
-                            ),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: ModernSurfaceTheme.tintedCard(
+                            AppTheme.getSuccessColor(context),
                           ),
                           child: Row(
                             children: [
@@ -142,23 +137,18 @@ class DietExerciseSection extends StatelessWidget {
                     Text(
                       'dashboard.exercise'.tr(),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: context.theme.colors.secondary,
-                      ),
+                            fontWeight: FontWeight.w700,
+                            color: ModernSurfaceTheme.accentBlue,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     ...todayExerciseLogs.take(2).map((log) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 6.0),
                         child: Container(
-                          padding: const EdgeInsets.all(10.0),
-                          decoration: BoxDecoration(
-                            color: context.theme.colors.secondary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: context.theme.colors.secondary.withOpacity(0.3),
-                            ),
-                          ),
+                          padding: const EdgeInsets.all(12.0),
+                          decoration:
+                              ModernSurfaceTheme.tintedCard(ModernSurfaceTheme.accentBlue),
                           child: Row(
                             children: [
                               Icon(
@@ -230,7 +220,7 @@ class DietExerciseSection extends StatelessWidget {
                           'count': '${todayTotalLogs - 4}'
                         }),
                         style: TextStyle(
-                          color: context.theme.colors.mutedForeground,
+                          color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
                         ),

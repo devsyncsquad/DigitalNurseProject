@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/document_provider.dart';
 import '../../../core/models/document_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 import 'expandable_section_tile.dart';
 
 class DocumentsSection extends StatelessWidget {
@@ -23,7 +22,7 @@ class DocumentsSection extends StatelessWidget {
           title: 'dashboard.documents'.tr(),
           subtitle: 'dashboard.viewDetailsTitle'.tr(),
           count: '${documents.length}',
-          titleColor: context.theme.colors.primary,
+          titleColor: Theme.of(context).colorScheme.primary,
           routeForViewDetails: '/documents',
           interactionMode: InteractionMode.standard,
           expandedChild: Padding(
@@ -36,7 +35,7 @@ class DocumentsSection extends StatelessWidget {
                     child: Text(
                       'dashboard.noDocuments'.tr(),
                       style: TextStyle(
-                        color: context.theme.colors.mutedForeground,
+                        color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
                         fontSize: 14,
                       ),
                     ),
@@ -45,19 +44,18 @@ class DocumentsSection extends StatelessWidget {
                   Text(
                     'dashboard.recentDocuments'.tr(),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: ModernSurfaceTheme.deepTeal,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   ...recentDocuments.map((document) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Container(
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: context.theme.colors.muted,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: context.theme.colors.border),
+                        padding: const EdgeInsets.all(14.0),
+                        decoration: ModernSurfaceTheme.glassCard(
+                          accent: _getDocumentColor(context, document.type),
                         ),
                         child: Row(
                           children: [
@@ -76,7 +74,10 @@ class DocumentsSection extends StatelessWidget {
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: ModernSurfaceTheme.deepTeal,
+                                        ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -84,7 +85,8 @@ class DocumentsSection extends StatelessWidget {
                                     document.type.displayName,
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
-                                          color: context.theme.colors.mutedForeground,
+                                          color: ModernSurfaceTheme.deepTeal
+                                              .withValues(alpha: 0.7),
                                         ),
                                   ),
                                   Text(
@@ -93,7 +95,8 @@ class DocumentsSection extends StatelessWidget {
                                     ).format(document.uploadDate),
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
-                                          color: context.theme.colors.mutedForeground,
+                                          color: ModernSurfaceTheme.deepTeal
+                                              .withValues(alpha: 0.6),
                                           fontSize: 11,
                                         ),
                                   ),
@@ -113,7 +116,7 @@ class DocumentsSection extends StatelessWidget {
                           'count': '${documents.length - 3}'
                         }),
                         style: TextStyle(
-                          color: context.theme.colors.mutedForeground,
+                          color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
                         ),

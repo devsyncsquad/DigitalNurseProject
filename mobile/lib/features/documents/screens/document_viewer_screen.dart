@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/document_provider.dart';
 import '../../../core/models/document_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class DocumentViewerScreen extends StatelessWidget {
   final String documentId;
@@ -51,91 +54,93 @@ class DocumentViewerScreen extends StatelessWidget {
       (d) => d.id == documentId,
     );
 
-    return FScaffold(
-      header: FHeader.nested(
-        title: const Text('Document Details'),
-        prefixes: [FHeaderAction.back(onPress: () => context.pop())],
-        suffixes: [
-          FHeaderAction(
-            icon: Icon(FIcons.trash, color: context.theme.colors.destructive),
-            onPress: () => _handleDelete(context),
+    return ModernScaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Document Details',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => _handleDelete(context),
+            icon: const Icon(Icons.delete_outline, color: Colors.white),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: ModernSurfaceTheme.screenPadding(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Document preview (mock)
-            FCard(
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: context.theme.colors.muted,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(FIcons.fileText, size: 64, color: context.theme.colors.mutedForeground),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Document Preview (Mock)',
-                      style: context.theme.typography.sm.copyWith(
-                        color: context.theme.colors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
+            Container(
+              height: 220,
+              decoration: ModernSurfaceTheme.glassCard(
+                accent: AppTheme.getDocumentColor(context, document.type.name),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    FIcons.fileText,
+                    size: 64,
+                    color: ModernSurfaceTheme.primaryTeal,
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'Document Preview (Mock)',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                        ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Document details
-            FCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      document.title,
-                      style: context.theme.typography.xl.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _InfoRow(label: 'Type', value: document.type.displayName),
-                    const SizedBox(height: 8),
+            SizedBox(height: 24.h),
+            Container(
+              decoration: ModernSurfaceTheme.glassCard(),
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    document.title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: ModernSurfaceTheme.deepTeal,
+                        ),
+                  ),
+                  SizedBox(height: 16.h),
+                  _InfoRow(label: 'Type', value: document.type.displayName),
+                  SizedBox(height: 8.h),
+                  _InfoRow(
+                    label: 'Upload Date',
+                    value: DateFormat('MMM d, yyyy - h:mm a')
+                        .format(document.uploadDate),
+                  ),
+                  SizedBox(height: 8.h),
+                  _InfoRow(
+                    label: 'Visibility',
+                    value: _getVisibilityText(document.visibility),
+                  ),
+                  if (document.description != null) ...[
+                    SizedBox(height: 8.h),
                     _InfoRow(
-                      label: 'Upload Date',
-                      value: DateFormat(
-                        'MMM d, yyyy - h:mm a',
-                      ).format(document.uploadDate),
+                      label: 'Description',
+                      value: document.description!,
                     ),
-                    const SizedBox(height: 8),
-                    _InfoRow(
-                      label: 'Visibility',
-                      value: _getVisibilityText(document.visibility),
-                    ),
-                    if (document.description != null) ...[
-                      const SizedBox(height: 8),
-                      _InfoRow(
-                        label: 'Description',
-                        value: document.description!,
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Actions
-            FButton(
-              onPress: () {
-                // Mock download
+            SizedBox(height: 20.h),
+            ElevatedButton.icon(
+              onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Download started (mock)'),
@@ -143,23 +148,38 @@ class DocumentViewerScreen extends StatelessWidget {
                   ),
                 );
               },
-              prefix: const Icon(FIcons.download),
-              child: const Text('Download'),
+              icon: const Icon(FIcons.download),
+              label: const Text('Download'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                backgroundColor: ModernSurfaceTheme.primaryTeal,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-
-            FButton(
-              onPress: () {
-                // Mock share
+            SizedBox(height: 12.h),
+            OutlinedButton.icon(
+              onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Share functionality (mock)'),
-                    backgroundColor: context.theme.colors.primary,
+                    backgroundColor: AppTheme.getSuccessColor(context),
                   ),
                 );
               },
-              prefix: const Icon(FIcons.share),
-              child: const Text('Share'),
+              icon: const Icon(FIcons.share),
+              label: const Text('Share'),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                side: BorderSide(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.4),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
             ),
           ],
         ),
@@ -191,20 +211,21 @@ class _InfoRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 120,
+          width: 120.w,
           child: Text(
             label,
-            style: context.theme.typography.sm.copyWith(
-              color: context.theme.colors.mutedForeground,
-            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.6),
+                ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: context.theme.typography.sm.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: ModernSurfaceTheme.deepTeal,
+                ),
           ),
         ),
       ],

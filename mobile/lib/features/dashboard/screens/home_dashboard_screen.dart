@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/medication_provider.dart';
@@ -15,6 +14,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 import '../widgets/caregiver/caregiver_dashboard_view.dart';
 import '../widgets/patient/patient_dashboard_view.dart';
 
@@ -157,27 +157,33 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final unreadNotifications = notificationProvider.unreadCount;
     final isCaregiver = user?.role == UserRole.caregiver;
     final headerTitle = isCaregiver
-        ? Text(
-            'Caregiver Dashboard',
-            style: context.theme.typography.xl.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          )
-        : Text(
-            'dashboard.hello'.tr(
-              namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()},
-            ),
+        ? 'Caregiver Dashboard'
+        : 'dashboard.hello'.tr(
+            namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()},
           );
 
-    return FScaffold(
-      header: FHeader(
-        title: headerTitle,
-        suffixes: [
-          FHeaderAction(
+    return ModernScaffold(
+      safeAreaTop: false,
+      safeAreaBottom: false,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          headerTitle,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        actions: [
+          IconButton(
             icon: const Icon(FIcons.languages),
-            onPress: () => _showLanguageDialog(context),
+            color: Colors.white,
+            onPressed: () => _showLanguageDialog(context),
           ),
-          FHeaderAction(
+          IconButton(
+            onPressed: () => context.push('/notifications'),
             icon: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -209,11 +215,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   ),
               ],
             ),
-            onPress: () => context.push('/notifications'),
           ),
+          const SizedBox(width: 4),
         ],
       ),
-      child: RefreshIndicator(
+      body: RefreshIndicator(
         onRefresh: () => _loadData(force: true),
         child: isCaregiver
             ? CaregiverDashboardView(

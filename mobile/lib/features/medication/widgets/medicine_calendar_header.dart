@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
+
+import '../../../core/theme/modern_surface_theme.dart';
 
 class MedicineCalendarHeader extends StatelessWidget {
   final DateTime selectedDate;
@@ -14,15 +17,26 @@ class MedicineCalendarHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: FLineCalendar(
-        initialSelection: selectedDate,
-        initialScroll: selectedDate,
-        onChange: (date) => onDateChanged(date ?? DateTime.now()),
-        toggleable: true,
-        start: DateTime(1900),
-        end: DateTime(2050),
-        today: DateTime.now(),
+      padding: EdgeInsets.all(12.w),
+      decoration: ModernSurfaceTheme.glassCard(accent: ModernSurfaceTheme.accentBlue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Schedule Overview',
+            style: ModernSurfaceTheme.sectionTitleStyle(context),
+          ),
+          SizedBox(height: 8.h),
+          FLineCalendar(
+            initialSelection: selectedDate,
+            initialScroll: selectedDate,
+            onChange: (date) => onDateChanged(date ?? DateTime.now()),
+            toggleable: true,
+            start: DateTime(1900),
+            end: DateTime(2050),
+            today: DateTime.now(),
+          ),
+        ],
       ),
     );
   }

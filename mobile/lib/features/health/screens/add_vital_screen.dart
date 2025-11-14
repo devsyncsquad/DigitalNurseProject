@@ -8,6 +8,8 @@ import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class AddVitalScreen extends StatefulWidget {
   const AddVitalScreen({super.key});
@@ -96,86 +98,89 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
           context.pop();
         }
       },
-      child: FScaffold(
-        header: FHeader.nested(
-          title: const Text('Log Vital'),
-          prefixes: [FHeaderAction.back(onPress: () => context.pop())],
+      child: ModernScaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Log Vital',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Vital type dropdown
-                  FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Vital Type',
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          padding: ModernSurfaceTheme.screenPadding(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vital Type',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: ModernSurfaceTheme.deepTeal,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Material(
-                            child: DropdownButton<VitalType>(
-                              value: _selectedType,
-                              isExpanded: true,
-                              items: VitalType.values.map((type) {
-                                return DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.displayName),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _selectedType = value;
-                                    _valueController.clear();
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
                       ),
+                      const SizedBox(height: 8),
+                      DropdownButton<VitalType>(
+                        value: _selectedType,
+                        isExpanded: true,
+                        items: VitalType.values.map((type) {
+                          return DropdownMenuItem(
+                            value: type,
+                            child: Text(type.displayName),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedType = value;
+                              _valueController.clear();
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _valueController,
+                  label: Text('${_selectedType.displayName} (${_selectedType.unit})'),
+                  hint: _getHintText(),
+                  keyboardType: TextInputType.text,
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _notesController,
+                  label: const Text('Notes (Optional)'),
+                  hint: 'Additional notes',
+                  maxLines: 3,
+                ),
+                SizedBox(height: 24.h),
+                ElevatedButton(
+                  onPressed: _handleSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ModernSurfaceTheme.primaryTeal,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  SizedBox(height: 16.h),
-
-                  // Value input
-                  FTextField(
-                    controller: _valueController,
-                    label: Text(
-                      '${_selectedType.displayName} (${_selectedType.unit})',
-                    ),
-                    hint: _getHintText(),
-                    keyboardType: TextInputType.text,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Notes
-                  FTextField(
-                    controller: _notesController,
-                    label: const Text('Notes (Optional)'),
-                    hint: 'Additional notes',
-                    maxLines: 3,
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Save button
-                  FButton(
-                    onPress: _handleSave,
-                    child: const Text('Save Vital'),
-                  ),
-                ],
-              ),
+                  child: const Text('Save Vital'),
+                ),
+              ],
             ),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,8 @@ import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/models/medicine_model.dart';
 import '../widgets/medicine_calendar_header.dart';
@@ -105,27 +108,50 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     final medicines = medicationProvider.medicines;
     final errorMessage = medicationProvider.error;
 
-    return FScaffold(
-      header: FHeader(
-        title: const Text('My Medicine'),
-        suffixes: [
+    return ModernScaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Medications',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            if (isCaregiver && careContext?.selectedRecipient != null)
+              Text(
+                'for ${careContext!.selectedRecipient!.name}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white70,
+                    ),
+              ),
+          ],
+        ),
+        actions: [
           if (!isCaregiver)
-            FHeaderAction(
-              icon: const Icon(FIcons.plus),
-              onPress: () => context.push('/medicine/add'),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+              onPressed: () => context.push('/medicine/add'),
             ),
         ],
       ),
-      child: _buildBody(
-        context,
-        medicationProvider: medicationProvider,
-        medicines: medicines,
-        errorMessage: errorMessage,
-        isCaregiver: isCaregiver,
-        hasAssignments: hasAssignments,
-        isCareContextLoading: isCareContextLoading,
-        careContextError: careContextError,
-        hasSelectedRecipient: selectedElderId != null,
+      body: Padding(
+        padding: ModernSurfaceTheme.screenPadding(),
+        child: _buildBody(
+          context,
+          medicationProvider: medicationProvider,
+          medicines: medicines,
+          errorMessage: errorMessage,
+          isCaregiver: isCaregiver,
+          hasAssignments: hasAssignments,
+          isCareContextLoading: isCareContextLoading,
+          careContextError: careContextError,
+          hasSelectedRecipient: selectedElderId != null,
+        ),
       ),
     );
   }
@@ -183,11 +209,16 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
     return Column(
       children: [
-        if (errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: _ErrorBanner(message: errorMessage, onRetry: _loadMedicines),
-          ),
+        _HeroSummary(
+          medicinesCount: medicines.length,
+          isCaregiver: isCaregiver,
+          selectedDate: _selectedDate,
+        ),
+        if (errorMessage != null) ...[
+          SizedBox(height: 16.h),
+          _ErrorBanner(message: errorMessage, onRetry: _loadMedicines),
+        ],
+        SizedBox(height: 16.h),
         MedicineCalendarHeader(
           selectedDate: _selectedDate,
           onDateChanged: (date) {
@@ -196,6 +227,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             });
           },
         ),
+        SizedBox(height: 16.h),
         Expanded(
           child: medicines.isEmpty
               ? _buildEmptyState(context, isCaregiver: isCaregiver)
@@ -206,29 +238,51 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context, {required bool isCaregiver}) {
-    return Center(
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(),
+      padding: ModernSurfaceTheme.cardPadding(),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             FIcons.pill,
-            size: 64,
-            color: context.theme.colors.mutedForeground,
+            size: 48,
+            color: ModernSurfaceTheme.deepTeal,
           ),
-          const SizedBox(height: 16),
-          Text('No medicines added yet', style: context.theme.typography.lg),
-          const SizedBox(height: 8),
+          SizedBox(height: 12.h),
+          Text(
+            'No medicines added yet',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: ModernSurfaceTheme.deepTeal,
+                ),
+          ),
+          SizedBox(height: 8.h),
           Text(
             isCaregiver
                 ? 'This patient has no medicines recorded yet.'
-                : 'Tap + to add your first medicine',
-            style: context.theme.typography.sm,
+                : 'Tap the button below to add your first medicine',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                ),
           ),
           if (!isCaregiver) ...[
-            const SizedBox(height: 24),
-            FButton(
-              onPress: () => context.push('/medicine/add'),
-              child: const Text('Add Medicine'),
+            SizedBox(height: 20.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  backgroundColor: ModernSurfaceTheme.primaryTeal,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => context.push('/medicine/add'),
+                child: const Text('Add Medicine'),
+              ),
             ),
           ],
         ],
@@ -277,8 +331,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SizedBox(height: 8),
-          // Morning Medicines
           if (categorized['morning']!.isNotEmpty)
             MedicineScheduleCard(
               timeOfDay: MedicineTimeOfDay.morning,
@@ -288,8 +340,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                 setState(() {});
               },
             ),
-
-          // Afternoon Medicines
+          if (categorized['afternoon']!.isNotEmpty) SizedBox(height: 12.h),
           if (categorized['afternoon']!.isNotEmpty)
             MedicineScheduleCard(
               timeOfDay: MedicineTimeOfDay.afternoon,
@@ -299,8 +350,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                 setState(() {});
               },
             ),
-
-          // Evening Medicines
+          if (categorized['evening']!.isNotEmpty) SizedBox(height: 12.h),
           if (categorized['evening']!.isNotEmpty)
             MedicineScheduleCard(
               timeOfDay: MedicineTimeOfDay.evening,
@@ -310,8 +360,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                 setState(() {});
               },
             ),
-
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
         ],
       ),
     );
@@ -342,38 +391,46 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     required String message,
     VoidCallback? onRetry,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 48, color: context.theme.colors.primary),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: context.theme.typography.lg.copyWith(
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(),
+      padding: ModernSurfaceTheme.cardPadding(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 48, color: ModernSurfaceTheme.primaryTeal),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: ModernSurfaceTheme.deepTeal,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: context.theme.typography.sm.copyWith(
-                  color: context.theme.colors.mutedForeground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (onRetry != null) ...[
-                const SizedBox(height: 16),
-                FButton(onPress: onRetry, child: const Text('Retry')),
-              ],
-            ],
+            textAlign: TextAlign.center,
           ),
-        ),
+          SizedBox(height: 8.h),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                ),
+            textAlign: TextAlign.center,
+          ),
+          if (onRetry != null) ...[
+            SizedBox(height: 16.h),
+            FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(
+                backgroundColor: ModernSurfaceTheme.primaryTeal,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -387,32 +444,133 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final errorColor = AppTheme.getErrorColor(context);
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.getErrorColor(context).withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.getErrorColor(context).withOpacity(0.3),
-        ),
-      ),
+      decoration: ModernSurfaceTheme.glassCard(accent: errorColor),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
         children: [
-          Icon(FIcons.info, color: AppTheme.getErrorColor(context)),
-          const SizedBox(width: 12),
+          Icon(FIcons.info, color: errorColor),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               message,
-              style: context.theme.typography.sm.copyWith(
-                color: AppTheme.getErrorColor(context),
-              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: errorColor,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
           TextButton(
-            onPressed: () {
-              onRetry();
-            },
+            onPressed: onRetry,
+            style: TextButton.styleFrom(foregroundColor: errorColor),
             child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroSummary extends StatelessWidget {
+  final int medicinesCount;
+  final bool isCaregiver;
+  final DateTime selectedDate;
+
+  const _HeroSummary({
+    required this.medicinesCount,
+    required this.isCaregiver,
+    required this.selectedDate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel =
+        '${selectedDate.day} ${_monthLabel(selectedDate.month)}, ${selectedDate.year}';
+    return Container(
+      width: double.infinity,
+      decoration: ModernSurfaceTheme.heroDecoration(),
+      padding: ModernSurfaceTheme.heroPadding(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isCaregiver ? 'Care schedule' : 'Today\'s plan',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.white.withOpacity(0.85),
+                ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '$medicinesCount medicines on $dateLabel',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          SizedBox(height: 12.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: [
+              _HeroChip(
+                icon: Icons.alarm,
+                label: 'Smart reminders',
+              ),
+              _HeroChip(
+                icon: Icons.health_and_safety,
+                label: isCaregiver ? 'Patient safety' : 'Stay on track',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _monthLabel(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final chipForeground =
+        ModernSurfaceTheme.chipForegroundColor(Colors.white);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: ModernSurfaceTheme.frostedChip(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: chipForeground),
+          SizedBox(width: 8.w),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: chipForeground,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
         ],
       ),

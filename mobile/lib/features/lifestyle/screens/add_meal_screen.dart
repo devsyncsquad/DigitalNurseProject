@@ -7,6 +7,8 @@ import '../../../core/models/diet_log_model.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/widgets/modern_scaffold.dart';
 
 class AddMealScreen extends StatefulWidget {
   const AddMealScreen({super.key});
@@ -68,77 +70,90 @@ class _AddMealScreenState extends State<AddMealScreen> {
           context.pop();
         }
       },
-      child: FScaffold(
-        header: FHeader.nested(
-          title: const Text('Add Meal'),
-          prefixes: [FHeaderAction.back(onPress: () => context.pop())],
+      child: ModernScaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Add Meal',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Meal type dropdown
-                  FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Meal Type',
-                            style: context.theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          padding: ModernSurfaceTheme.screenPadding(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Meal Type',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: ModernSurfaceTheme.deepTeal,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Material(
-                            child: DropdownButton<MealType>(
-                              value: _mealType,
-                              isExpanded: true,
-                              items: MealType.values.map((type) {
-                                return DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type.displayName),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _mealType = value;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
                       ),
+                      const SizedBox(height: 8),
+                      DropdownButton<MealType>(
+                        value: _mealType,
+                        isExpanded: true,
+                        items: MealType.values
+                            .map(
+                              (type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type.displayName),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _mealType = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _descriptionController,
+                  label: const Text('Description'),
+                  hint: 'What did you eat?',
+                  maxLines: 3,
+                ),
+                SizedBox(height: 16.h),
+                FTextField(
+                  controller: _caloriesController,
+                  label: const Text('Calories'),
+                  hint: 'Estimated calories',
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 24.h),
+                ElevatedButton(
+                  onPressed: _handleSave,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ModernSurfaceTheme.primaryTeal,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  SizedBox(height: 16.h),
-
-                  FTextField(
-                    controller: _descriptionController,
-                    label: const Text('Description'),
-                    hint: 'What did you eat?',
-                    maxLines: 3,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  FTextField(
-                    controller: _caloriesController,
-                    label: const Text('Calories'),
-                    hint: 'Estimated calories',
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: 24.h),
-
-                  FButton(onPress: _handleSave, child: const Text('Save Meal')),
-                ],
-              ),
+                  child: const Text('Save Meal'),
+                ),
+              ],
             ),
           ),
         ),

@@ -77,6 +77,8 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
 
   @override
   Widget build(BuildContext context) {
+    final chipForeground =
+        CaregiverDashboardTheme.chipForegroundColor(widget.accentColor);
     return Container(
       padding: CaregiverDashboardTheme.cardPadding(),
       decoration: CaregiverDashboardTheme.glassCard(),
@@ -158,7 +160,7 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
                           Text(
                             widget.count,
                             style: context.theme.typography.sm.copyWith(
-                              color: Colors.white,
+                              color: chipForeground,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -166,9 +168,9 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
                           AnimatedRotation(
                             turns: _isExpanded ? 0.5 : 0,
                             duration: const Duration(milliseconds: 300),
-                            child: const Icon(
+                            child: Icon(
                               Icons.keyboard_arrow_down,
-                              color: Colors.white,
+                              color: chipForeground,
                               size: 18,
                             ),
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import '../../../core/models/medicine_model.dart';
 import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 
 class MedicineItemTile extends StatelessWidget {
   final MedicineModel medicine;
@@ -29,37 +31,43 @@ class MedicineItemTile extends StatelessWidget {
     final timeDisplay = medicationProvider.getTimeOfDayString(reminderTime);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      margin: EdgeInsets.symmetric(vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withOpacity(0.6),
+      ),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
               onTap: () => context.push('/medicine/${medicine.id}'),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       medicine.name,
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: ModernSurfaceTheme.deepTeal,
+                          ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 4.h),
                     Text(
-                      '${medicine.dosage} - $timeDisplay',
-                      style: context.theme.typography.xs.copyWith(
-                        color: context.theme.colors.mutedForeground,
-                      ),
+                      '${medicine.dosage} • $timeDisplay',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: ModernSurfaceTheme.deepTeal.withOpacity(0.65),
+                          ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 12.w),
           _buildStatusButton(context),
         ],
       ),
@@ -69,30 +77,14 @@ class MedicineItemTile extends StatelessWidget {
   Widget _buildStatusButton(BuildContext context) {
     switch (status) {
       case IntakeStatus.taken:
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.getSuccessColor(context).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            FIcons.check,
-            color: AppTheme.getSuccessColor(context),
-            size: 16,
-          ),
+        return _StatusChip(
+          color: AppTheme.getSuccessColor(context),
+          icon: FIcons.check,
         );
       case IntakeStatus.missed:
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppTheme.getErrorColor(context).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            FIcons.x,
-            color: AppTheme.getErrorColor(context),
-            size: 16,
-          ),
+        return _StatusChip(
+          color: AppTheme.getErrorColor(context),
+          icon: FIcons.x,
         );
       case IntakeStatus.pending:
         final now = DateTime.now();
@@ -109,41 +101,28 @@ class MedicineItemTile extends StatelessWidget {
 
         if (scheduledTime.isBefore(now)) {
           // Past time, show missed status
-          return Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.getWarningColor(context).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              FIcons.x,
-              color: AppTheme.getWarningColor(context),
-              size: 16,
-            ),
+          return _StatusChip(
+            color: AppTheme.getWarningColor(context),
+            icon: FIcons.x,
           );
         } else {
-          // Future time, show neutral outlined action button
-          final theme = context.theme;
-          final borderColor = theme.colors.border;
           return SizedBox(
-            width: 36,
-            height: 36,
+            width: 38.w,
+            height: 38.w,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => _handleMarkTaken(context),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(19),
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colors.background,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: borderColor),
+                  decoration: ModernSurfaceTheme.frostedChip(
+                    baseColor: ModernSurfaceTheme.primaryTeal,
                   ),
-                  child: Center(
-                    child: Icon(
-                      FIcons.plus,
-                      size: 16,
-                      color: theme.colors.foreground,
+                  child: Icon(
+                    FIcons.plus,
+                    size: 16,
+                    color: ModernSurfaceTheme.chipForegroundColor(
+                      ModernSurfaceTheme.primaryTeal,
                     ),
                   ),
                 ),
@@ -152,13 +131,9 @@ class MedicineItemTile extends StatelessWidget {
           );
         }
       case IntakeStatus.skipped:
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: context.theme.colors.mutedForeground.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(FIcons.minus, color: context.theme.colors.mutedForeground, size: 16),
+        return _StatusChip(
+          color: context.theme.colors.mutedForeground,
+          icon: FIcons.minus,
         );
     }
   }
@@ -187,5 +162,24 @@ class MedicineItemTile extends StatelessWidget {
     );
 
     onStatusChanged?.call();
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+
+  const _StatusChip({required this.color, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(8.w),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Icon(icon, color: color, size: 16),
+    );
   }
 }

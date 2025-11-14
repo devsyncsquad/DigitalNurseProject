@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/theme/modern_surface_theme.dart';
 
 class FormStepContainer extends StatelessWidget {
   final String title;
@@ -21,46 +22,45 @@ class FormStepContainer extends StatelessWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       transitionBuilder: (child, animation) {
-        return SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-              ),
+        return FadeTransition(
+          opacity: animation,
           child: child,
         );
       },
-      child: Column(
+      child: Container(
         key: ValueKey(stepNumber),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: context.theme.typography.xl),
-              if (description != null) ...[
-                SizedBox(height: 8.h),
-                Text(
-                  description!,
-                  style: context.theme.typography.base.copyWith(
-                    color: context.theme.colors.mutedForeground,
+        decoration: ModernSurfaceTheme.glassCard(highlighted: true),
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: ModernSurfaceTheme.deepTeal,
                   ),
-                ),
-              ],
-              SizedBox(height: 24.h),
+            ),
+            if (description != null) ...[
+              SizedBox(height: 8.h),
+              Text(
+                description!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+                    ),
+              ),
             ],
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: child,
+            SizedBox(height: 24.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: child,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

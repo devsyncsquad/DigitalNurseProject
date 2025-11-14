@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/medicine_model.dart';
 import '../../../core/providers/medication_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 import 'medicine_item_tile.dart';
 
 enum MedicineTimeOfDay { morning, afternoon, evening }
@@ -72,132 +74,121 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
   Widget build(BuildContext context) {
     if (widget.medicines.isEmpty) return const SizedBox.shrink();
 
-    final theme = context.theme;
     final timeInfo = _getTimeInfo(context);
+    final chipForeground =
+        ModernSurfaceTheme.chipForegroundColor(timeInfo.color);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: FCard(
-        child: Column(
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _isExpanded = !_isExpanded;
-                  });
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: timeInfo.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          timeInfo.icon,
-                          color: timeInfo.color,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              timeInfo.label,
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: timeInfo.color,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _getStatusText(context),
-                              style: theme.typography.sm.copyWith(
-                                color: theme.colors.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _buildStatusIcon(context),
-                      const SizedBox(width: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colors.muted,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.medicines.length.toString(),
-                              style: theme.typography.sm.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              _isExpanded
-                                  ? FIcons.chevronUp
-                                  : FIcons.chevronDown,
-                              size: 16,
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+      decoration: ModernSurfaceTheme.glassCard(accent: timeInfo.color),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: ModernSurfaceTheme.iconBadge(timeInfo.color),
+                    child: Icon(
+                      timeInfo.icon,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          timeInfo.label,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: ModernSurfaceTheme.deepTeal,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          _getStatusText(context),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.6),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusIcon(context),
+                  SizedBox(width: 12.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                    decoration: ModernSurfaceTheme.frostedChip(
+                      baseColor: timeInfo.color,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.medicines.length.toString(),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: chipForeground,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          _isExpanded ? FIcons.chevronUp : FIcons.chevronDown,
+                          size: 14,
+                      color: chipForeground,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            if (_isExpanded) ...[
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: widget.medicines
-                      .map((medicine) {
-                        final relevantTimes = medicine.reminderTimes
-                            .where((time) => _isRelevantTimeOfDay(time))
-                            .toList();
+          ),
+          if (_isExpanded) ...[
+            Divider(
+              height: 24.h,
+              color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.08),
+            ),
+            Column(
+              children: widget.medicines
+                  .map((medicine) {
+                    final relevantTimes = medicine.reminderTimes
+                        .where((time) => _isRelevantTimeOfDay(time))
+                        .toList();
 
-                        return relevantTimes.map((time) {
-                          final key = '${medicine.id}_$time';
-                          final status =
-                              _medicineStatuses[key] ?? IntakeStatus.pending;
+                    return relevantTimes.map((time) {
+                      final key = '${medicine.id}_$time';
+                      final status =
+                          _medicineStatuses[key] ?? IntakeStatus.pending;
 
-                          return MedicineItemTile(
-                            medicine: medicine,
-                            reminderTime: time,
-                            status: status,
-                            selectedDate: widget.selectedDate,
-                            onStatusChanged: () {
-                              _loadStatuses();
-                              widget.onStatusChanged?.call();
-                            },
-                          );
-                        }).toList();
-                      })
-                      .expand((x) => x)
-                      .toList(),
-                ),
-              ),
-            ],
+                      return MedicineItemTile(
+                        medicine: medicine,
+                        reminderTime: time,
+                        status: status,
+                        selectedDate: widget.selectedDate,
+                        onStatusChanged: () {
+                          _loadStatuses();
+                          widget.onStatusChanged?.call();
+                        },
+                      );
+                    }).toList();
+                  })
+                  .expand((x) => x)
+                  .toList(),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -223,31 +214,19 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
     final statuses = _medicineStatuses.values.toSet();
 
     if (statuses.contains(IntakeStatus.missed)) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.getErrorColor(context).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(FIcons.x, color: AppTheme.getErrorColor(context), size: 20),
-      );
+        return _StatusBadge(
+          color: AppTheme.getErrorColor(context),
+          icon: FIcons.x,
+        );
     } else if (statuses.contains(IntakeStatus.pending)) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: context.theme.colors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(FIcons.clock, color: context.theme.colors.primary, size: 20),
+      return _StatusBadge(
+        color: context.theme.colors.primary,
+        icon: FIcons.clock,
       );
     } else if (statuses.contains(IntakeStatus.taken)) {
-      return Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.getSuccessColor(context).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(FIcons.check, color: AppTheme.getSuccessColor(context), size: 20),
+      return _StatusBadge(
+        color: AppTheme.getSuccessColor(context),
+        icon: FIcons.check,
       );
     }
 
@@ -271,15 +250,32 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
   ({String label, IconData icon, Color color}) _getTimeInfo(
     BuildContext context,
   ) {
-    final primaryColor = context.theme.colors.primary;
-    final secondaryColor = context.theme.colors.secondary;
     switch (widget.timeOfDay) {
       case MedicineTimeOfDay.morning:
-        return (label: 'Morning', icon: FIcons.sunrise, color: primaryColor);
+        return (label: 'Morning', icon: FIcons.sunrise, color: ModernSurfaceTheme.accentYellow);
       case MedicineTimeOfDay.afternoon:
-        return (label: 'Afternoon', icon: FIcons.sun, color: AppTheme.getSuccessColor(context));
+        return (label: 'Afternoon', icon: FIcons.sun, color: ModernSurfaceTheme.primaryTeal);
       case MedicineTimeOfDay.evening:
-        return (label: 'Evening', icon: FIcons.moon, color: secondaryColor);
+        return (label: 'Evening', icon: FIcons.moon, color: ModernSurfaceTheme.accentBlue);
     }
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+
+  const _StatusBadge({required this.color, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(10.w),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Icon(icon, color: color, size: 18),
+    );
   }
 }
