@@ -14,6 +14,7 @@ import '../features/medication/screens/medicine_detail_screen.dart';
 import '../features/health/screens/add_vital_screen.dart';
 import '../features/health/screens/health_trends_screen.dart';
 import '../features/caregiver/screens/add_caregiver_screen.dart';
+import '../features/caregiver/screens/caregiver_list_screen.dart';
 import '../features/caregiver/screens/invitation_accept_screen.dart';
 import '../features/lifestyle/screens/diet_exercise_log_screen.dart';
 import '../features/lifestyle/screens/add_meal_screen.dart';
@@ -130,6 +131,18 @@ final goRouter = GoRouter(
     ),
 
     // Caregiver routes
+    GoRoute(
+      path: '/caregivers',
+      redirect: (context, state) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final role = authProvider.currentUser?.role;
+        if (role == UserRole.caregiver) {
+          return '/home';
+        }
+        return null;
+      },
+      builder: (context, state) => const CaregiverListScreen(),
+    ),
     GoRoute(
       path: '/caregiver/add',
       redirect: (context, state) {

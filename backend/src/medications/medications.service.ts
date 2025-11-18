@@ -316,16 +316,30 @@ export class MedicationsService {
         medicationId,
         elderUserId: context.elderUserId,
       },
+      include: {
+        schedules: {
+          select: {
+            medScheduleId: true,
+          },
+        },
+      },
     });
 
     if (!medication) {
       throw new NotFoundException('Medication not found');
     }
 
+    // Get schedule IDs for this medication
+    const scheduleIds = medication.schedules.map((s) => s.medScheduleId);
+
+    if (scheduleIds.length === 0) {
+      return [];
+    }
+
     const intakes = await this.prisma.medIntake.findMany({
       where: {
-        schedule: {
-          medicationId,
+        medScheduleId: {
+          in: scheduleIds,
         },
       },
       include: {
@@ -441,10 +455,24 @@ export class MedicationsService {
         medicationId,
         elderUserId: context.elderUserId,
       },
+      include: {
+        schedules: {
+          select: {
+            medScheduleId: true,
+          },
+        },
+      },
     });
 
     if (!medication) {
       throw new NotFoundException('Medication not found');
+    }
+
+    // Get schedule IDs for this medication
+    const scheduleIds = medication.schedules.map((s) => s.medScheduleId);
+
+    if (scheduleIds.length === 0) {
+      return { percentage: 100, total: 0, taken: 0 };
     }
 
     const cutoffDate = new Date();
@@ -452,8 +480,8 @@ export class MedicationsService {
 
     const intakes = await this.prisma.medIntake.findMany({
       where: {
-        schedule: {
-          medicationId,
+        medScheduleId: {
+          in: scheduleIds,
         },
         dueAt: {
           gte: cutoffDate,
@@ -484,17 +512,31 @@ export class MedicationsService {
         medicationId,
         elderUserId: context.elderUserId,
       },
+      include: {
+        schedules: {
+          select: {
+            medScheduleId: true,
+          },
+        },
+      },
     });
 
     if (!medication) {
       throw new NotFoundException('Medication not found');
     }
 
+    // Get schedule IDs for this medication
+    const scheduleIds = medication.schedules.map((s) => s.medScheduleId);
+
+    if (scheduleIds.length === 0) {
+      return { streak: 0 };
+    }
+
     // Get all intakes ordered by date descending
     const intakes = await this.prisma.medIntake.findMany({
       where: {
-        schedule: {
-          medicationId,
+        medScheduleId: {
+          in: scheduleIds,
         },
       },
       orderBy: {
