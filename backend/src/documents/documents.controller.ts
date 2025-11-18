@@ -98,8 +98,31 @@ export class DocumentsController {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    res.setHeader('Content-Type', fileInfo.fileType || 'application/octet-stream');
+    res.setHeader('Content-Type', fileInfo.mimeType || 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${fileInfo.fileName}"`);
+    return res.sendFile(fileInfo.filePath);
+  }
+
+  @Get(':id/view')
+  @ApiOperation({ summary: 'View document file inline' })
+  @ApiResponse({ status: 200, description: 'File view' })
+  @ApiResponse({ status: 404, description: 'Document or file not found' })
+  async viewFile(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('elderUserId') elderUserId: string | undefined,
+    @Res() res: any,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    const fileInfo = await this.documentsService.getFile(context, BigInt(id));
+
+    if (!fs.existsSync(fileInfo.filePath)) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Set content type for inline viewing
+    res.setHeader('Content-Type', fileInfo.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${fileInfo.fileName}"`);
     return res.sendFile(fileInfo.filePath);
   }
 

@@ -107,11 +107,43 @@ export class DocumentsService {
       throw new NotFoundException('File not found');
     }
 
+    // Get MIME type based on file extension
+    const mimeType = this.getMimeType(document.fileType || path.extname(document.filePath));
+
     return {
       filePath: document.filePath,
       fileName: path.basename(document.filePath),
       fileType: document.fileType,
+      mimeType,
     };
+  }
+
+  /**
+   * Get MIME type from file extension or file type
+   */
+  private getMimeType(fileType: string): string {
+    const ext = fileType.toLowerCase();
+    
+    // Handle full MIME types
+    if (ext.includes('/')) {
+      return ext;
+    }
+
+    // Map extensions to MIME types
+    const mimeTypes: { [key: string]: string } = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'pdf': 'application/pdf',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'txt': 'text/plain',
+    };
+
+    // Remove leading dot if present
+    const cleanExt = ext.replace(/^\./, '');
+    return mimeTypes[cleanExt] || 'application/octet-stream';
   }
 
   /**
@@ -205,11 +237,14 @@ export class DocumentsService {
    * Map database model to API response
    */
   private mapToResponse(document: any) {
+    const documentId = document.documentId.toString();
     return {
-      id: document.documentId.toString(),
+      id: documentId,
       title: document.title,
       type: document.documentType,
-      filePath: document.filePath,
+      filePath: document.filePath, // Keep for backward compatibility
+      fileUrl: `/documents/${documentId}/file`, // Add accessible URL
+      fileType: document.fileType,
       uploadDate: document.uploadedAt.toISOString(),
       visibility: document.visibility,
       description: document.description || null,

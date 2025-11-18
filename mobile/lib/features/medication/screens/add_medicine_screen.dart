@@ -145,6 +145,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     side: BorderSide(
                       color: ModernSurfaceTheme.deepTeal.withOpacity(0.4),
                     ),
+                    foregroundColor: ModernSurfaceTheme.deepTeal,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),

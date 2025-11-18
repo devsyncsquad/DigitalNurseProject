@@ -410,6 +410,7 @@ class _FileSelector extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.symmetric(vertical: 14.h),
           side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
+          foregroundColor: ModernSurfaceTheme.deepTeal,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
@@ -490,6 +491,7 @@ class _FileSelector extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 14.h),
             side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
+            foregroundColor: ModernSurfaceTheme.deepTeal,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
             ),

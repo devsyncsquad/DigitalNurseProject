@@ -74,14 +74,21 @@ class DocumentMapper {
     // Get file path - backend may return fileName or filePath
     String filePath = json['filePath']?.toString() ?? 
                      json['fileName']?.toString() ?? 
-                     json['fileUrl']?.toString() ?? 
                      '';
+    
+    // Get file URL - backend now returns fileUrl
+    String? fileUrl = json['fileUrl']?.toString();
+    
+    // Get file type
+    String? fileType = json['fileType']?.toString();
 
     return DocumentModel(
       id: json['id']?.toString() ?? json['documentId']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       type: type,
       filePath: filePath,
+      fileUrl: fileUrl,
+      fileType: fileType,
       uploadDate: uploadDate,
       visibility: visibility,
       description: json['description']?.toString(),

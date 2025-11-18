@@ -26,6 +26,8 @@ dependencies:
   timezone: ^0.9.4
   easy_localization: ^3.0.8
   dio: ^5.7.0
+  cached_network_image: ^3.4.1
+  syncfusion_flutter_pdfviewer: ^31.2.10
 
 dev_dependencies:
   flutter_test:
