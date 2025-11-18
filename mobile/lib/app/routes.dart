@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../core/models/user_model.dart';
 import '../core/providers/auth_provider.dart';
+import '../core/services/auth_service.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/auth/screens/email_verification_screen.dart';
@@ -28,9 +29,10 @@ import '../features/notifications/screens/notifications_screen.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/welcome',
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final isLoggedIn = authProvider.isLoggedIn;
+    final authService = AuthService();
 
     // Public routes that don't require authentication
     final publicRoutes = [
@@ -45,14 +47,30 @@ final goRouter = GoRouter(
       (route) => state.matchedLocation.startsWith(route),
     );
 
-    // If user is not logged in and trying to access a private route
-    if (!isLoggedIn && !isPublicRoute) {
-      return '/welcome';
-    }
-
     // If user is logged in and on a public route, redirect to dashboard
     if (isLoggedIn && isPublicRoute) {
       return '/home';
+    }
+
+    // If user is not logged in
+    if (!isLoggedIn) {
+      // Check if user has seen welcome screen
+      final hasSeenWelcome = await authService.hasSeenWelcomeScreen();
+
+      // If user has seen welcome screen and trying to access /welcome, redirect to login
+      if (hasSeenWelcome && state.matchedLocation == '/welcome') {
+        return '/login';
+      }
+
+      // If user hasn't seen welcome screen and trying to access a private route, redirect to welcome
+      if (!hasSeenWelcome && !isPublicRoute) {
+        return '/welcome';
+      }
+
+      // If user has seen welcome and trying to access a private route, redirect to login
+      if (hasSeenWelcome && !isPublicRoute) {
+        return '/login';
+      }
     }
 
     return null;

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final BiometricService _biometricService = BiometricService();
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _error;
@@ -20,6 +22,10 @@ class AuthProvider with ChangeNotifier {
 
     try {
       _currentUser = await _authService.getCurrentUser();
+      // If user is already logged in, ensure welcome screen flag is set
+      if (_currentUser != null) {
+        await _authService.setWelcomeScreenSeen();
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -73,6 +79,8 @@ class AuthProvider with ChangeNotifier {
         phone: phone,
         caregiverInviteCode: caregiverInviteCode,
       );
+      // Mark welcome screen as seen after successful registration
+      await _authService.setWelcomeScreenSeen();
       _isLoading = false;
       notifyListeners();
       return true;
@@ -152,6 +160,95 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  // Login with biometric authentication for a specific user
+  Future<bool> loginWithBiometrics(String userId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // First, authenticate with biometrics
+      final authenticated = await _biometricService.authenticate(
+        localizedReason: 'Authenticate to access your account',
+      );
+
+      if (!authenticated) {
+        _error = 'Biometric authentication was cancelled. Please try again.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // If biometric authentication successful, login with saved credentials for this user
+      _currentUser = await _authService.loginWithBiometrics(userId);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = _extractErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Save credentials for biometric login for a specific user
+  Future<bool> saveCredentialsForBiometric({
+    required String userId,
+    required String phone,
+    required String password,
+  }) async {
+    try {
+      await _authService.saveCredentialsForBiometric(
+        userId: userId,
+        phone: phone,
+        password: password,
+      );
+      return true;
+    } catch (e) {
+      _error = _extractErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Check if biometric login is available for a specific user
+  Future<bool> isBiometricLoginAvailable(String userId) async {
+    try {
+      final isAvailable = await _biometricService.isAvailable();
+      if (!isAvailable) {
+        return false;
+      }
+      final isEnabled = await _authService.isBiometricLoginEnabled(userId);
+      return isEnabled;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Check if biometric login is available for any user
+  Future<bool> isBiometricLoginAvailableForAnyUser() async {
+    try {
+      final isAvailable = await _biometricService.isAvailable();
+      if (!isAvailable) {
+        return false;
+      }
+      final usersWithBiometric = await _authService.getUsersWithBiometricEnabled();
+      return usersWithBiometric.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Get list of user IDs who have biometric login enabled
+  Future<List<String>> getUsersWithBiometricEnabled() async {
+    try {
+      return await _authService.getUsersWithBiometricEnabled();
+    } catch (e) {
+      return [];
     }
   }
 

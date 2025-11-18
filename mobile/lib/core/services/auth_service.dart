@@ -3,12 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import 'api_service.dart';
 import 'token_service.dart';
+import 'secure_storage_service.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
   final TokenService _tokenService = TokenService();
+  final SecureStorageService _secureStorage = SecureStorageService();
   static const String _userKey = 'current_user';
   static const String _isLoggedInKey = 'is_logged_in';
+  static const String _hasSeenWelcomeKey = 'has_seen_welcome';
 
   void _log(String message) {
     print('🔍 [AUTH] $message');
@@ -75,6 +78,8 @@ class AuthService {
 
         // Save user to shared preferences
         await _saveUser(user);
+        // Mark welcome screen as seen after successful login
+        await setWelcomeScreenSeen();
         _log('💾 [AUTH] User saved: ${user.phone ?? user.email} (${user.id})');
         return user;
       } else {
@@ -422,6 +427,8 @@ class AuthService {
     await prefs.remove(_userKey);
     await prefs.setBool(_isLoggedInKey, false);
     await _tokenService.clearTokens();
+    // Optionally clear biometric credentials (user might want to keep them)
+    // await _secureStorage.clearCredentials();
     _log('✅ [AUTH] Logout complete - tokens and user data cleared');
   }
 
@@ -430,5 +437,110 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, json.encode(user.toJson()));
     await prefs.setBool(_isLoggedInKey, true);
+  }
+
+  // Set welcome screen as seen
+  Future<void> setWelcomeScreenSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasSeenWelcomeKey, true);
+    _log('✅ [AUTH] Welcome screen marked as seen');
+  }
+
+  // Check if welcome screen has been seen
+  Future<bool> hasSeenWelcomeScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool(_hasSeenWelcomeKey) ?? false;
+    _log('🔍 [AUTH] Welcome screen seen status: $hasSeen');
+    return hasSeen;
+  }
+
+  // Save credentials for biometric login for a specific user
+  Future<void> saveCredentialsForBiometric({
+    required String userId,
+    required String phone,
+    required String password,
+  }) async {
+    _log('💾 [AUTH] Saving credentials for biometric login for user: $userId');
+    try {
+      await _secureStorage.saveCredentials(userId: userId, phone: phone, password: password);
+      _log('✅ [AUTH] Credentials saved for biometric login for user: $userId');
+    } catch (e) {
+      _log('❌ [AUTH] Error saving credentials for biometric for user $userId: $e');
+      rethrow;
+    }
+  }
+
+  // Login with biometric authentication for a specific user
+  // This method retrieves saved credentials and performs login
+  Future<UserModel> loginWithBiometrics(String userId) async {
+    _log('🔐 [AUTH] Attempting biometric login for user: $userId');
+    try {
+      // Check if biometric is enabled and credentials exist for this user
+      final hasCredentials = await _secureStorage.hasSavedCredentials(userId);
+      if (!hasCredentials) {
+        _log('❌ [AUTH] No saved credentials found for biometric login for user: $userId');
+        throw Exception('No saved credentials found for this account. Please login with phone and password first.');
+      }
+
+      final isEnabled = await _secureStorage.isBiometricEnabled(userId);
+      if (!isEnabled) {
+        _log('❌ [AUTH] Biometric login is not enabled for user: $userId');
+        throw Exception('Biometric login is not enabled for this account');
+      }
+
+      // Retrieve saved credentials for this user
+      final phone = await _secureStorage.getSavedPhone(userId);
+      final password = await _secureStorage.getSavedPassword(userId);
+
+      if (phone == null || password == null || phone.isEmpty || password.isEmpty) {
+        _log('❌ [AUTH] Invalid saved credentials for user: $userId');
+        throw Exception('Invalid saved credentials for this account');
+      }
+
+      _log('✅ [AUTH] Credentials retrieved for user $userId, attempting login...');
+
+      // Use existing login method with retrieved credentials
+      return await login(phone, password);
+    } catch (e) {
+      _log('❌ [AUTH] Biometric login error for user $userId: $e');
+      rethrow;
+    }
+  }
+
+  // Clear biometric credentials for a specific user
+  Future<void> clearBiometricCredentials(String userId) async {
+    _log('🗑️ [AUTH] Clearing biometric credentials for user: $userId');
+    try {
+      await _secureStorage.clearCredentials(userId);
+      _log('✅ [AUTH] Biometric credentials cleared for user: $userId');
+    } catch (e) {
+      _log('❌ [AUTH] Error clearing biometric credentials for user $userId: $e');
+      rethrow;
+    }
+  }
+
+  // Check if biometric login is enabled for a specific user
+  Future<bool> isBiometricLoginEnabled(String userId) async {
+    try {
+      final hasCredentials = await _secureStorage.hasSavedCredentials(userId);
+      final isEnabled = await _secureStorage.isBiometricEnabled(userId);
+      _log('🔍 [AUTH] Biometric login status for user $userId - hasCredentials: $hasCredentials, isEnabled: $isEnabled');
+      return hasCredentials && isEnabled;
+    } catch (e) {
+      _log('❌ [AUTH] Error checking biometric login status for user $userId: $e');
+      return false;
+    }
+  }
+
+  // Get list of user IDs who have biometric login enabled
+  Future<List<String>> getUsersWithBiometricEnabled() async {
+    try {
+      final userIds = await _secureStorage.getUsersWithBiometricEnabled();
+      _log('🔍 [AUTH] Found ${userIds.length} users with biometric enabled');
+      return userIds;
+    } catch (e) {
+      _log('❌ [AUTH] Error getting users with biometric enabled: $e');
+      return [];
+    }
   }
 }
