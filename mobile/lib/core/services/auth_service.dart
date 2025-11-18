@@ -14,13 +14,13 @@ class AuthService {
     print('🔍 [AUTH] $message');
   }
 
-  // Login with email and password
-  Future<UserModel> login(String email, String password) async {
-    _log('🔐 [AUTH] Attempting login for: $email');
+  // Login with phone and password
+  Future<UserModel> login(String phone, String password) async {
+    _log('🔐 [AUTH] Attempting login for: $phone');
     try {
       final response = await _apiService.post(
         '/auth/login',
-        data: {'email': email, 'password': password},
+        data: {'phone': phone, 'password': password},
       );
 
       if (response.statusCode == 200) {
@@ -60,7 +60,7 @@ class AuthService {
               userData['id']?.toString() ??
               userData['userId']?.toString() ??
               '',
-          email: userData['email']?.toString() ?? email,
+          email: userData['email']?.toString() ?? '',
           name:
               userData['name']?.toString() ??
               userData['full_name']?.toString() ??
@@ -70,12 +70,12 @@ class AuthService {
           age: userData['age']?.toString(),
           medicalConditions: userData['medicalConditions']?.toString(),
           emergencyContact: userData['emergencyContact']?.toString(),
-          phone: userData['phone']?.toString(),
+          phone: userData['phone']?.toString() ?? phone,
         );
 
         // Save user to shared preferences
         await _saveUser(user);
-        _log('💾 [AUTH] User saved: ${user.email} (${user.id})');
+        _log('💾 [AUTH] User saved: ${user.phone ?? user.email} (${user.id})');
         return user;
       } else {
         _log('❌ [AUTH] Login failed: ${response.statusMessage}');

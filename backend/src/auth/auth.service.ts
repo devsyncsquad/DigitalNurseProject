@@ -49,13 +49,13 @@ export class AuthService {
       );
     }
 
-    // Check if user exists
+    // Check if user exists by phone
     const existingUser = await this.prisma.user.findUnique({
-      where: { email },
+      where: { phone },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException('User with this phone number already exists');
     }
 
     // Hash password
@@ -161,7 +161,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(loginDto.phone, loginDto.password);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -175,15 +175,16 @@ export class AuthService {
       user: {
         id: user.userId.toString(),
         email: user.email,
+        phone: user.phone,
         name: user.full_name,
         role: activeRole,
       },
     };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(phone: string, password: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { phone },
     });
 
     if (!user || !user.passwordHash) {

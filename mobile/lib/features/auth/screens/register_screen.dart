@@ -42,6 +42,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate phone number
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      _showErrorDialog('Phone number is required');
+      return;
+    }
+    if (!RegExp(r'^\+92\d{10}$').hasMatch(phone)) {
+      _showErrorDialog('Phone must be in format +92XXXXXXXXXX');
+      return;
+    }
+
+    // Validate email if provided
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _showErrorDialog('Please enter a valid email address');
+      return;
+    }
+
     final inviteCode = _inviteCodeController.text.trim();
     if (_selectedRole == UserRole.caregiver && inviteCode.isEmpty) {
       _showErrorDialog('auth.register.caregiverInviteRequired'.tr());
@@ -62,7 +80,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        context.go('/email-verification?email=${_emailController.text.trim()}');
+        // Redirect to home or appropriate screen after registration
+        // Note: Email verification flow may need to be updated for phone-based auth
+        context.go('/home');
       } else {
         _showErrorDialog(authProvider.error ?? 'Registration failed');
       }
@@ -157,21 +177,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       SizedBox(height: 20.h),
 
-                      // Email field
-                      FTextField(
-                        controller: _emailController,
-                        label: Text('auth.register.email'.tr()),
-                        hint: 'auth.register.emailHint'.tr(),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      SizedBox(height: 20.h),
-
-                      // Phone field (optional)
+                      // Phone field (required)
                       FTextField(
                         controller: _phoneController,
                         label: Text('auth.register.phone'.tr()),
                         hint: 'auth.register.phoneHint'.tr(),
                         keyboardType: TextInputType.phone,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Email field (optional)
+                      FTextField(
+                        controller: _emailController,
+                        label: Text('auth.register.email'.tr()),
+                        hint: 'auth.register.emailHint'.tr(),
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       SizedBox(height: 24.h),
                     ],

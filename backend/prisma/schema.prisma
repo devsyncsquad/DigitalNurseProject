@@ -18,7 +18,7 @@ model User {
   userId            BigInt    @id @default(autoincrement()) @map("userId")
   authProvider      String    @default("password") @map("authProvider")
   email             String?   @unique @map("email")
-  phone             String?   @map("phone")
+  phone             String?   @unique @map("phone")
   passwordHash      String?   @map("passwordHash")
   full_name         String    @map("full_name")
   dob               DateTime? @map("dob") @db.Date
@@ -145,7 +145,7 @@ model MedIntake {
   updatedAt        DateTime  @default(now()) @updatedAt @map("updatedAt")
 
   // Relations
-  schedule               MedSchedule @relation(fields: [medScheduleId], references: [medScheduleId], onDelete: Cascade)
+  schedule MedSchedule @relation(fields: [medScheduleId], references: [medScheduleId], onDelete: Cascade)
 
   @@index([medScheduleId])
   @@map("med_intakes")

@@ -16,14 +16,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final bool _obscurePassword = true;
+  bool _showTestCredentials = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -33,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.login(
-      _emailController.text.trim(),
+      _phoneController.text.trim(),
       _passwordController.text,
     );
 
@@ -126,12 +127,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Email field
+                      // Phone field
                       FTextField(
-                        controller: _emailController,
-                        label: Text('auth.login.email'.tr()),
-                        hint: 'auth.login.emailHint'.tr(),
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _phoneController,
+                        label: Text('auth.login.phone'.tr()),
+                        hint: 'auth.login.phoneHint'.tr(),
+                        keyboardType: TextInputType.phone,
                       ),
                       SizedBox(height: 20.h),
 
@@ -185,6 +186,75 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 24.h),
 
+                // Test credentials section
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(context),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _showTestCredentials = !_showTestCredentials;
+                          });
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  FIcons.info,
+                                  size: 20.r,
+                                  color: ModernSurfaceTheme.accentBlue,
+                                ),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  'Test Credentials',
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(
+                              _showTestCredentials ? Icons.expand_less : Icons.expand_more,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_showTestCredentials) ...[
+                        SizedBox(height: 16.h),
+                        Divider(),
+                        SizedBox(height: 12.h),
+                        _buildTestCredential('Patient User', '+923001234567', 'password123'),
+                        SizedBox(height: 12.h),
+                        _buildTestCredential('Caregiver User', '+923007654321', 'password123'),
+                        SizedBox(height: 8.h),
+                        TextButton(
+                          onPressed: () {
+                            _phoneController.text = '+923001234567';
+                            _passwordController.text = 'password123';
+                            setState(() {
+                              _showTestCredentials = false;
+                            });
+                          },
+                          child: Text(
+                            'Use Patient Credentials',
+                            style: TextStyle(
+                              color: ModernSurfaceTheme.primaryTeal,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24.h),
+
                 // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -215,6 +285,36 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTestCredential(String label, String phone, String password) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Phone: $phone',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Text(
+            'Password: $password',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
       ),
     );
   }
