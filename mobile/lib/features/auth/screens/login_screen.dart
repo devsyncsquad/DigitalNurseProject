@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -67,98 +69,149 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
-    return FScaffold(
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(24.w),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo/Icon
-                  Icon(
-                    FIcons.heartPulse,
-                    size: 80.r,
-                    color: context.theme.colors.primary,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Title
-                  Text(
-                    'app.name'.tr(),
-                    style: context.theme.typography.xl4.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'auth.login.welcomeBack'.tr(),
-                    style: context.theme.typography.base,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 48.h),
-
-                  // Email field
-                  FTextField(
-                    controller: _emailController,
-                    label: Text('auth.login.email'.tr()),
-                    hint: 'auth.login.emailHint'.tr(),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Password field
-                  FTextField(
-                    controller: _passwordController,
-                    label: Text('auth.login.password'.tr()),
-                    hint: 'auth.login.passwordHint'.tr(),
-                    obscureText: _obscurePassword,
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Login button
-                  FButton(
-                    onPress: authProvider.isLoading ? null : _handleLogin,
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : Text('auth.login.loginButton'.tr()),
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+    return ModernScaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: ModernSurfaceTheme.screenPadding(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 40.h),
+                
+                // Hero section with logo/title
+                Container(
+                  decoration: ModernSurfaceTheme.heroDecoration(context),
+                  padding: ModernSurfaceTheme.heroPadding(),
+                  child: Column(
                     children: [
-                      Text(
-                        'auth.login.noAccount'.tr(),
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.foreground,
-                        ),
+                      SizedBox(height: 20.h),
+                      // Logo/Icon
+                      Icon(
+                        FIcons.heartPulse,
+                        size: 80.r,
+                        color: Colors.white,
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/register'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: context.theme.colors.primary,
+                      SizedBox(height: ModernSurfaceTheme.heroSpacing()),
+
+                      // Title
+                      Text(
+                        'app.name'.tr(),
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        child: Text('auth.login.registerLink'.tr()),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'auth.login.welcomeBack'.tr(),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 20.h),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 32.h),
+
+                // Form container with glassmorphic card
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(context, highlighted: true),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Email field
+                      FTextField(
+                        controller: _emailController,
+                        label: Text('auth.login.email'.tr()),
+                        hint: 'auth.login.emailHint'.tr(),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Password field
+                      FTextField(
+                        controller: _passwordController,
+                        label: Text('auth.login.password'.tr()),
+                        hint: 'auth.login.passwordHint'.tr(),
+                        obscureText: _obscurePassword,
+                      ),
+                      SizedBox(height: 28.h),
+
+                      // Login button with modern pill style
+                      Container(
+                        decoration: ModernSurfaceTheme.pillButton(
+                          context,
+                          ModernSurfaceTheme.primaryTeal,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: authProvider.isLoading ? null : _handleLogin,
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              alignment: Alignment.center,
+                              child: authProvider.isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
+                                      'auth.login.loginButton'.tr(),
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: 24.h),
+
+                // Register link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'auth.login.noAccount'.tr(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      ),
+                      child: Text(
+                        'auth.login.registerLink'.tr(),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: ModernSurfaceTheme.primaryTeal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 40.h),
+              ],
             ),
           ),
         ),

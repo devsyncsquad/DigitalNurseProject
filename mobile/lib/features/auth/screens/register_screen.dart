@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/theme/modern_surface_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -90,135 +92,211 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
-    return Scaffold(
-      body: FScaffold(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(24.w),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo/Icon
-                    Icon(
-                      FIcons.userPlus,
-                      size: 80.r,
-                      color: context.theme.colors.primary,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Title
-                    Text(
-                      'auth.register.title'.tr(),
-                      style: context.theme.typography.xl4.copyWith(
-                        fontWeight: FontWeight.bold,
+    return ModernScaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: ModernSurfaceTheme.screenPadding(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 20.h),
+                
+                // Hero section with logo/title
+                Container(
+                  decoration: ModernSurfaceTheme.heroDecoration(context),
+                  padding: ModernSurfaceTheme.heroPadding(),
+                  child: Column(
+                    children: [
+                      SizedBox(height: 20.h),
+                      // Logo/Icon
+                      Icon(
+                        FIcons.userPlus,
+                        size: 80.r,
+                        color: Colors.white,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'auth.register.subtitle'.tr(),
-                      style: context.theme.typography.base,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 48.h),
+                      SizedBox(height: ModernSurfaceTheme.heroSpacing()),
 
-                    // Name field
-                    FTextField(
-                      controller: _nameController,
-                      label: Text('auth.register.fullName'.tr()),
-                      hint: 'auth.register.nameHint'.tr(),
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Email field
-                    FTextField(
-                      controller: _emailController,
-                      label: Text('auth.register.email'.tr()),
-                      hint: 'auth.register.emailHint'.tr(),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Phone field (optional)
-                    FTextField(
-                      controller: _phoneController,
-                      label: Text('auth.register.phone'.tr()),
-                      hint: 'auth.register.phoneHint'.tr(),
-                      keyboardType: TextInputType.phone,
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // Role selection
-                    Text(
-                      'auth.register.accountType'.tr(),
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: context.theme.colors.foreground,
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: context.theme.colors.muted,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: UserRole.values.map((role) {
-                          final isSelected = role == _selectedRole;
-                          return RadioListTile<UserRole>(
-                            value: role,
-                            groupValue: _selectedRole,
-                            onChanged: authProvider.isLoading
-                                ? null
-                                : (value) {
-                                    if (value != null) {
-                                      setState(() {
-                                        _selectedRole = value;
-                                      });
-                                    }
-                                  },
-                            title: Text(
-                              role == UserRole.patient
-                                  ? 'auth.register.rolePatient'.tr()
-                                  : 'auth.register.roleCaregiver'.tr(),
-                              style: context.theme.typography.base.copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Text(
-                              role == UserRole.patient
-                                  ? 'auth.register.rolePatientDesc'.tr()
-                                  : 'auth.register.roleCaregiverDesc'.tr(),
-                              style: context.theme.typography.sm.copyWith(
-                                color: context.theme.colors.mutedForeground,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-
-                    if (_selectedRole == UserRole.caregiver) ...[
-                      Container(
-                        padding: EdgeInsets.all(16.w),
-                        decoration: BoxDecoration(
-                          color: context.theme.colors.muted,
-                          borderRadius: BorderRadius.circular(12),
+                      // Title
+                      Text(
+                        'auth.register.title'.tr(),
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        child: Row(
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'auth.register.subtitle'.tr(),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 20.h),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 32.h),
+
+                // Form container with glassmorphic card
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(context, highlighted: true),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Name field
+                      FTextField(
+                        controller: _nameController,
+                        label: Text('auth.register.fullName'.tr()),
+                        hint: 'auth.register.nameHint'.tr(),
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Email field
+                      FTextField(
+                        controller: _emailController,
+                        label: Text('auth.register.email'.tr()),
+                        hint: 'auth.register.emailHint'.tr(),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Phone field (optional)
+                      FTextField(
+                        controller: _phoneController,
+                        label: Text('auth.register.phone'.tr()),
+                        hint: 'auth.register.phoneHint'.tr(),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // Role selection card
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(context),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'auth.register.accountType'.tr(),
+                        style: ModernSurfaceTheme.sectionTitleStyle(context),
+                      ),
+                      SizedBox(height: 16.h),
+                      ...UserRole.values.map((role) {
+                        final isSelected = role == _selectedRole;
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 12.h),
+                          decoration: isSelected
+                              ? ModernSurfaceTheme.tintedCard(context, ModernSurfaceTheme.primaryTeal)
+                              : ModernSurfaceTheme.glassCard(context),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: authProvider.isLoading
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _selectedRole = role;
+                                      });
+                                    },
+                              borderRadius: ModernSurfaceTheme.cardRadius(),
+                              child: Padding(
+                                padding: EdgeInsets.all(16.w),
+                                child: Row(
+                                  children: [
+                                    Radio<UserRole>(
+                                      value: role,
+                                      groupValue: _selectedRole,
+                                      onChanged: authProvider.isLoading
+                                          ? null
+                                          : (value) {
+                                              if (value != null) {
+                                                setState(() {
+                                                  _selectedRole = value;
+                                                });
+                                              }
+                                            },
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            role == UserRole.patient
+                                                ? 'auth.register.rolePatient'.tr()
+                                                : 'auth.register.roleCaregiver'.tr(),
+                                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w600,
+                                              color: isSelected
+                                                  ? ModernSurfaceTheme.tintedForegroundColor(
+                                                      ModernSurfaceTheme.primaryTeal,
+                                                      brightness: Theme.of(context).brightness,
+                                                    )
+                                                  : Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            role == UserRole.patient
+                                                ? 'auth.register.rolePatientDesc'.tr()
+                                                : 'auth.register.roleCaregiverDesc'.tr(),
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: isSelected
+                                                  ? ModernSurfaceTheme.tintedMutedColor(
+                                                      ModernSurfaceTheme.primaryTeal,
+                                                      brightness: Theme.of(context).brightness,
+                                                    )
+                                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                if (_selectedRole == UserRole.caregiver) ...[
+                  Container(
+                    decoration: ModernSurfaceTheme.glassCard(context),
+                    padding: ModernSurfaceTheme.cardPadding(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              FIcons.info,
-                              color: context.theme.colors.primary,
-                              size: 20.r,
+                            Container(
+                              decoration: ModernSurfaceTheme.iconBadge(
+                                context,
+                                ModernSurfaceTheme.accentBlue,
+                              ),
+                              padding: EdgeInsets.all(8.w),
+                              child: Icon(
+                                FIcons.info,
+                                color: Colors.white,
+                                size: 20.r,
+                              ),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
@@ -227,88 +305,123 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 children: [
                                   Text(
                                     'auth.register.caregiverInfoTitle'.tr(),
-                                    style: context.theme.typography.sm.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: ModernSurfaceTheme.sectionTitleStyle(context),
                                   ),
-                                  SizedBox(height: 4.h),
+                                  SizedBox(height: 6.h),
                                   Text(
                                     'auth.register.caregiverInfoBody'.tr(),
-                                    style: context.theme.typography.sm,
+                                    style: ModernSurfaceTheme.sectionSubtitleStyle(context),
                                   ),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 16.h),
-                      FTextField(
-                        controller: _inviteCodeController,
-                        label: Text('auth.register.inviteCode'.tr()),
-                        hint: 'auth.register.inviteCodeHint'.tr(),
-                      ),
-                      SizedBox(height: 24.h),
-                    ],
-
-                    // Password field
-                    FTextField(
-                      controller: _passwordController,
-                      label: Text('auth.register.password'.tr()),
-                      hint: 'auth.register.passwordHint'.tr(),
-                      obscureText: _obscurePassword,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Confirm Password field
-                    FTextField(
-                      controller: _confirmPasswordController,
-                      label: Text('auth.register.confirmPassword'.tr()),
-                      hint: 'auth.register.confirmPasswordHint'.tr(),
-                      obscureText: _obscureConfirmPassword,
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // Register button
-                    FButton(
-                      onPress: authProvider.isLoading ? null : _handleRegister,
-                      child: authProvider.isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : Text('auth.register.createAccount'.tr()),
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Login link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'auth.register.hasAccount'.tr(),
-                          style: context.theme.typography.sm.copyWith(
-                            color: context.theme.colors.foreground,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go('/login'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: context.theme.colors.primary,
-                          ),
-                          child: Text('auth.register.loginLink'.tr()),
+                        SizedBox(height: 20.h),
+                        FTextField(
+                          controller: _inviteCodeController,
+                          label: Text('auth.register.inviteCode'.tr()),
+                          hint: 'auth.register.inviteCodeHint'.tr(),
                         ),
                       ],
                     ),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+
+                // Password fields card
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(context, highlighted: true),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Password field
+                      FTextField(
+                        controller: _passwordController,
+                        label: Text('auth.register.password'.tr()),
+                        hint: 'auth.register.passwordHint'.tr(),
+                        obscureText: _obscurePassword,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Confirm Password field
+                      FTextField(
+                        controller: _confirmPasswordController,
+                        label: Text('auth.register.confirmPassword'.tr()),
+                        hint: 'auth.register.confirmPasswordHint'.tr(),
+                        obscureText: _obscureConfirmPassword,
+                      ),
+                      SizedBox(height: 28.h),
+
+                      // Register button with modern pill style
+                      Container(
+                        decoration: ModernSurfaceTheme.pillButton(
+                          context,
+                          ModernSurfaceTheme.primaryTeal,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: authProvider.isLoading ? null : _handleRegister,
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 16.h),
+                              alignment: Alignment.center,
+                              child: authProvider.isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
+                                      'auth.register.createAccount'.tr(),
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24.h),
+
+                // Login link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'auth.register.hasAccount'.tr(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/login'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      ),
+                      child: Text(
+                        'auth.register.loginLink'.tr(),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: ModernSurfaceTheme.primaryTeal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
+                SizedBox(height: 40.h),
+              ],
             ),
           ),
         ),
