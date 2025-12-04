@@ -119,6 +119,11 @@ class NotificationService {
     return await _fcmService.requestExactAlarmPermission();
   }
 
+  // Get diagnostic information
+  Future<Map<String, dynamic>> getDiagnosticInfo() async {
+    return await _fcmService.getDiagnosticInfo();
+  }
+
   // Initialize mock notifications
   void initializeMockData() {
     final now = DateTime.now();

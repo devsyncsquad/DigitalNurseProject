@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -17,9 +18,11 @@ class FCMService {
 
   String? _fcmToken;
   bool _isInitialized = false;
+  bool? _exactAlarmPermission;
 
   String? get fcmToken => _fcmToken;
   bool get isInitialized => _isInitialized;
+  bool? get exactAlarmPermission => _exactAlarmPermission;
 
   /// Initialize Firebase Cloud Messaging
   Future<void> initialize() async {
@@ -89,6 +92,7 @@ class FCMService {
       description: 'Notifications for medication reminders and missed doses',
       importance: Importance.high,
       playSound: true,
+      enableVibration: true,
     );
 
     const healthChannel = AndroidNotificationChannel(
@@ -154,22 +158,28 @@ class FCMService {
       try {
         final canScheduleExact = await androidPlugin
             ?.canScheduleExactNotifications();
+        _exactAlarmPermission = canScheduleExact;
+        
         if (canScheduleExact == false) {
           print('Requesting exact alarm permission...');
           final exactAlarmGranted = await androidPlugin
               ?.requestExactAlarmsPermission();
+          _exactAlarmPermission = exactAlarmGranted ?? false;
+          
           if (exactAlarmGranted == true) {
             print('✅ Exact alarm permission granted!');
           } else {
             print(
               '⚠️ Exact alarm permission denied - using inexact scheduling',
             );
+            print('⚠️ Notifications may be delayed by 5-15 minutes');
           }
         } else {
           print('✅ Exact alarm permission already granted');
         }
       } catch (e) {
         print('Could not request exact alarm permission: $e');
+        _exactAlarmPermission = false;
       }
     }
   }
@@ -241,6 +251,9 @@ class FCMService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final type = message.data['type'] ?? 'general';
+    final isMedicineReminder = type == 'medicine_reminder' || type == 'missed_dose';
+
     final androidDetails = AndroidNotificationDetails(
       _getChannelId(message.data),
       _getChannelName(message.data),
@@ -248,6 +261,15 @@ class FCMService {
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
+      // Enable sound and vibration for medicine reminders
+      // Sound will use the channel's default or system default notification sound
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: isMedicineReminder
+          ? Int64List.fromList([0, 250, 250, 250])
+          : null,
+      channelShowBadge: true,
+      autoCancel: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -276,9 +298,12 @@ class FCMService {
     switch (type) {
       case 'medicine_reminder':
       case 'missed_dose':
+      case 'NotificationType.medicineReminder':
+      case 'NotificationType.missedDose':
         return 'medication_reminders';
       case 'health_alert':
       case 'vitals_reminder':
+      case 'NotificationType.healthAlert':
         return 'health_alerts';
       default:
         return 'general_notifications';
@@ -291,9 +316,12 @@ class FCMService {
     switch (type) {
       case 'medicine_reminder':
       case 'missed_dose':
+      case 'NotificationType.medicineReminder':
+      case 'NotificationType.missedDose':
         return 'Medication Reminders';
       case 'health_alert':
       case 'vitals_reminder':
+      case 'NotificationType.healthAlert':
         return 'Health Alerts';
       default:
         return 'General Notifications';
@@ -306,9 +334,12 @@ class FCMService {
     switch (type) {
       case 'medicine_reminder':
       case 'missed_dose':
+      case 'NotificationType.medicineReminder':
+      case 'NotificationType.missedDose':
         return 'Notifications for medication reminders and missed doses';
       case 'health_alert':
       case 'vitals_reminder':
+      case 'NotificationType.healthAlert':
         return 'Notifications for health monitoring and vitals';
       default:
         return 'General app notifications and updates';
@@ -387,6 +418,9 @@ class FCMService {
         'type': type.toString(),
       });
 
+      // Configure sound and vibration for medicine reminders
+      final isMedicineReminder = type == NotificationType.medicineReminder;
+      
       final androidDetails = AndroidNotificationDetails(
         channelId,
         channelName,
@@ -394,6 +428,17 @@ class FCMService {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
+        // Enable sound and vibration for medicine reminders
+        // Sound will use the channel's default or system default notification sound
+        playSound: true,
+        enableVibration: true,
+        vibrationPattern: isMedicineReminder
+            ? Int64List.fromList([0, 250, 250, 250])
+            : null,
+        channelShowBadge: true,
+        autoCancel: true,
+        // Make it more prominent
+        ticker: isMedicineReminder ? 'Medicine Reminder' : null,
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -421,11 +466,14 @@ class FCMService {
               UILocalNotificationDateInterpretation.absoluteTime,
         );
         print(
-          'Notification scheduled successfully for $title at $scheduledDate',
+          '✅ Notification #$id scheduled successfully for "$title" at $scheduledDate (exact)',
         );
       } catch (e) {
         if (e.toString().contains('exact_alarms_not_permitted')) {
-          print('Exact alarm permission denied, using inexact scheduling');
+          print('⚠️ Exact alarm permission denied, using inexact scheduling');
+          print('⚠️ Notification #$id may be delayed by 5-15 minutes');
+          _exactAlarmPermission = false;
+          
           // Fallback to inexact scheduling
           await _localNotifications.zonedSchedule(
             id,
@@ -438,9 +486,9 @@ class FCMService {
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
           );
-          print('Notification scheduled with inexact timing for $title');
+          print('✅ Notification #$id scheduled with inexact timing for "$title"');
         } else {
-          print('Error scheduling notification: $e');
+          print('❌ Error scheduling notification #$id: $e');
           // Don't rethrow to prevent app crashes
         }
       }
@@ -460,6 +508,26 @@ class FCMService {
     await _localNotifications.cancelAll();
   }
 
+  /// Check if exact alarm notifications can be scheduled
+  Future<bool?> canScheduleExactNotifications() async {
+    if (Platform.isAndroid) {
+      try {
+        final androidPlugin = _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        final canScheduleExact = await androidPlugin
+            ?.canScheduleExactNotifications();
+        _exactAlarmPermission = canScheduleExact;
+        return canScheduleExact;
+      } catch (e) {
+        print('Error checking exact alarm permission: $e');
+        return false;
+      }
+    }
+    return true; // iOS doesn't need this permission
+  }
+
   /// Request exact alarm permission manually
   Future<bool> requestExactAlarmPermission() async {
     if (Platform.isAndroid) {
@@ -471,14 +539,19 @@ class FCMService {
 
         final canScheduleExact = await androidPlugin
             ?.canScheduleExactNotifications();
+        _exactAlarmPermission = canScheduleExact;
+        
         if (canScheduleExact == false) {
           print('Requesting exact alarm permission...');
           final granted = await androidPlugin?.requestExactAlarmsPermission();
+          _exactAlarmPermission = granted ?? false;
+          
           if (granted == true) {
             print('✅ Exact alarm permission granted!');
             return true;
           } else {
             print('⚠️ Exact alarm permission denied');
+            print('⚠️ Notifications may be delayed by 5-15 minutes');
             return false;
           }
         } else {
@@ -487,10 +560,37 @@ class FCMService {
         }
       } catch (e) {
         print('Error requesting exact alarm permission: $e');
+        _exactAlarmPermission = false;
         return false;
       }
     }
     return true; // iOS doesn't need this permission
+  }
+
+  /// Get diagnostic information about notification setup
+  Future<Map<String, dynamic>> getDiagnosticInfo() async {
+    final info = <String, dynamic>{
+      'isInitialized': _isInitialized,
+      'hasFcmToken': _fcmToken != null,
+      'exactAlarmPermission': _exactAlarmPermission,
+    };
+
+    if (Platform.isAndroid) {
+      try {
+        final androidPlugin = _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        final canScheduleExact = await androidPlugin
+            ?.canScheduleExactNotifications();
+        info['canScheduleExact'] = canScheduleExact;
+        info['exactAlarmPermission'] = canScheduleExact;
+      } catch (e) {
+        info['permissionCheckError'] = e.toString();
+      }
+    }
+
+    return info;
   }
 }
 

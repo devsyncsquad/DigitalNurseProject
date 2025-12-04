@@ -115,6 +115,7 @@ class StepMedicineForm extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -124,26 +125,32 @@ class StepMedicineForm extends StatelessWidget {
                           ? AppTheme.appleGreen
                           : context.theme.colors.mutedForeground,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      option.title,
-                      style: context.theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? ModernSurfaceTheme.deepTeal
-                            : context.theme.colors.foreground,
+                    const SizedBox(height: 6),
+                    Flexible(
+                      child: Text(
+                        option.title,
+                        style: context.theme.typography.sm.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? ModernSurfaceTheme.deepTeal
+                              : context.theme.colors.foreground,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      option.description,
-                      style: context.theme.typography.xs.copyWith(
-                        color: context.theme.colors.mutedForeground,
+                    const SizedBox(height: 2),
+                    Flexible(
+                      child: Text(
+                        option.description,
+                        style: context.theme.typography.xs.copyWith(
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

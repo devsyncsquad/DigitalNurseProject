@@ -373,7 +373,13 @@ class MedicationService {
   }
 
   // Test immediate notification (for debugging)
-  Future<void> testImmediateNotification(String medicineName) async {
+  Future<Map<String, dynamic>> testImmediateNotification(String medicineName) async {
+    final result = <String, dynamic>{
+      'success': false,
+      'message': '',
+      'errors': <String>[],
+    };
+
     try {
       _log('🧪 Testing immediate notification for $medicineName');
 
@@ -382,26 +388,99 @@ class MedicationService {
         _log('FCM service not initialized, attempting to initialize...');
         try {
           await _fcmService.initialize();
+          if (!_fcmService.isInitialized) {
+            result['errors'].add('Failed to initialize FCM service');
+            result['message'] = 'FCM service initialization failed';
+            return result;
+          }
         } catch (e) {
           _log('Failed to initialize FCM service: $e');
-          return;
+          result['errors'].add('FCM initialization error: $e');
+          result['message'] = 'Failed to initialize FCM service';
+          return result;
         }
       }
 
+      // Check exact alarm permission
+      final canScheduleExact = await _fcmService.canScheduleExactNotifications();
+      if (canScheduleExact == false) {
+        result['errors'].add('Exact alarm permission not granted - notification may be delayed');
+      }
+
+      final testTime = DateTime.now().add(const Duration(seconds: 10));
       await _fcmService.scheduleLocalNotification(
         id: 99999, // Use a unique ID for testing
         title: 'Test Medicine Reminder',
         body: 'Time to take $medicineName - This is a test notification',
-        scheduledDate: DateTime.now().add(
-          const Duration(seconds: 10),
-        ), // 10 seconds from now
-        payload: '{"type": "test_notification"}',
+        scheduledDate: testTime,
+        payload: '{"type": "test_notification", "medicineName": "$medicineName"}',
         type: NotificationType.medicineReminder,
       );
-      _log('Test notification scheduled for 10 seconds from now');
+      
+      _log('✅ Test notification scheduled for 10 seconds from now (${testTime.toString()})');
+      result['success'] = true;
+      result['message'] = 'Test notification scheduled for 10 seconds from now';
+      if (canScheduleExact == false) {
+        result['message'] += ' (may be delayed due to inexact scheduling)';
+      }
     } catch (e) {
-      _log('Failed to schedule test notification: $e');
-      // Don't rethrow to prevent app crashes
+      _log('❌ Failed to schedule test notification: $e');
+      result['errors'].add('Scheduling error: $e');
+      result['message'] = 'Failed to schedule test notification: $e';
+    }
+
+    return result;
+  }
+
+  // Reschedule all medicine reminders (for app start)
+  Future<int> rescheduleAllMedicineReminders(List<MedicineModel> medicines) async {
+    _log('🔄 Rescheduling reminders for ${medicines.length} medicines');
+    int scheduledCount = 0;
+    
+    try {
+      // Check if FCM service is initialized
+      if (!_fcmService.isInitialized) {
+        _log('FCM service not initialized, attempting to initialize...');
+        try {
+          await _fcmService.initialize();
+        } catch (e) {
+          _log('Failed to initialize FCM service: $e');
+          return 0;
+        }
+      }
+
+      // Check exact alarm permission and warn if not available
+      final canScheduleExact = await _fcmService.canScheduleExactNotifications();
+      if (canScheduleExact == false) {
+        _log('⚠️ Warning: Exact alarm permission not granted. Notifications may be delayed.');
+      }
+
+      // Cancel existing notifications for all medicines first
+      for (final medicine in medicines) {
+        try {
+          // Cancel by medicine ID hash (approximate, but helps clean up)
+          await _fcmService.cancelNotification(medicine.id.hashCode);
+        } catch (e) {
+          _log('Warning: Failed to cancel existing notifications for ${medicine.name}: $e');
+        }
+      }
+
+      // Reschedule reminders for each medicine
+      for (final medicine in medicines) {
+        try {
+          await _scheduleMedicineReminders(medicine);
+          scheduledCount++;
+        } catch (e) {
+          _log('⚠️ Warning: Failed to reschedule reminders for ${medicine.name}: $e');
+          // Continue with other medicines even if one fails
+        }
+      }
+
+      _log('✅ Rescheduled reminders for $scheduledCount/${medicines.length} medicines');
+      return scheduledCount;
+    } catch (e) {
+      _log('❌ Error rescheduling all medicine reminders: $e');
+      return scheduledCount;
     }
   }
 
@@ -419,7 +498,14 @@ class MedicationService {
         }
       }
 
+      // Validate reminder times
+      if (medicine.reminderTimes.isEmpty) {
+        _log('Warning: No reminder times for ${medicine.name}');
+        return;
+      }
+
       final now = DateTime.now();
+      int scheduledForThisMedicine = 0;
 
       for (int i = 0; i < 7; i++) {
         // Schedule for next 7 days
@@ -429,12 +515,17 @@ class MedicationService {
           try {
             final parts = timeStr.split(':');
             if (parts.length != 2) {
-              _log('Warning: Invalid time format: $timeStr');
+              _log('Warning: Invalid time format: $timeStr for ${medicine.name}');
               continue;
             }
 
-            final hour = int.parse(parts[0]);
-            final minute = int.parse(parts[1]);
+            final hour = int.tryParse(parts[0]);
+            final minute = int.tryParse(parts[1]);
+            
+            if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+              _log('Warning: Invalid time values: $timeStr for ${medicine.name}');
+              continue;
+            }
 
             final reminderTime = DateTime(
               date.year,
@@ -446,28 +537,86 @@ class MedicationService {
 
             // Only schedule if the time is in the future
             if (reminderTime.isAfter(now)) {
-              _log('Scheduling notification for ${medicine.name} at ${reminderTime.toString()}');
+              final notificationId = '${medicine.id}_${reminderTime.millisecondsSinceEpoch}'.hashCode;
+              _log('📅 Scheduling notification #$notificationId for ${medicine.name} at ${reminderTime.toString()}');
+              
               await _fcmService.scheduleLocalNotification(
-                id: '${medicine.id}_${reminderTime.millisecondsSinceEpoch}'.hashCode,
+                id: notificationId,
                 title: 'Medicine Reminder',
                 body: 'Time to take ${medicine.name} ${medicine.dosage}',
                 scheduledDate: reminderTime,
                 payload: '{"medicineId": "${medicine.id}", "type": "medicine_reminder"}',
                 type: NotificationType.medicineReminder,
               );
-              _log('Notification scheduled successfully for ${medicine.name}');
+              scheduledForThisMedicine++;
             } else {
-              _log('Skipping notification for ${medicine.name} - time ${reminderTime.toString()} is in the past');
+              _log('⏭️ Skipping notification for ${medicine.name} - time ${reminderTime.toString()} is in the past');
             }
           } catch (e) {
-            _log('Warning: Failed to schedule reminder for time $timeStr: $e');
+            _log('⚠️ Warning: Failed to schedule reminder for time $timeStr: $e');
             // Continue with other times even if one fails
           }
         }
       }
+      
+      _log('✅ Scheduled $scheduledForThisMedicine notifications for ${medicine.name}');
     } catch (e) {
-      _log('Error in _scheduleMedicineReminders: $e');
+      _log('❌ Error in _scheduleMedicineReminders for ${medicine.name}: $e');
       rethrow;
+    }
+  }
+
+  // Verify notification setup and return diagnostic report
+  Future<Map<String, dynamic>> verifyNotificationSetup() async {
+    final report = <String, dynamic>{
+      'fcmInitialized': false,
+      'notificationPermission': false,
+      'exactAlarmPermission': false,
+      'canScheduleExact': false,
+      'errors': <String>[],
+    };
+
+    try {
+      // Check FCM initialization
+      report['fcmInitialized'] = _fcmService.isInitialized;
+      if (!_fcmService.isInitialized) {
+        report['errors'].add('FCM service is not initialized');
+      }
+
+      // Check permissions (Android only)
+      final canScheduleExact = await _fcmService.canScheduleExactNotifications();
+      if (canScheduleExact != null) {
+        report['canScheduleExact'] = canScheduleExact;
+        report['exactAlarmPermission'] = canScheduleExact;
+        
+        if (!canScheduleExact) {
+          report['errors'].add('Exact alarm permission not granted - notifications may be delayed by 5-15 minutes');
+        }
+      }
+
+      // Note: Notification permission check would require platform-specific code
+      // For now, we assume it's granted if FCM is initialized
+      report['notificationPermission'] = _fcmService.isInitialized;
+    } catch (e) {
+      report['errors'].add('Error checking setup: $e');
+    }
+
+    return report;
+  }
+
+  // Get estimated count of scheduled notifications
+  // Note: This is an estimate based on medicines and their reminder times
+  Future<int> getEstimatedScheduledNotificationsCount() async {
+    try {
+      // This is a rough estimate - actual count depends on:
+      // - Number of medicines
+      // - Number of reminder times per medicine
+      // - How many are in the future (next 7 days)
+      // We can't get the actual count from the notification system easily
+      return 0; // Placeholder - actual implementation would require platform-specific code
+    } catch (e) {
+      _log('Error estimating notification count: $e');
+      return 0;
     }
   }
 }

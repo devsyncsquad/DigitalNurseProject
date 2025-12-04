@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -110,6 +111,20 @@ class DigitalNurseApp extends StatelessWidget {
               themeMode: themeProvider.themeMode,
               routerConfig: goRouter,
               builder: (context, child) {
+                // Set status bar style based on current theme
+                final isDark = themeProvider.isDarkMode;
+                SystemChrome.setSystemUIOverlayStyle(
+                  SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent, // Make status bar transparent
+                    statusBarIconBrightness: isDark 
+                        ? Brightness.light  // Light icons for dark theme
+                        : Brightness.dark,  // Dark icons for light theme
+                    statusBarBrightness: isDark 
+                        ? Brightness.dark   // For iOS
+                        : Brightness.light, // For iOS
+                  ),
+                );
+                
                 return ScreenUtilInit(
                   designSize: const Size(
                     375,

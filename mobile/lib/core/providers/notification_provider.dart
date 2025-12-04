@@ -111,4 +111,9 @@ class NotificationProvider with ChangeNotifier {
   Future<bool> requestExactAlarmPermission() async {
     return await _notificationService.requestExactAlarmPermission();
   }
+
+  // Get diagnostic information
+  Future<Map<String, dynamic>> getDiagnosticInfo() async {
+    return await _notificationService.getDiagnosticInfo();
+  }
 }

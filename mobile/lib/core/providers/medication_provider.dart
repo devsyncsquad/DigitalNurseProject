@@ -38,12 +38,48 @@ class MedicationProvider with ChangeNotifier {
       );
       _adherenceStreak =
           await _medicationService.getAdherenceStreak(userId, elderUserId: elderUserId);
+      
+      // Reschedule all medicine reminders after loading
+      // Only reschedule if medicines were loaded successfully
+      try {
+        if (_medicines.isNotEmpty) {
+          print('Rescheduling reminders for ${_medicines.length} medicines...');
+          await _medicationService.rescheduleAllMedicineReminders(_medicines);
+        }
+      } catch (e) {
+        print('Warning: Failed to reschedule reminders: $e');
+        // Don't fail the entire load operation if rescheduling fails
+      }
+      
       _error = null;
     } catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Reschedule all reminders manually
+  Future<bool> rescheduleAllReminders(String userId, {String? elderUserId}) async {
+    try {
+      if (_medicines.isEmpty) {
+        // Reload medicines first
+        await loadMedicines(userId, elderUserId: elderUserId);
+      }
+      
+      final scheduledCount = await _medicationService.rescheduleAllMedicineReminders(_medicines);
+      print('Rescheduled reminders for $scheduledCount medicines');
+      
+      // Refresh upcoming reminders
+      await _refreshReminders(userId, elderUserId: elderUserId);
+      
+      return scheduledCount > 0;
+    } catch (e) {
+      print('Error rescheduling all reminders: $e');
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 

@@ -8,6 +8,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/providers/notification_provider.dart';
+import '../../../core/providers/medication_provider.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -203,8 +206,17 @@ class SettingsScreen extends StatelessWidget {
           ),
           SizedBox(height: 24.h),
 
+          // Medicine Reminders Diagnostic section
+          Text(
+            'Medicine Reminders',
+            style: ModernSurfaceTheme.sectionTitleStyle(context),
+          ),
+          SizedBox(height: 12.h),
+          _MedicineRemindersDiagnostic(),
+
           // Debug section (only in debug mode)
           if (const bool.fromEnvironment('dart.vm.product') == false) ...[
+            SizedBox(height: 24.h),
             Text(
               'settings.debug.title'.tr(),
               style: ModernSurfaceTheme.sectionTitleStyle(context).copyWith(
@@ -313,6 +325,218 @@ class _ModernListTile extends StatelessWidget {
         color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
       ),
       onTap: onTap,
+    );
+  }
+}
+
+class _MedicineRemindersDiagnostic extends StatefulWidget {
+  @override
+  State<_MedicineRemindersDiagnostic> createState() =>
+      _MedicineRemindersDiagnosticState();
+}
+
+class _MedicineRemindersDiagnosticState
+    extends State<_MedicineRemindersDiagnostic> {
+  Map<String, dynamic>? _diagnosticInfo;
+  bool _isLoading = false;
+  String? _rescheduleMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDiagnostics();
+  }
+
+  Future<void> _loadDiagnostics() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final notificationProvider = context.read<NotificationProvider>();
+      final info = await notificationProvider.getDiagnosticInfo();
+      setState(() {
+        _diagnosticInfo = info;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _rescheduleAllReminders() async {
+    setState(() {
+      _isLoading = true;
+      _rescheduleMessage = null;
+    });
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final medicationProvider = context.read<MedicationProvider>();
+      final user = authProvider.currentUser;
+
+      if (user == null) {
+        setState(() {
+          _rescheduleMessage = 'Error: User not logged in';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final success = await medicationProvider.rescheduleAllReminders(user.id);
+      setState(() {
+        _rescheduleMessage = success
+            ? 'Reminders rescheduled successfully!'
+            : 'Failed to reschedule reminders';
+        _isLoading = false;
+      });
+
+      // Reload diagnostics
+      await _loadDiagnostics();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_rescheduleMessage!),
+            backgroundColor: success ? Colors.green : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _rescheduleMessage = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(context),
+      child: Column(
+        children: [
+          if (_isLoading && _diagnosticInfo == null)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(),
+            )
+          else ...[
+            // Status items
+            if (_diagnosticInfo != null) ...[
+              _DiagnosticItem(
+                label: 'FCM Initialized',
+                value: _diagnosticInfo!['isInitialized'] == true
+                    ? 'Yes'
+                    : 'No',
+                isGood: _diagnosticInfo!['isInitialized'] == true,
+              ),
+              const Divider(height: 1),
+              _DiagnosticItem(
+                label: 'Exact Alarm Permission',
+                value: _diagnosticInfo!['exactAlarmPermission'] == true
+                    ? 'Granted'
+                    : 'Not Granted',
+                isGood: _diagnosticInfo!['exactAlarmPermission'] == true,
+              ),
+              const Divider(height: 1),
+            ],
+            // Reschedule button
+            ListTile(
+              leading: Icon(
+                FIcons.refreshCw,
+                color: ModernSurfaceTheme.primaryTeal,
+              ),
+              title: Text(
+                'Reschedule All Medicine Reminders',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: ModernSurfaceTheme.deepTeal,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              subtitle: _rescheduleMessage != null
+                  ? Text(
+                      _rescheduleMessage!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: _rescheduleMessage!.contains('success')
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                    )
+                  : Text(
+                      'Reschedule all medicine reminders for the next 7 days',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                ModernSurfaceTheme.deepTeal.withValues(alpha: 0.65),
+                          ),
+                    ),
+              trailing: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      FIcons.chevronsRight,
+                      color: ModernSurfaceTheme.deepTeal.withValues(alpha: 0.4),
+                    ),
+              onTap: _isLoading ? null : _rescheduleAllReminders,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DiagnosticItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isGood;
+
+  const _DiagnosticItem({
+    required this.label,
+    required this.value,
+    required this.isGood,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ModernSurfaceTheme.deepTeal,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          Row(
+            children: [
+              Icon(
+                isGood ? FIcons.check : FIcons.x,
+                size: 16,
+                color: isGood ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isGood
+                          ? Colors.green
+                          : ModernSurfaceTheme.deepTeal.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
