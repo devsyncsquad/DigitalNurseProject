@@ -12,6 +12,7 @@ import '../features/onboarding/screens/subscription_plans_screen.dart';
 import '../features/dashboard/screens/main_navigation_screen.dart';
 import '../features/medication/screens/add_medicine_screen.dart';
 import '../features/medication/screens/medicine_detail_screen.dart';
+import '../features/medication/screens/medicine_alarm_screen.dart';
 import '../features/health/screens/add_vital_screen.dart';
 import '../features/health/screens/health_trends_screen.dart';
 import '../features/health/screens/abnormal_vitals_screen.dart';
@@ -229,6 +230,23 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/notification-test',
       builder: (context, state) => const NotificationTestWidget(),
+    ),
+
+    // Medicine Alarm Screen
+    GoRoute(
+      path: '/medicine-alarm',
+      builder: (context, state) {
+        final medicineId = state.uri.queryParameters['medicineId'];
+        final medicineName = state.uri.queryParameters['medicineName'];
+        final dosage = state.uri.queryParameters['dosage'];
+        final payload = state.uri.queryParameters['payload'];
+        return MedicineAlarmScreen(
+          medicineId: medicineId,
+          medicineName: medicineName,
+          dosage: dosage,
+          payload: payload,
+        );
+      },
     ),
   ],
 );

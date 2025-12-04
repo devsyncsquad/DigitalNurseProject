@@ -545,7 +545,7 @@ class MedicationService {
                 title: 'Medicine Reminder',
                 body: 'Time to take ${medicine.name} ${medicine.dosage}',
                 scheduledDate: reminderTime,
-                payload: '{"medicineId": "${medicine.id}", "type": "medicine_reminder"}',
+                payload: '{"medicineId": "${medicine.id}", "medicineName": "${medicine.name}", "dosage": "${medicine.dosage}", "type": "medicine_reminder"}',
                 type: NotificationType.medicineReminder,
               );
               scheduledForThisMedicine++;

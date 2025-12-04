@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/widgets/full_screen_intent_dialog.dart';
 import '../widgets/caregiver/caregiver_dashboard_view.dart';
 import '../widgets/patient/patient_dashboard_view.dart';
 
@@ -32,7 +34,20 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     // Defer data loading until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData(force: true);
+      _checkAlarmPermission();
     });
+  }
+
+  /// Check and prompt for full-screen intent permission on Android
+  Future<void> _checkAlarmPermission() async {
+    if (!Platform.isAndroid) return;
+    
+    // Small delay to let the home screen render first
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (!mounted) return;
+    
+    await FullScreenIntentDialog.showIfNeeded(context);
   }
 
   String? _lastLoadedContextKey;

@@ -21,6 +21,9 @@ import 'core/providers/locale_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/fcm_service.dart';
 
+/// Global navigator key for navigation from services
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,6 +32,11 @@ void main() async {
 
   // Set up background message handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Set up FCM alarm tap callback
+  FCMService().onAlarmTap = (payload) {
+    _navigateToAlarmScreen(payload);
+  };
 
   // Initialize EasyLocalization
   await EasyLocalization.ensureInitialized();
@@ -49,6 +57,13 @@ void main() async {
       child: const DigitalNurseApp(),
     ),
   );
+}
+
+/// Navigate to the alarm screen when a medicine reminder notification is tapped
+void _navigateToAlarmScreen(String? payload) {
+  // Use the goRouter to navigate
+  final encodedPayload = payload != null ? Uri.encodeComponent(payload) : '';
+  goRouter.go('/medicine-alarm?payload=$encodedPayload');
 }
 
 class DigitalNurseApp extends StatelessWidget {

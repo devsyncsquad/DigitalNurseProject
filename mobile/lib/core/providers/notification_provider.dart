@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
+import '../services/fcm_service.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
+  final FCMService _fcmService = FCMService();
   List<NotificationModel> _notifications = [];
   int _unreadCount = 0;
   bool _isLoading = false;
@@ -115,5 +117,15 @@ class NotificationProvider with ChangeNotifier {
   // Get diagnostic information
   Future<Map<String, dynamic>> getDiagnosticInfo() async {
     return await _notificationService.getDiagnosticInfo();
+  }
+
+  // Check full-screen intent permission
+  Future<bool> checkFullScreenIntentPermission() async {
+    return await _fcmService.checkFullScreenIntentPermission();
+  }
+
+  // Request full-screen intent permission
+  Future<bool> requestFullScreenIntentPermission() async {
+    return await _fcmService.requestFullScreenIntentPermission();
   }
 }

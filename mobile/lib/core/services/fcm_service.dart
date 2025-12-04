@@ -5,12 +5,19 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
 import '../models/notification_model.dart';
+
+/// Callback type for navigating to alarm screen
+typedef AlarmNavigationCallback = void Function(String? payload);
 
 class FCMService {
   static final FCMService _instance = FCMService._internal();
   factory FCMService() => _instance;
   FCMService._internal();
+
+  /// Callback to navigate to alarm screen when notification is tapped
+  AlarmNavigationCallback? onAlarmTap;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -240,9 +247,13 @@ class FCMService {
   void _onNotificationTap(NotificationResponse response) {
     print('Notification tapped: ${response.payload}');
 
-    // TODO: Navigate based on payload
     if (response.payload != null) {
-      // Parse payload and navigate
+      // Check if this is a medicine reminder
+      if (response.payload!.contains('medicine_reminder') ||
+          response.payload!.contains('medicineId')) {
+        // Navigate to alarm screen
+        onAlarmTap?.call(response.payload);
+      }
     }
   }
 
@@ -425,20 +436,26 @@ class FCMService {
         channelId,
         channelName,
         channelDescription: channelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
+        importance: Importance.max,
+        priority: Priority.max,
         icon: '@mipmap/ic_launcher',
         // Enable sound and vibration for medicine reminders
         // Sound will use the channel's default or system default notification sound
         playSound: true,
         enableVibration: true,
         vibrationPattern: isMedicineReminder
-            ? Int64List.fromList([0, 250, 250, 250])
+            ? Int64List.fromList([0, 500, 250, 500, 250, 500])
             : null,
         channelShowBadge: true,
-        autoCancel: true,
+        autoCancel: false, // Keep notification until user interacts
         // Make it more prominent
         ticker: isMedicineReminder ? 'Medicine Reminder' : null,
+        // Full-screen intent for alarm-like behavior
+        fullScreenIntent: isMedicineReminder,
+        category: isMedicineReminder ? AndroidNotificationCategory.alarm : null,
+        visibility: NotificationVisibility.public,
+        // Keep playing sound
+        ongoing: isMedicineReminder,
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -585,12 +602,66 @@ class FCMService {
             ?.canScheduleExactNotifications();
         info['canScheduleExact'] = canScheduleExact;
         info['exactAlarmPermission'] = canScheduleExact;
+        
+        // Check full-screen intent permission
+        final fullScreenStatus = await checkFullScreenIntentPermission();
+        info['fullScreenIntentPermission'] = fullScreenStatus;
       } catch (e) {
         info['permissionCheckError'] = e.toString();
       }
     }
 
     return info;
+  }
+
+  /// Check if full-screen intent permission is granted (Android 11+)
+  Future<bool> checkFullScreenIntentPermission() async {
+    if (!Platform.isAndroid) return true;
+
+    try {
+      // On Android 11+ (API 30+), we need to check this permission
+      final status = await Permission.systemAlertWindow.status;
+      print('Full-screen intent permission status: $status');
+      return status.isGranted;
+    } catch (e) {
+      print('Error checking full-screen intent permission: $e');
+      // If we can't check, assume it's not granted
+      return false;
+    }
+  }
+
+  /// Request full-screen intent permission
+  /// Returns true if permission is granted or user was directed to settings
+  Future<bool> requestFullScreenIntentPermission() async {
+    if (!Platform.isAndroid) return true;
+
+    try {
+      final status = await Permission.systemAlertWindow.status;
+      
+      if (status.isGranted) {
+        print('Full-screen intent permission already granted');
+        return true;
+      }
+
+      // Request the permission - this will open settings on Android 11+
+      final result = await Permission.systemAlertWindow.request();
+      print('Full-screen intent permission request result: $result');
+      
+      return result.isGranted;
+    } catch (e) {
+      print('Error requesting full-screen intent permission: $e');
+      return false;
+    }
+  }
+
+  /// Open app settings for user to enable permissions manually
+  Future<bool> openPermissionSettings() async {
+    try {
+      return await openAppSettings();
+    } catch (e) {
+      print('Error opening app settings: $e');
+      return false;
+    }
   }
 }
 
