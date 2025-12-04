@@ -258,21 +258,8 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 // Analyze Button
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
+                  child: OutlinedButton(
                     onPressed: _isAnalyzing ? null : _handleAnalyze,
-                    icon: _isAnalyzing
-                        ? SizedBox(
-                            width: 16.w,
-                            height: 16.h,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                ModernSurfaceTheme.primaryTeal,
-                              ),
-                            ),
-                          )
-                        : const Icon(FIcons.sparkles),
-                    label: Text(_isAnalyzing ? 'Analyzing...' : 'Analyze with AI'),
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 14.h),
                       side: BorderSide(
@@ -283,6 +270,27 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isAnalyzing)
+                          SizedBox(
+                            width: 16.w,
+                            height: 16.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                ModernSurfaceTheme.primaryTeal,
+                              ),
+                            ),
+                          )
+                        else
+                          const Icon(FIcons.sparkles, size: 20),
+                        SizedBox(width: 8.w),
+                        Text(_isAnalyzing ? 'Analyzing...' : 'Analyze with AI'),
+                      ],
                     ),
                   ),
                 ),

@@ -3,7 +3,8 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 
 /// Service for interacting with OpenAI API to analyze food descriptions
-/// and calculate calories
+/// and calculate calories, as well as analyze exercise descriptions and
+/// calculate calories burned
 class OpenAIService {
   static OpenAIService? _instance;
   Dio? _dio;
@@ -169,6 +170,107 @@ JSON response:''';
       _log('❌ Error parsing OpenAI response: $e');
       return null;
     }
+  }
+
+  /// Analyze exercise description and duration to calculate calories burned
+  /// Returns the estimated calories burned, or null if unable to calculate
+  Future<int?> analyzeExerciseCalories(
+    String exerciseDescription,
+    int durationMinutes,
+  ) async {
+    if (exerciseDescription.trim().isEmpty) {
+      _log('❌ Empty exercise description provided');
+      return null;
+    }
+
+    if (durationMinutes <= 0) {
+      _log('❌ Invalid duration provided: $durationMinutes');
+      return null;
+    }
+
+    try {
+      await _ensureInitialized();
+      if (_dio == null) {
+        throw Exception('OpenAI service not initialized');
+      }
+
+      _log('🤖 Analyzing exercise: ${exerciseDescription.substring(0, exerciseDescription.length > 50 ? 50 : exerciseDescription.length)}... for $durationMinutes minutes');
+
+      // Create prompt for exercise calorie analysis
+      final prompt = _buildExerciseCalorieAnalysisPrompt(exerciseDescription, durationMinutes);
+
+      // Call OpenAI Chat Completions API
+      final response = await _dio!.post(
+        '/chat/completions',
+        data: {
+          'model': 'gpt-4o-mini',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'You are a fitness and exercise expert. Analyze exercise descriptions and calculate accurate calorie burn estimates based on duration. Always respond with valid JSON only.',
+            },
+            {
+              'role': 'user',
+              'content': prompt,
+            },
+          ],
+          'temperature': 0.3,
+          'max_tokens': 200,
+          'response_format': {'type': 'json_object'},
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final content = data['choices']?[0]?['message']?['content'];
+        
+        if (content != null) {
+          final result = _parseCalorieResponse(content);
+          if (result != null) {
+            _log('✅ Calories burned calculated: $result kcal');
+            return result;
+          }
+        }
+      }
+
+      _log('❌ Failed to get valid response from OpenAI');
+      return null;
+    } on DioException catch (e) {
+      _log('❌ OpenAI API error: ${e.message}');
+      if (e.response != null) {
+        _log('Response: ${e.response?.data}');
+      }
+      rethrow;
+    } catch (e) {
+      _log('❌ Error analyzing exercise calories: $e');
+      rethrow;
+    }
+  }
+
+  /// Build prompt for exercise calorie analysis
+  String _buildExerciseCalorieAnalysisPrompt(String exerciseDescription, int durationMinutes) {
+    return '''Analyze the following exercise description and calculate the total estimated calories burned.
+
+Exercise description: "$exerciseDescription"
+Duration: $durationMinutes minutes
+
+Please provide your response as JSON with the following format:
+{
+  "calories": <estimated_total_calories_burned>,
+  "intensity": "low" | "moderate" | "high",
+  "confidence": "high" | "medium" | "low",
+  "notes": "any relevant notes about the estimation"
+}
+
+Guidelines:
+- Calculate calories burned based on the exercise type and duration
+- Consider the intensity level mentioned or implied in the description
+- Use standard calorie burn rates for common exercises
+- For average body weight (assume 70kg/154lbs if not specified)
+- Provide your best estimate even if details are limited
+- Return only valid JSON, no additional text
+
+JSON response:''';
   }
 }
 
