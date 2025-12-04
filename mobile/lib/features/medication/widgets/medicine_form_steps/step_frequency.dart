@@ -3,6 +3,8 @@ import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/models/medicine_model.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/modern_surface_theme.dart';
 import '../../providers/medicine_form_provider.dart';
 import '../medicine_form_shared/weekday_toggle_selector.dart';
 
@@ -96,13 +98,13 @@ class StepFrequency extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: isSelected
-                        ? context.theme.colors.primary
+                        ? AppTheme.appleGreen
                         : context.theme.colors.border,
                     width: isSelected ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(12.r),
                   color: isSelected
-                      ? context.theme.colors.primary.withValues(alpha: 0.1)
+                      ? AppTheme.appleGreen.withValues(alpha: 0.1)
                       : context.theme.colors.muted,
                 ),
                 child: Padding(
@@ -114,14 +116,14 @@ class StepFrequency extends StatelessWidget {
                         height: 40.h,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? context.theme.colors.primary
+                              ? AppTheme.appleGreen
                               : context.theme.colors.muted,
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Icon(
                           option.icon,
                           color: isSelected
-                              ? context.theme.colors.primaryForeground
+                              ? Colors.white
                               : context.theme.colors.mutedForeground,
                           size: 20.r,
                         ),
@@ -133,7 +135,7 @@ class StepFrequency extends StatelessWidget {
                           style: context.theme.typography.base.copyWith(
                             fontWeight: FontWeight.w600,
                             color: isSelected
-                                ? context.theme.colors.primary
+                                ? ModernSurfaceTheme.deepTeal
                                 : context.theme.colors.foreground,
                           ),
                         ),
@@ -141,7 +143,7 @@ class StepFrequency extends StatelessWidget {
                       if (isSelected)
                         Icon(
                           FIcons.check,
-                          color: context.theme.colors.primary,
+                          color: AppTheme.appleGreen,
                           size: 20.r,
                         ),
                     ],

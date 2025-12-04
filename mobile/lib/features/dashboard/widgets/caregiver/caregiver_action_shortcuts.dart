@@ -84,7 +84,7 @@ class CaregiverActionShortcuts extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Quick actions',
+                          'Quick Actions',
                           style: CaregiverDashboardTheme.sectionTitleStyle(
                             context,
                           ),

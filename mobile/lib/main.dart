@@ -141,10 +141,26 @@ ThemeData _buildMaterialTheme(
 }) {
   final base = fTheme.toApproximateMaterialTheme();
   final colorScheme = base.colorScheme;
-  final primaryActionColor = isDark ? AppTheme.tealLight : AppTheme.tealDark;
+  final secondaryColor = const Color(0xFF7FD991);
+  final tertiaryColor = AppTheme.blueTertiary;
+
+  // Update ColorScheme with tertiary color
+  // Note: Primary stays as teal, but buttons use secondary (apple green) via ElevatedButtonTheme
+  final updatedColorScheme = colorScheme.copyWith(
+    tertiary: tertiaryColor,
+    onTertiary: Colors.white,
+  );
 
   final textButtonStyle = TextButton.styleFrom(
-    foregroundColor: primaryActionColor,
+    foregroundColor: secondaryColor,
+    textStyle: base.textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w600,
+    ),
+  );
+
+  final elevatedButtonStyle = ElevatedButton.styleFrom(
+    backgroundColor: secondaryColor,
+    foregroundColor: Colors.white,
     textStyle: base.textTheme.labelLarge?.copyWith(
       fontWeight: FontWeight.w600,
     ),
@@ -156,16 +172,18 @@ ThemeData _buildMaterialTheme(
       borderRadius: BorderRadius.circular(16),
     ),
     titleTextStyle: base.textTheme.titleLarge?.copyWith(
-      color: colorScheme.onSurface,
+      color: updatedColorScheme.onSurface,
       fontWeight: FontWeight.w600,
     ),
     contentTextStyle: base.textTheme.bodyMedium?.copyWith(
-      color: colorScheme.onSurfaceVariant,
+      color: updatedColorScheme.onSurfaceVariant,
     ),
   );
 
   return base.copyWith(
+    colorScheme: updatedColorScheme,
     textButtonTheme: TextButtonThemeData(style: textButtonStyle),
+    elevatedButtonTheme: ElevatedButtonThemeData(style: elevatedButtonStyle),
     dialogTheme: dialogTheme,
   );
 }

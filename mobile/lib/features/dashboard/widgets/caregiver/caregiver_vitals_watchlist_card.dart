@@ -26,7 +26,7 @@ class CaregiverVitalsWatchlistCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.monitor_heart_outlined,
-      title: 'Vitals watchlist',
+      title: 'Vitals Watchlist',
       subtitle: 'Track readings that fall outside normal ranges.',
       count: '${abnormalVitals.length}',
       accentColor: CaregiverDashboardTheme.accentCoral,

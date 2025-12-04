@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class FrequencyTimeSelector extends StatelessWidget {
   final TimeOfDay time;
@@ -173,12 +174,12 @@ class _TimePickerDialogState extends State<TimePickerDialog> {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? context.theme.colors.primary
+                    ? AppTheme.appleGreen
                     : context.theme.colors.muted,
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
                   color: isSelected
-                      ? context.theme.colors.primary
+                      ? AppTheme.appleGreen
                       : context.theme.colors.border,
                 ),
               ),
@@ -186,7 +187,7 @@ class _TimePickerDialogState extends State<TimePickerDialog> {
                 time.format(context),
                 style: context.theme.typography.sm.copyWith(
                   color: isSelected
-                      ? context.theme.colors.primaryForeground
+                      ? Colors.white
                       : context.theme.colors.foreground,
                   fontWeight: FontWeight.w500,
                 ),

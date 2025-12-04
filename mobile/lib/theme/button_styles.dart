@@ -61,8 +61,8 @@ FButtonStyles buttonStyles({
     colors: colors,
     style: style,
     typography: typography,
-    color: colors.primary,
-    foregroundColor: colors.primaryForeground,
+    color: colors.secondary,
+    foregroundColor: colors.secondaryForeground,
   ),
   secondary: _buttonStyle(
     colors: colors,

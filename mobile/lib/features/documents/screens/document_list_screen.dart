@@ -513,7 +513,7 @@ class _DocumentsHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isCaregiver ? 'Shared records' : 'Your health vault',
+            isCaregiver ? 'Shared records' : 'Your Health Vault',
             style: textTheme.bodyMedium?.copyWith(
                   color: onPrimary.withValues(alpha: 0.85),
                 ),

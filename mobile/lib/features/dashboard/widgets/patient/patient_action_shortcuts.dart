@@ -22,14 +22,14 @@ class PatientActionShortcuts extends StatelessWidget {
     final actions = [
       _ActionShortcut(
         icon: Icons.medication,
-        label: 'Log medication',
+        label: 'Log Medication',
         caption: 'Record when you take your doses.',
         accent: CaregiverDashboardTheme.primaryTeal,
         onTap: () => context.push('/medications'),
       ),
       _ActionShortcut(
         icon: Icons.favorite,
-        label: 'Record vital',
+        label: 'Record Vital',
         caption: 'Log your health measurements.',
         accent: CaregiverDashboardTheme.accentCoral,
         onTap: () => context.push('/health'),
@@ -43,16 +43,16 @@ class PatientActionShortcuts extends StatelessWidget {
       ),
       _ActionShortcut(
         icon: Icons.calendar_month,
-        label: 'View schedule',
+        label: 'View Schedule',
         caption: 'See upcoming medicines.',
-        accent: CaregiverDashboardTheme.accentBlue,
+        accent: const Color.fromARGB(255, 0, 162, 255),
         onTap: () => context.push('/medications'),
       ),
       _ActionShortcut(
         icon: Icons.people,
-        label: 'Contact caregiver',
+        label: 'Contact Caregiver',
         caption: 'Reach out to your caregivers.',
-        accent: CaregiverDashboardTheme.accentYellow,
+        accent: const Color.fromARGB(255, 243, 173, 21),
         onTap: () => _showComingSoon(context, 'Contacting caregiver'),
       ),
     ];
@@ -91,7 +91,7 @@ class PatientActionShortcuts extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Quick actions',
+                          'Quick Actions',
                           style: CaregiverDashboardTheme.sectionTitleStyle(
                             context,
                           ),

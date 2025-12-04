@@ -38,7 +38,7 @@ class PatientLifestyleCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.directions_run_outlined,
-      title: 'Your lifestyle',
+      title: 'Your Lifestyle',
       subtitle: 'Track your diet and exercise activities.',
       count: '$todayTotalLogs',
       accentColor: CaregiverDashboardTheme.accentBlue,

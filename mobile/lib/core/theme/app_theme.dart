@@ -21,6 +21,12 @@ class AppTheme {
   static const Color darkSurface = Color(0xFF1A1F2E);
   static const Color darkSurfaceVariant = Color(0xFF2A3142);
 
+  // Apple Green Color (Secondary)
+  static const Color appleGreen = Color(0xFF7FD991); // Apple green
+  
+  // Blue Color (Tertiary)
+  static const Color blueTertiary = Color(0xFF3B82F6); // Blue tertiary
+
   // Semantic colors that adapt to theme
   static const Color successLight = Color(0xFF10B981);
   static const Color successDark = Color(0xFF34D399);
@@ -33,7 +39,7 @@ class AppTheme {
   static FColors get _lightColors => FThemes.zinc.light.colors.copyWith(
     primary: teal,
     primaryForeground: Colors.white,
-    secondary: tealDark,
+    secondary: appleGreen,
     secondaryForeground: Colors.white,
     background: lightBackground,
     foreground: const Color(0xFF1F2937),
@@ -48,7 +54,7 @@ class AppTheme {
   static FColors get _darkColors => FThemes.zinc.dark.colors.copyWith(
     primary: tealLight,
     primaryForeground: Colors.white,
-    secondary: tealDark,
+    secondary: appleGreen,
     secondaryForeground: Colors.white,
     background: darkBackground,
     foreground: const Color(0xFFE5E7EB),

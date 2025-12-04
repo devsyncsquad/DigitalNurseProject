@@ -22,7 +22,7 @@ class PatientDocumentsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.article_outlined,
-      title: 'Your documents',
+      title: 'Your Documents',
       subtitle: 'Access your health records and important files.',
       count: '${documents.length}',
       accentColor: CaregiverDashboardTheme.accentYellow,

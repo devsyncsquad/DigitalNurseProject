@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../providers/medicine_form_provider.dart';
 
 class StepStartDate extends StatefulWidget {
@@ -109,12 +110,12 @@ class _StepStartDateState extends State<StepStartDate> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: context.theme.colors.primary.withValues(alpha: 0.1),
+                    color: AppTheme.appleGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: context.theme.colors.primary,
+                    color: AppTheme.appleGreen,
                     size: 24,
                   ),
                 ),
@@ -162,7 +163,7 @@ class _StepStartDateState extends State<StepStartDate> {
                       Text(
                         dateText,
                         style: context.theme.typography.base.copyWith(
-                          color: context.theme.colors.primary,
+                          color: AppTheme.appleGreen,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

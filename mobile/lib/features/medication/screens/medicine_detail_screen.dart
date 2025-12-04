@@ -361,7 +361,7 @@ class _QuickActions extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
-              backgroundColor: ModernSurfaceTheme.primaryTeal,
+              backgroundColor: AppTheme.appleGreen,
               foregroundColor: Colors.white,
             ),
             child: const Text('Mark as Taken'),

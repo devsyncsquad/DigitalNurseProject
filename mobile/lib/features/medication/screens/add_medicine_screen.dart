@@ -164,7 +164,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
                   ),
-                  backgroundColor: ModernSurfaceTheme.primaryTeal,
+                  backgroundColor: AppTheme.appleGreen,
+                  foregroundColor: Colors.white,
                 ),
                 child: Text(
                   formProvider.isLastStep ? 'Save Medicine' : 'Next',
@@ -256,7 +257,7 @@ class _ProgressHeader extends StatelessWidget {
     return Container(
       decoration: ModernSurfaceTheme.glassCard(
         context,
-        accent: ModernSurfaceTheme.primaryTeal,
+        accent: AppTheme.appleGreen,
         highlighted: true,
       ),
       padding: EdgeInsets.all(20.w),
@@ -266,7 +267,7 @@ class _ProgressHeader extends StatelessWidget {
           Text(
             'Step ${currentStep + 1} of $totalSteps',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                  color: ModernSurfaceTheme.deepTeal,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -278,7 +279,7 @@ class _ProgressHeader extends StatelessWidget {
               minHeight: 10.h,
               backgroundColor: Colors.white.withOpacity(0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                ModernSurfaceTheme.primaryTeal,
+                AppTheme.appleGreen,
               ),
             ),
           ),

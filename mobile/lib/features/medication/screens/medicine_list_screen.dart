@@ -245,7 +245,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     final textTheme = Theme.of(context).textTheme;
     final onSurface = colorScheme.onSurface;
     final muted = colorScheme.onSurfaceVariant;
-    final onPrimary = colorScheme.onPrimary;
 
     return Container(
       decoration: ModernSurfaceTheme.glassCard(context),
@@ -286,14 +285,14 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: onPrimary,
+                  backgroundColor: AppTheme.appleGreen,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: () => context.push('/medicine/add'),
                 child: Text(
                   'Add Medicine',
                   style: textTheme.labelLarge?.copyWith(
-                    color: onPrimary,
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

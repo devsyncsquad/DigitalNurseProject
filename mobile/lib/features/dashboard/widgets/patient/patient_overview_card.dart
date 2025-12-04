@@ -123,7 +123,7 @@ class PatientOverviewCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Health overview',
+                              'Health Overview',
                               style: CaregiverDashboardTheme.sectionTitleStyle(
                                 context,
                               ),

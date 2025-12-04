@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/models/medicine_model.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/modern_surface_theme.dart';
 import '../../providers/medicine_form_provider.dart';
 
 class StepMedicineForm extends StatelessWidget {
@@ -101,13 +103,13 @@ class StepMedicineForm extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: isSelected
-                      ? context.theme.colors.primary
+                      ? AppTheme.appleGreen
                       : context.theme.colors.border,
                   width: isSelected ? 2 : 1,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 color: isSelected
-                    ? context.theme.colors.primary.withValues(alpha: 0.1)
+                    ? AppTheme.appleGreen.withValues(alpha: 0.1)
                     : context.theme.colors.muted,
               ),
               child: Padding(
@@ -119,7 +121,7 @@ class StepMedicineForm extends StatelessWidget {
                       option.icon,
                       size: 32,
                       color: isSelected
-                          ? context.theme.colors.primary
+                          ? AppTheme.appleGreen
                           : context.theme.colors.mutedForeground,
                     ),
                     const SizedBox(height: 8),
@@ -128,7 +130,7 @@ class StepMedicineForm extends StatelessWidget {
                       style: context.theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isSelected
-                            ? context.theme.colors.primary
+                            ? ModernSurfaceTheme.deepTeal
                             : context.theme.colors.foreground,
                       ),
                       textAlign: TextAlign.center,

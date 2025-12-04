@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class WeekdayToggleSelector extends StatelessWidget {
   final List<int> selectedDays;
@@ -80,12 +81,12 @@ class WeekdayToggleSelector extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? context.theme.colors.primary
+                ? AppTheme.appleGreen
                 : context.theme.colors.muted,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? context.theme.colors.primary
+                  ? AppTheme.appleGreen
                   : context.theme.colors.border,
               width: 2,
             ),
@@ -96,7 +97,7 @@ class WeekdayToggleSelector extends StatelessWidget {
                 dayLabels[index],
                 style: context.theme.typography.sm.copyWith(
                   color: isSelected
-                      ? context.theme.colors.primaryForeground
+                      ? Colors.white
                       : context.theme.colors.foreground,
                   fontWeight: FontWeight.bold,
                 ),
@@ -105,7 +106,7 @@ class WeekdayToggleSelector extends StatelessWidget {
                 dayNames[index],
                 style: context.theme.typography.xs.copyWith(
                   color: isSelected
-                      ? context.theme.colors.primaryForeground
+                      ? Colors.white
                       : context.theme.colors.mutedForeground,
                 ),
               ),

@@ -27,7 +27,7 @@ class PatientVitalsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.monitor_heart_outlined,
-      title: 'Your vitals',
+      title: 'Your Vitals',
       subtitle: abnormalVitals.isNotEmpty
           ? 'Track readings that fall outside normal ranges.'
           : 'Your latest health measurements.',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../providers/medicine_form_provider.dart';
 
 class StepDoseStrength extends StatefulWidget {
@@ -127,12 +128,12 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? context.theme.colors.primary
+                        ? AppTheme.appleGreen
                         : context.theme.colors.muted,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
-                          ? context.theme.colors.primary
+                          ? AppTheme.appleGreen
                           : context.theme.colors.border,
                     ),
                   ),
@@ -140,7 +141,7 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
                     dose,
                     style: context.theme.typography.sm.copyWith(
                       color: isSelected
-                          ? context.theme.colors.primaryForeground
+                          ? Colors.white
                           : context.theme.colors.foreground,
                       fontWeight: FontWeight.w500,
                     ),
@@ -201,12 +202,12 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? context.theme.colors.primary
+                        ? AppTheme.appleGreen
                         : context.theme.colors.muted,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
-                          ? context.theme.colors.primary
+                          ? AppTheme.appleGreen
                           : context.theme.colors.border,
                     ),
                   ),
@@ -214,7 +215,7 @@ class _StepDoseStrengthState extends State<StepDoseStrength> {
                     unit,
                     style: context.theme.typography.sm.copyWith(
                       color: isSelected
-                          ? context.theme.colors.primaryForeground
+                          ? Colors.white
                           : context.theme.colors.foreground,
                       fontWeight: FontWeight.w500,
                     ),
