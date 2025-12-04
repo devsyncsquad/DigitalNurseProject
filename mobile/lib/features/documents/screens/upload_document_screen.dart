@@ -235,9 +235,9 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         onSelect: _showFilePicker,
                       ),
                       SizedBox(height: 24.h),
-                      FTextField(
+                      _CustomTextField(
                         controller: _titleController,
-                        label: const Text('Document Title'),
+                        label: 'Document Title',
                         hint: 'e.g., Blood Test Results',
                       ),
                       SizedBox(height: 16.h),
@@ -246,11 +246,19 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         child: DropdownButton<DocumentType>(
                           value: _documentType,
                           isExpanded: true,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                           items: DocumentType.values
                               .map(
                                 (type) => DropdownMenuItem(
                                   value: type,
-                                  child: Text(type.displayName),
+                                  child: Text(
+                                    type.displayName,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -266,9 +274,9 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         ),
                       ),
                       SizedBox(height: 16.h),
-                      FTextField(
+                      _CustomTextField(
                         controller: _descriptionController,
-                        label: const Text('Description (Optional)'),
+                        label: 'Description (Optional)',
                         hint: 'Additional details',
                         maxLines: 3,
                       ),
@@ -279,7 +287,12 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                           children: DocumentVisibility.values
                               .map(
                                 (visibility) => RadioListTile<DocumentVisibility>(
-                                  title: Text(_visibilityLabel(visibility)),
+                                  title: Text(
+                                    _visibilityLabel(visibility),
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                  ),
                                   value: visibility,
                                   groupValue: _visibility,
                                   onChanged: isUploading
@@ -303,7 +316,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         onPressed: isUploading ? null : _handleUpload,
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14.h),
-                          backgroundColor: ModernSurfaceTheme.primaryTeal,
+                          backgroundColor: AppTheme.appleGreen,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
@@ -402,17 +415,26 @@ class _FileSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     if (selectedFile == null) {
-      return OutlinedButton.icon(
-        onPressed: isUploading ? null : onSelect,
-        icon: const Icon(FIcons.upload),
-        label: const Text('Select Document or Photo'),
-        style: OutlinedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: 14.h),
-          side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
-          foregroundColor: ModernSurfaceTheme.deepTeal,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+      return Container(
+        decoration: ModernSurfaceTheme.glassCard(context),
+        child: ElevatedButton.icon(
+          onPressed: isUploading ? null : onSelect,
+          icon: Icon(FIcons.upload, size: 20),
+          label: const Text(
+            'Select Document or Photo',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+            backgroundColor: Colors.transparent,
+            foregroundColor: colorScheme.onSurface,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
           ),
         ),
       );
@@ -455,7 +477,7 @@ class _FileSelector extends StatelessWidget {
                       selectedFile!.fileName,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: ModernSurfaceTheme.deepTeal,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -465,7 +487,7 @@ class _FileSelector extends StatelessWidget {
                         selectedFile!.fileSize,
                       ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -484,18 +506,24 @@ class _FileSelector extends StatelessWidget {
           ),
         ),
         SizedBox(height: 16.h),
-        OutlinedButton.icon(
-          onPressed: isUploading ? null : onSelect,
-          icon: const Icon(FIcons.upload),
-          label: const Text('Change File'),
-          style: OutlinedButton.styleFrom(
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-            side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.3)),
-            foregroundColor: ModernSurfaceTheme.deepTeal,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-            ),
-          ),
+        Builder(
+          builder: (context) {
+            final colorScheme = Theme.of(context).colorScheme;
+            final onSurface = colorScheme.onSurface;
+            return OutlinedButton.icon(
+              onPressed: isUploading ? null : onSelect,
+              icon: const Icon(FIcons.upload),
+              label: const Text('Change File'),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                side: BorderSide(color: onSurface.withOpacity(0.3)),
+                foregroundColor: onSurface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -510,6 +538,7 @@ class _GlassFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: ModernSurfaceTheme.glassCard(context),
       padding: EdgeInsets.all(16.w),
@@ -520,13 +549,85 @@ class _GlassFormSection extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: ModernSurfaceTheme.deepTeal,
+                  color: colorScheme.onSurface,
                 ),
           ),
           SizedBox(height: 8.h),
           child,
         ],
       ),
+    );
+  }
+}
+
+class _CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final int? maxLines;
+
+  const _CustomTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    this.maxLines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextField(
+          controller: controller,
+          maxLines: maxLines ?? 1,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            filled: true,
+            fillColor: colorScheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.appleGreen,
+                width: 2,
+              ),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

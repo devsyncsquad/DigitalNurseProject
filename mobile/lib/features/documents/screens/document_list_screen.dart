@@ -227,9 +227,8 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                   itemCount: documents.length,
                   itemBuilder: (context, index) {
                     final document = documents[index];
-                    final accent = _getDocumentColor(context, document.type);
-                    final chipForeground =
-                        ModernSurfaceTheme.chipForegroundColor(accent);
+                    // Use green color (labReport color) for all cards
+                    final accent = AppTheme.getDocumentColor(context, 'labreport');
                     return Container(
                       decoration: ModernSurfaceTheme.glassCard(context, accent: accent),
                       padding: EdgeInsets.all(16.w),
@@ -265,14 +264,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                                 horizontal: 12.w,
                                 vertical: 6.h,
                               ),
-                              decoration: ModernSurfaceTheme.frostedChip(
-                                context,
-                                baseColor: accent,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(22),
+                                color: AppTheme.appleGreen,
                               ),
                               child: Text(
                                 document.type.name,
                                 style: TextStyle(
-                                  color: chipForeground,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -435,23 +434,6 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     }
   }
 
-  Color _getDocumentColor(BuildContext context, DocumentType type) {
-    switch (type) {
-      case DocumentType.prescription:
-        return AppTheme.getDocumentColor(context, 'prescription');
-      case DocumentType.labReport:
-        return AppTheme.getDocumentColor(context, 'labreport');
-      case DocumentType.xray:
-      case DocumentType.scan:
-        return AppTheme.getDocumentColor(context, 'xray');
-      case DocumentType.discharge:
-        return AppTheme.getDocumentColor(context, 'discharge');
-      case DocumentType.insurance:
-        return AppTheme.getDocumentColor(context, 'insurance');
-      case DocumentType.other:
-        return AppTheme.getDocumentColor(context, 'other');
-    }
-  }
 }
 
 class _ErrorBanner extends StatelessWidget {
@@ -519,12 +501,31 @@ class _DocumentsHero extends StatelessWidget {
                 ),
           ),
           SizedBox(height: 8.h),
-          Text(
-            '$documentCount documents stored',
-            style: textTheme.headlineSmall?.copyWith(
-                  color: onPrimary,
-                  fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: AppTheme.appleGreen,
                 ),
+                child: Text(
+                  '$documentCount',
+                  style: textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'Documents Stored',
+                style: textTheme.headlineSmall?.copyWith(
+                      color: onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
           ),
           if (!isCaregiver) ...[
             SizedBox(height: 12.h),
@@ -553,21 +554,21 @@ class _HeroChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const chipBase = Colors.white;
-    final chipForeground =
-        ModernSurfaceTheme.chipForegroundColor(chipBase);
     final chip = Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        color: AppTheme.appleGreen,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: chipForeground),
-          SizedBox(width: 6.w),
+          Icon(icon, size: 20, color: Colors.white),
+          SizedBox(width: 8.w),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: chipForeground,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
           ),
