@@ -526,15 +526,14 @@ class _DocumentsHero extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
           ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: const [
-              _HeroChip(icon: Icons.verified, label: 'Secure & encrypted'),
-              _HeroChip(icon: Icons.folder_special, label: 'Smart categories'),
-            ],
-          ),
+          if (!isCaregiver) ...[
+            SizedBox(height: 12.h),
+            _HeroChip(
+              icon: Icons.cloud_upload_outlined,
+              label: 'Upload document',
+              onTap: () => context.push('/documents/upload'),
+            ),
+          ],
         ],
       ),
     );
@@ -544,15 +543,20 @@ class _DocumentsHero extends StatelessWidget {
 class _HeroChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _HeroChip({required this.icon, required this.label});
+  const _HeroChip({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     const chipBase = Colors.white;
     final chipForeground =
         ModernSurfaceTheme.chipForegroundColor(chipBase);
-    return Container(
+    final chip = Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
       child: Row(
@@ -570,5 +574,15 @@ class _HeroChip extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: chip,
+      );
+    }
+
+    return chip;
   }
 }
