@@ -108,7 +108,7 @@ class AdherenceStreakCard extends StatelessWidget {
                 child: Center(
                   child: AnimatedHeartIcon(
                     percentage: adherencePercentage,
-                    size: 56.0,
+                    size: 60.0,
                     fillColor: Colors.red,
                     strokeColor: Colors.black,
                   ),

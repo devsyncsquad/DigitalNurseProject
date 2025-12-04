@@ -34,7 +34,7 @@ class PatientOverviewCard extends StatelessWidget {
             : CaregiverDashboardTheme.accentCoral;
     final alertsAccent = abnormalVitals.isEmpty
         ? CaregiverDashboardTheme.primaryTeal
-        : CaregiverDashboardTheme.accentCoral;
+        : const Color(0xFFFFB84D); // Orange-yellowish color
 
     final cards = <_OverviewMetric>[
       _OverviewMetric(

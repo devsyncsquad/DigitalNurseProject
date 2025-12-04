@@ -35,7 +35,7 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.medication_liquid_outlined,
-      title: 'Upcoming medicines',
+      title: 'Upcoming Medicines',
       subtitle: 'Stay prepared with your next doses in the queue.',
       count: '${nextReminders.length}',
       accentColor: CaregiverDashboardTheme.accentBlue,

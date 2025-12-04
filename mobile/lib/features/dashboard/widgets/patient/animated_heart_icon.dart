@@ -57,7 +57,7 @@ class _AnimatedHeartIconState extends State<AnimatedHeartIcon>
             curve: Curves.easeInOut,
           ),
         );
-    _glowAnimation = Tween<double>(begin: 0.3, end: 0.7)
+    _glowAnimation = Tween<double>(begin: 0.15, end: 0.3)
         .animate(
           CurvedAnimation(
             parent: _pulseController!,
@@ -109,27 +109,28 @@ class _AnimatedHeartIconState extends State<AnimatedHeartIcon>
       width: widget.size,
       height: widget.size,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_pulseAnimation!, _glowAnimation!]),
+        animation: _pulseAnimation!,
+        // animation: Listenable.merge([_pulseAnimation!, _glowAnimation!]),
         builder: (context, child) {
           final pulseValue = _pulseAnimation!.value;
-          final glowValue = _glowAnimation!.value;
+          // final glowValue = _glowAnimation!.value;
           
           return Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: widget.fillColor.withOpacity(glowValue),
-                  blurRadius: 12 * pulseValue,
-                  spreadRadius: 2 * pulseValue,
-                ),
-                BoxShadow(
-                  color: widget.fillColor.withOpacity(glowValue * 0.5),
-                  blurRadius: 20 * pulseValue,
-                  spreadRadius: 1 * pulseValue,
-                ),
-              ],
-            ),
+            // decoration: BoxDecoration(
+            //   shape: BoxShape.circle,
+            //   boxShadow: [
+            //     BoxShadow(
+            //       color: widget.fillColor.withOpacity(glowValue),
+            //       blurRadius: 6 * pulseValue,
+            //       spreadRadius: 1 * pulseValue,
+            //     ),
+            //     BoxShadow(
+            //       color: widget.fillColor.withOpacity(glowValue * 0.5),
+            //       blurRadius: 10 * pulseValue,
+            //       spreadRadius: 0.5 * pulseValue,
+            //     ),
+            //   ],
+            // ),
             child: Transform.scale(
               scale: pulseValue,
               child: Stack(
@@ -163,7 +164,7 @@ class _AnimatedHeartIconState extends State<AnimatedHeartIcon>
                         painter: _HeartStrokePainter(
                           path: heartPath,
                           strokeColor: widget.strokeColor,
-                          strokeWidth: 1.0 + (0.2 * (_pulseAnimation!.value - 1.0) / 0.08),
+                          strokeWidth: 2.0 + (0.3 * (_pulseAnimation!.value - 1.0) / 0.08),
                         ),
                       );
                     },

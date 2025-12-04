@@ -81,19 +81,9 @@ class ModernSurfaceTheme {
   static double heroSpacing() => 18.h;
 
   static BoxDecoration heroDecoration(BuildContext context) {
-    final isDark = _isDark(context);
-    final shadowBase = isDark ? Colors.black : deepTeal;
-
     return BoxDecoration(
       borderRadius: BorderRadius.circular(28),
       gradient: heroGradient(context),
-      boxShadow: [
-        BoxShadow(
-          color: shadowBase.withValues(alpha: isDark ? 0.55 : 0.35),
-          blurRadius: 30,
-          offset: const Offset(0, 20),
-        ),
-      ],
     );
   }
 
@@ -132,13 +122,6 @@ class ModernSurfaceTheme {
         color: baseAccent.withValues(alpha: isDark ? 0.25 : 0.12),
         width: 1.2,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: baseAccent.withValues(alpha: isDark ? 0.45 : 0.2),
-          blurRadius: highlighted ? 26 : 18,
-          offset: const Offset(0, 18),
-        ),
-      ],
     );
   }
 
@@ -167,13 +150,6 @@ class ModernSurfaceTheme {
       border: Border.all(
         color: accent.withValues(alpha: isDark ? 0.35 : 0.14),
       ),
-      boxShadow: [
-        BoxShadow(
-          color: accent.withValues(alpha: isDark ? 0.4 : 0.18),
-          blurRadius: 24,
-          offset: const Offset(0, 18),
-        ),
-      ],
     );
   }
 
@@ -190,13 +166,6 @@ class ModernSurfaceTheme {
           accent.withValues(alpha: isDark ? 0.7 : 0.8),
         ],
       ),
-      boxShadow: [
-        BoxShadow(
-          color: accent.withValues(alpha: isDark ? 0.5 : 0.25),
-          blurRadius: 16,
-          offset: const Offset(0, 12),
-        ),
-      ],
     );
   }
 
@@ -213,13 +182,6 @@ class ModernSurfaceTheme {
           accent.withValues(alpha: isDark ? 0.55 : 0.7),
         ],
       ),
-      boxShadow: [
-        BoxShadow(
-          color: accent.withValues(alpha: isDark ? 0.45 : 0.25),
-          blurRadius: 14,
-          offset: const Offset(0, 10),
-        ),
-      ],
     );
   }
 
@@ -244,13 +206,6 @@ class ModernSurfaceTheme {
       border: Border.all(
         color: resolvedBase.withValues(alpha: isDark ? 0.5 : 0.3),
       ),
-      boxShadow: [
-        BoxShadow(
-          color: resolvedBase.withValues(alpha: isDark ? 0.45 : 0.16),
-          blurRadius: 14,
-          offset: const Offset(0, 10),
-        ),
-      ],
     );
   }
 
