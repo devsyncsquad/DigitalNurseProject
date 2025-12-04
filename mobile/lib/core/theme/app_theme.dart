@@ -84,7 +84,7 @@ class AppTheme {
         style: fStyle,
       ),
       lineCalendarStyle: (_) => FLineCalendarStyle.inherit(
-        colors: colors,
+        colors: colors.copyWith(primary: appleGreen),
         typography: typography,
         style: fStyle,
       ),
@@ -110,7 +110,7 @@ class AppTheme {
         style: fStyle,
       ),
       lineCalendarStyle: (_) => FLineCalendarStyle.inherit(
-        colors: colors,
+        colors: colors.copyWith(primary: appleGreen),
         typography: typography,
         style: fStyle,
       ),

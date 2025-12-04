@@ -7,6 +7,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 
 class ProfileViewScreen extends StatelessWidget {
@@ -296,7 +297,7 @@ class ProfileViewScreen extends StatelessWidget {
               label: const Text('Logout'),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 14.h),
-                backgroundColor: ModernSurfaceTheme.accentCoral,
+                backgroundColor: AppTheme.appleGreen,
               foregroundColor: onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),

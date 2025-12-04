@@ -260,7 +260,9 @@ class _MedicineScheduleCardState extends State<MedicineScheduleCard> {
       case MedicineTimeOfDay.morning:
         return (label: 'Morning', icon: FIcons.sunrise, color: ModernSurfaceTheme.accentYellow);
       case MedicineTimeOfDay.afternoon:
-        return (label: 'Afternoon', icon: FIcons.sun, color: ModernSurfaceTheme.primaryTeal);
+        // Use a more vibrant teal for better visibility in the chip
+        // Using a brighter, more saturated teal (similar vibrancy to accentYellow/accentBlue)
+        return (label: 'Afternoon', icon: FIcons.sun, color: const Color(0xFF14C4B3));
       case MedicineTimeOfDay.evening:
         return (label: 'Evening', icon: FIcons.moon, color: ModernSurfaceTheme.accentBlue);
     }

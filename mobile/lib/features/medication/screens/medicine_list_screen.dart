@@ -531,28 +531,40 @@ class _HeroSummary extends StatelessWidget {
                 ),
           ),
           SizedBox(height: 8.h),
-          Text(
-            '$medicinesCount medicines on $dateLabel',
-            style: textTheme.headlineSmall?.copyWith(
-                  color: onPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
+          Row(
             children: [
-              _HeroChip(
-                icon: Icons.alarm,
-                label: 'Smart reminders',
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: AppTheme.appleGreen,
+                ),
+                child: Text(
+                  '$medicinesCount',
+                  style: textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
               ),
-              _HeroChip(
-                icon: Icons.health_and_safety,
-                label: isCaregiver ? 'Patient safety' : 'Stay on track',
+              SizedBox(width: 12.w),
+              Text(
+                'medicines on $dateLabel',
+                style: textTheme.headlineSmall?.copyWith(
+                      color: onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
             ],
           ),
+          if (!isCaregiver) ...[
+            SizedBox(height: 12.h),
+            _HeroChip(
+              icon: Icons.add_circle_outline,
+              label: 'Add medicine',
+              onTap: () => context.push('/medicine/add'),
+            ),
+          ],
         ],
       ),
     );
@@ -580,30 +592,46 @@ class _HeroSummary extends StatelessWidget {
 class _HeroChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
-  const _HeroChip({required this.icon, required this.label});
+  const _HeroChip({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const chipBase = Colors.white;
-    final chipForeground = ModernSurfaceTheme.chipForegroundColor(chipBase);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      decoration: ModernSurfaceTheme.frostedChip(context, baseColor: chipBase),
+    final chip = Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        color: AppTheme.appleGreen,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: chipForeground),
+          Icon(icon, size: 20, color: Colors.white),
           SizedBox(width: 8.w),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: chipForeground,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
           ),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: chip,
+      );
+    }
+
+    return chip;
   }
 }

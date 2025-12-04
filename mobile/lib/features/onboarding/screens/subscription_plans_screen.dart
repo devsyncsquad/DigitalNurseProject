@@ -107,7 +107,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             // Free plan
             _PlanCard(
               title: 'Free',
-              price: '\$0',
+              price: 'PKR 0',
               period: 'forever',
               features: const [
                 'Basic medicine reminders',
@@ -128,7 +128,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             // Premium plan
             _PlanCard(
               title: 'Premium',
-              price: '\$9.99',
+              price: 'PKR 150',
               period: 'per month',
               features: const [
                 'Advanced medicine reminders',
@@ -296,10 +296,10 @@ class _PlanCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: isSelected
                             ? ModernSurfaceTheme.tintedForegroundColor(
-                                accent,
+                                ModernSurfaceTheme.primaryTeal,
                                 brightness: Theme.of(context).brightness,
                               )
-                            : accent,
+                            : ModernSurfaceTheme.primaryTeal,
                       ),
                     ),
                     SizedBox(width: 6.w),
