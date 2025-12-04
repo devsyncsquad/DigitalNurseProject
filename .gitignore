@@ -65,3 +65,4 @@ node_modules/
 .parcel-cache/
 .next/
 web/portal/dist.zip
+node_modules
