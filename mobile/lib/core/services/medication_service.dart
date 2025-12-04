@@ -12,6 +12,12 @@ class MedicationService {
     print('🔍 [MEDICATION] $message');
   }
 
+  // Helper method to check if error is unauthorized (user logging out)
+  bool _isUnauthorizedError(dynamic error) {
+    final errorMessage = error.toString();
+    return errorMessage.contains('Unauthorized') || errorMessage.contains('401');
+  }
+
   // Get all medicines for a user
   Future<List<MedicineModel>> getMedicines(
     String userId, {
@@ -241,6 +247,11 @@ class MedicationService {
         throw Exception('Failed to fetch intake history: ${response.statusMessage}');
       }
     } catch (e) {
+      // Handle Unauthorized errors gracefully (user might be logging out)
+      if (_isUnauthorizedError(e)) {
+        _log('⚠️ Unauthorized error during intake history fetch (user may be logging out)');
+        return []; // Return empty list instead of throwing
+      }
       _log('❌ Error fetching intake history: $e');
       throw Exception(e.toString());
     }

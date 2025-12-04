@@ -30,12 +30,23 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Future<void> _loadIntakeHistory() async {
-    final history = await context.read<MedicationProvider>().getIntakeHistory(
-      widget.medicineId,
-    );
-    setState(() {
-      _intakeHistory = history;
-    });
+    try {
+      final history = await context.read<MedicationProvider>().getIntakeHistory(
+        widget.medicineId,
+      );
+      if (mounted) {
+        setState(() {
+          _intakeHistory = history;
+        });
+      }
+    } catch (e) {
+      // Handle errors gracefully, especially during logout
+      if (mounted) {
+        setState(() {
+          _intakeHistory = []; // Set empty list on error
+        });
+      }
+    }
   }
 
   Future<void> _handleLogIntake(IntakeStatus status) async {

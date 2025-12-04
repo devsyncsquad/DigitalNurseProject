@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
@@ -187,6 +188,16 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } on PlatformException catch (e) {
+      // Handle PlatformException specifically
+      if (e.code == 'no_fragment_activity') {
+        _error = 'Biometric authentication is not properly configured. Please contact support.';
+      } else {
+        _error = 'Biometric authentication failed: ${e.message ?? e.code}';
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = _extractErrorMessage(e);
       _isLoading = false;
@@ -268,6 +279,14 @@ class AuthProvider with ChangeNotifier {
   // Extract user-friendly error message
   String _extractErrorMessage(dynamic error) {
     final errorString = error.toString();
+
+    // Handle PlatformException
+    if (error is PlatformException) {
+      if (error.code == 'no_fragment_activity') {
+        return 'Biometric authentication is not properly configured. Please contact support.';
+      }
+      return error.message ?? error.code;
+    }
 
     // Remove "Exception: " prefix if present
     if (errorString.startsWith('Exception: ')) {

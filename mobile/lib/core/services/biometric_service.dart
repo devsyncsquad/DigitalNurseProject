@@ -1,5 +1,6 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 
 class BiometricService {
@@ -111,6 +112,12 @@ class BiometricService {
       }
 
       return didAuthenticate;
+    } on PlatformException catch (e) {
+      _log('❌ PlatformException during biometric authentication: ${e.code} - ${e.message}');
+      if (e.code == 'no_fragment_activity') {
+        _log('❌ CRITICAL: MainActivity must extend FlutterFragmentActivity, not FlutterActivity');
+      }
+      return false;
     } catch (e) {
       _log('❌ Error during biometric authentication: $e');
       return false;
