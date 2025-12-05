@@ -41,6 +41,8 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  isHovered: boolean
+  setIsHovered: (hovered: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -76,6 +78,7 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
+    const [isHovered, setIsHovered] = React.useState(false)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -149,8 +152,10 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
+        isHovered,
+        setIsHovered,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, isHovered, setIsHovered]
     )
 
     return (
@@ -199,7 +204,23 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, isHovered, setIsHovered } = useSidebar()
+
+    // Calculate effective state: if hovered and collapsed, show expanded temporarily
+    const effectiveState = isHovered && state === "collapsed" && !isMobile ? "expanded" : state
+
+    // Hover handlers for desktop only
+    const handleMouseEnter = React.useCallback(() => {
+      if (!isMobile && state === "collapsed") {
+        setIsHovered(true)
+      }
+    }, [isMobile, state, setIsHovered])
+
+    const handleMouseLeave = React.useCallback(() => {
+      if (!isMobile) {
+        setIsHovered(false)
+      }
+    }, [isMobile, setIsHovered])
 
     if (collapsible === "none") {
       return (
@@ -243,11 +264,13 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className="group peer hidden text-sidebar-foreground md:block"
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
+        className={cn("group/sidebar group peer hidden text-sidebar-foreground md:block", className)}
+        data-state={effectiveState}
+        data-collapsible={effectiveState === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
@@ -269,9 +292,10 @@ const Sidebar = React.forwardRef<
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
-            className
+              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l"
           )}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           {...props}
         >
           <div
@@ -449,7 +473,7 @@ const SidebarGroup = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="group"
-      className={cn("relative flex w-full min-w-0 flex-col p-2", className)}
+      className={cn("relative flex w-full min-w-0 flex-col p-2 group-data-[collapsible=icon]/sidebar:px-1", className)}
       {...props}
     />
   )
@@ -582,7 +606,7 @@ const SidebarMenuButton = React.forwardRef<
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
-    const { isMobile, state } = useSidebar()
+    const { isMobile, state, isHovered } = useSidebar()
 
     const button = (
       <Comp
@@ -605,13 +629,16 @@ const SidebarMenuButton = React.forwardRef<
       }
     }
 
+    // Hide tooltip when sidebar is expanded (either by state or hover) or on mobile
+    const shouldHideTooltip = state !== "collapsed" || isHovered || isMobile
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
-          hidden={state !== "collapsed" || isMobile}
+          hidden={shouldHideTooltip}
           {...tooltip}
         />
       </Tooltip>

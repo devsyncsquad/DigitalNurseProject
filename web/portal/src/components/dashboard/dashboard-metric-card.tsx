@@ -31,9 +31,12 @@ export function DashboardMetricCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <span className="text-3xl font-semibold tracking-tight">
-          {metric.value}
-        </span>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">{metric.label}</p>
+          <span className="text-3xl font-semibold tracking-tight">
+            {metric.value}
+          </span>
+        </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span
             className={cn(

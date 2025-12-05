@@ -123,11 +123,11 @@ export function AppSidebar() {
               end={item.to === "/"}
             >
               <Icon className="size-4 shrink-0" />
-              <span className="flex-1 truncate transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]/sidebar:-ml-6 group-data-[collapsible=icon]/sidebar:opacity-0">
+              <span className="flex-1 truncate transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]/sidebar:hidden">
                 {item.title}
               </span>
               {item.badge ? (
-                <Badge variant="secondary" className="ml-auto h-5 px-1 text-xs">
+                <Badge variant="secondary" className="ml-auto h-5 px-1 text-xs group-data-[collapsible=icon]/sidebar:hidden">
                   {item.badge}
                 </Badge>
               ) : null}
@@ -139,7 +139,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="group/sidebar">
-      <SidebarHeader className="px-3 py-4">
+      <SidebarHeader className="px-3 py-4 group-data-[collapsible=icon]/sidebar:px-1">
         <Button
           variant="secondary"
           size="sm"
@@ -180,7 +180,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="mt-auto px-3 pb-4">
+      <SidebarFooter className="mt-auto px-3 pb-4 group-data-[collapsible=icon]/sidebar:px-1">
         <Separator className="mb-3 group-data-[collapsible=icon]/sidebar:hidden" />
         <Button
           variant="ghost"

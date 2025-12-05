@@ -4,6 +4,7 @@ export type RiskLevel = "low" | "moderate" | "high" | "critical"
 
 export type DashboardMetric = {
   title: string
+  label: string
   value: string
   change: string
   changeLabel: string
@@ -13,6 +14,7 @@ export type DashboardMetric = {
 export const dashboardMetrics: DashboardMetric[] = [
   {
     title: "Medication Adherence",
+    label: "Number of Patient",
     value: "92%",
     change: "+4.2%",
     changeLabel: "vs last 30 days",
@@ -20,6 +22,7 @@ export const dashboardMetrics: DashboardMetric[] = [
   },
   {
     title: "Active Alerts",
+    label: "Number of Carigiver",
     value: "34",
     change: "-7",
     changeLabel: "resolved in the last week",
@@ -27,6 +30,7 @@ export const dashboardMetrics: DashboardMetric[] = [
   },
   {
     title: "Avg. Vital Stability",
+    label: "Number of Vitals Added",
     value: "87%",
     change: "+2.5%",
     changeLabel: "patients within safe ranges",
@@ -34,6 +38,7 @@ export const dashboardMetrics: DashboardMetric[] = [
   },
   {
     title: "Caregiver Response Time",
+    label: "Number of Medication Added",
     value: "18m",
     change: "-6m",
     changeLabel: "median acknowledgement",
@@ -98,6 +103,70 @@ export const vitalTrend: VitalTrendPoint[] = Array.from({ length: 10 }).map(
     }
   }
 )
+
+export type PatientGrowthPoint = {
+  date: string
+  count: number
+}
+
+// Generate 7-day patient growth data (cumulative)
+const basePatientCount = 120
+export const patientGrowth7Days: PatientGrowthPoint[] = Array.from({ length: 7 }).map(
+  (_, index) => {
+    const date = subDays(new Date(), 6 - index)
+    // Simulate growth: start with base count and add 2-5 patients per day
+    const dailyGrowth = 2 + Math.round(Math.random() * 3)
+    const cumulativeCount = basePatientCount + (index + 1) * dailyGrowth
+    return {
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      count: cumulativeCount,
+    }
+  }
+)
+
+// Generate 30-day patient growth data (cumulative)
+export const patientGrowth30Days: PatientGrowthPoint[] = Array.from({ length: 30 }).map(
+  (_, index) => {
+    const date = subDays(new Date(), 29 - index)
+    // Simulate growth: start with lower base and add 1-4 patients per day
+    const dailyGrowth = 1 + Math.round(Math.random() * 3)
+    const cumulativeCount = basePatientCount - 50 + (index + 1) * dailyGrowth
+    return {
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      count: cumulativeCount,
+    }
+  }
+)
+
+export type SubscriptionBreakdown = {
+  type: "FREE" | "PREMIUM"
+  count: number
+  percentage: number
+}
+
+// Calculate subscription breakdown
+const totalPatients = 150
+const freeCount = Math.round(totalPatients * 0.72) // 72% free
+const premiumCount = totalPatients - freeCount // 28% premium
+
+export const subscriptionBreakdown: SubscriptionBreakdown[] = [
+  {
+    type: "FREE",
+    count: freeCount,
+    percentage: 72,
+  },
+  {
+    type: "PREMIUM",
+    count: premiumCount,
+    percentage: 28,
+  },
+]
 
 export type DashboardAlert = {
   id: string

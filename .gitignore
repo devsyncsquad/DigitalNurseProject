@@ -66,3 +66,4 @@ node_modules/
 .next/
 web/portal/dist.zip
 node_modules
+assets/

@@ -3,17 +3,18 @@ import {
   dashboardAlerts,
   dashboardMetrics,
   documents,
-  medicationReminders,
   patientRoster,
-  vitalTrend,
+  patientGrowth7Days,
+  patientGrowth30Days,
+  subscriptionBreakdown,
 } from "@/mocks/data"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DashboardMetricCard } from "@/components/dashboard/dashboard-metric-card"
-import { MedicationRemindersCard } from "@/components/dashboard/medication-reminders-card"
-import { VitalsTrendCard } from "@/components/dashboard/vitals-trend-card"
+import { PatientsGrowthCard } from "@/components/dashboard/patients-growth-card"
+import { SubscriptionBreakdownCard } from "@/components/dashboard/subscription-breakdown-card"
 import { AlertsCard } from "@/components/dashboard/alerts-card"
 import { DocumentsSummaryCard } from "@/components/dashboard/documents-summary-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,8 +70,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <VitalsTrendCard data={vitalTrend} />
-        <MedicationRemindersCard reminders={medicationReminders} />
+        <PatientsGrowthCard
+          data7Days={patientGrowth7Days}
+          data30Days={patientGrowth30Days}
+        />
+        <SubscriptionBreakdownCard data={subscriptionBreakdown} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
