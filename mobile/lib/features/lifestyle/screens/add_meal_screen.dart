@@ -258,15 +258,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 // Analyze Button
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
+                  child: ElevatedButton(
                     onPressed: _isAnalyzing ? null : _handleAnalyze,
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.appleGreen,
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 14.h),
-                      side: BorderSide(
-                        color: ModernSurfaceTheme.primaryTeal,
-                        width: 1.5,
-                      ),
-                      foregroundColor: ModernSurfaceTheme.primaryTeal,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -282,7 +279,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                ModernSurfaceTheme.primaryTeal,
+                                Colors.white,
                               ),
                             ),
                           )

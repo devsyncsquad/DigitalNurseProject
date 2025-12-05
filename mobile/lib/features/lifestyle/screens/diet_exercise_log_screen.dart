@@ -8,6 +8,7 @@ import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/extensions/meal_type_extensions.dart';
 import '../../../core/extensions/activity_type_extensions.dart';
 import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 
 class DietExerciseLogScreen extends StatefulWidget {
@@ -114,7 +115,7 @@ class _MealsTab extends StatelessWidget {
               icon: const Icon(FIcons.plus),
               label: const Text('Add Meal'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.primaryTeal,
+                backgroundColor: AppTheme.appleGreen,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 shape: RoundedRectangleBorder(
@@ -277,7 +278,7 @@ class _WorkoutsTab extends StatelessWidget {
               icon: const Icon(FIcons.plus),
               label: const Text('Add Workout'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ModernSurfaceTheme.accentBlue,
+                backgroundColor: AppTheme.appleGreen,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 shape: RoundedRectangleBorder(

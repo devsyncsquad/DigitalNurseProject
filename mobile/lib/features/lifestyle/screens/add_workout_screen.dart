@@ -311,15 +311,12 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 // Analyze Button
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
+                  child: ElevatedButton(
                     onPressed: _isAnalyzing ? null : _handleAnalyze,
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.appleGreen,
+                      foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 14.h),
-                      side: BorderSide(
-                        color: ModernSurfaceTheme.accentBlue,
-                        width: 1.5,
-                      ),
-                      foregroundColor: ModernSurfaceTheme.accentBlue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -335,7 +332,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                ModernSurfaceTheme.accentBlue,
+                                Colors.white,
                               ),
                             ),
                           )
