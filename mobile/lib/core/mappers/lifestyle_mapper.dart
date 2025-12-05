@@ -27,11 +27,24 @@ class LifestyleMapper {
       }
     }
 
-    // Parse timestamp
+    // Parse timestamp - check multiple possible field names
     DateTime timestamp = DateTime.now();
     if (json['timestamp'] != null) {
       try {
         timestamp = DateTime.parse(json['timestamp'].toString());
+      } catch (e) {
+        timestamp = DateTime.now();
+      }
+    } else if (json['logDate'] != null) {
+      try {
+        // logDate might be a date string (YYYY-MM-DD) or ISO datetime
+        final dateStr = json['logDate'].toString();
+        if (dateStr.contains('T')) {
+          timestamp = DateTime.parse(dateStr);
+        } else {
+          // Parse date-only string (YYYY-MM-DD)
+          timestamp = DateTime.parse('${dateStr}T00:00:00');
+        }
       } catch (e) {
         timestamp = DateTime.now();
       }
@@ -75,11 +88,14 @@ class LifestyleMapper {
         break;
     }
 
+    // Format date as YYYY-MM-DD (date only, not datetime)
+    final logDate = '${diet.timestamp.year}-${diet.timestamp.month.toString().padLeft(2, '0')}-${diet.timestamp.day.toString().padLeft(2, '0')}';
+    
     return {
       'mealType': mealType,
       'description': diet.description,
       'calories': diet.calories,
-      'timestamp': diet.timestamp.toIso8601String(),
+      'logDate': logDate,
       if (elderUserId != null && elderUserId.isNotEmpty)
         'elderUserId': elderUserId,
     };
@@ -119,11 +135,24 @@ class LifestyleMapper {
       }
     }
 
-    // Parse timestamp
+    // Parse timestamp - check multiple possible field names
     DateTime timestamp = DateTime.now();
     if (json['timestamp'] != null) {
       try {
         timestamp = DateTime.parse(json['timestamp'].toString());
+      } catch (e) {
+        timestamp = DateTime.now();
+      }
+    } else if (json['logDate'] != null) {
+      try {
+        // logDate might be a date string (YYYY-MM-DD) or ISO datetime
+        final dateStr = json['logDate'].toString();
+        if (dateStr.contains('T')) {
+          timestamp = DateTime.parse(dateStr);
+        } else {
+          // Parse date-only string (YYYY-MM-DD)
+          timestamp = DateTime.parse('${dateStr}T00:00:00');
+        }
       } catch (e) {
         timestamp = DateTime.now();
       }
@@ -180,12 +209,15 @@ class LifestyleMapper {
         break;
     }
 
+    // Format date as YYYY-MM-DD (date only, not datetime)
+    final logDate = '${exercise.timestamp.year}-${exercise.timestamp.month.toString().padLeft(2, '0')}-${exercise.timestamp.day.toString().padLeft(2, '0')}';
+    
     return {
       'activityType': activityType,
       'description': exercise.description,
       'durationMinutes': exercise.durationMinutes,
       'caloriesBurned': exercise.caloriesBurned,
-      'timestamp': exercise.timestamp.toIso8601String(),
+      'logDate': logDate,
       if (elderUserId != null && elderUserId.isNotEmpty)
         'elderUserId': elderUserId,
     };

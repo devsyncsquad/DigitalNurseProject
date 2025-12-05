@@ -3,14 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfig {
   static const String _apiBaseUrlKey = 'api_base_url';
-  static const String _openAIApiKeyKey = 'openai_api_key';
+  static const String _geminiApiKeyKey = 'gemini_api_key';
   
   // Default URLs for different environments
   static const String _defaultLocalhost = 'http://100.42.177.77:3000/api';
   static const String _defaultAndroidEmulator = 'http://100.42.177.77:3000/api';
   
-  // Default OpenAI API key (can be overridden by environment variable or saved preference)
-  static const String _defaultOpenAIApiKey = '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';
+  // Default Gemini API key (can be overridden by environment variable or saved preference)
+  static const String _defaultGeminiApiKey = 'AIzaSyBB-nGNXzlo399N1viNLq011V4YJJDWzBg';
   
   // Convert localhost URLs to Android emulator URL (10.0.2.2)
   // This is needed because Android emulators can't access host machine's localhost directly
@@ -95,45 +95,63 @@ class AppConfig {
     return _defaultLocalhost;
   }
 
-  // Get OpenAI API key
-  static Future<String?> getOpenAIApiKey() async {
+  // Get Gemini API key
+  static Future<String?> getGeminiApiKey() async {
     // First check environment variable
-    const envKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
+    const envKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
     if (envKey.isNotEmpty) {
-      print('🔍 [CONFIG] Using OpenAI API key from environment variable');
+      print('🔍 [CONFIG] Using Gemini API key from environment variable');
       return envKey;
     }
 
     // Then check saved preference
     final prefs = await SharedPreferences.getInstance();
-    final savedKey = prefs.getString(_openAIApiKeyKey);
+    final savedKey = prefs.getString(_geminiApiKeyKey);
     if (savedKey != null && savedKey.isNotEmpty) {
-      print('🔍 [CONFIG] Using saved OpenAI API key');
+      print('🔍 [CONFIG] Using saved Gemini API key');
       return savedKey;
     }
 
     // Use default API key
-    if (_defaultOpenAIApiKey.isNotEmpty) {
-      print('🔍 [CONFIG] Using default OpenAI API key');
-      return _defaultOpenAIApiKey;
+    if (_defaultGeminiApiKey.isNotEmpty) {
+      print('🔍 [CONFIG] Using default Gemini API key');
+      return _defaultGeminiApiKey;
     }
 
-    print('⚠️ [CONFIG] OpenAI API key not found');
+    print('⚠️ [CONFIG] Gemini API key not found');
     return null;
   }
 
-  // Set OpenAI API key
-  static Future<void> setOpenAIApiKey(String key) async {
+  // Set Gemini API key
+  static Future<void> setGeminiApiKey(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_openAIApiKeyKey, key);
-    print('✅ [CONFIG] OpenAI API key saved');
+    await prefs.setString(_geminiApiKeyKey, key);
+    print('✅ [CONFIG] Gemini API key saved');
   }
 
-  // Clear OpenAI API key
-  static Future<void> clearOpenAIApiKey() async {
+  // Clear Gemini API key
+  static Future<void> clearGeminiApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_openAIApiKeyKey);
-    print('🗑️ [CONFIG] OpenAI API key cleared');
+    await prefs.remove(_geminiApiKeyKey);
+    print('🗑️ [CONFIG] Gemini API key cleared');
+  }
+
+  // Legacy method for backward compatibility (deprecated)
+  @Deprecated('Use getGeminiApiKey() instead')
+  static Future<String?> getOpenAIApiKey() async {
+    return getGeminiApiKey();
+  }
+
+  // Legacy method for backward compatibility (deprecated)
+  @Deprecated('Use setGeminiApiKey() instead')
+  static Future<void> setOpenAIApiKey(String key) async {
+    return setGeminiApiKey(key);
+  }
+
+  // Legacy method for backward compatibility (deprecated)
+  @Deprecated('Use clearGeminiApiKey() instead')
+  static Future<void> clearOpenAIApiKey() async {
+    return clearGeminiApiKey();
   }
 }
 
