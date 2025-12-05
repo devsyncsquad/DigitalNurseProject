@@ -102,13 +102,6 @@ class DigitalNurseApp extends StatelessWidget {
             );
           }
 
-          // Sync EasyLocalization with LocaleProvider (only if different)
-          if (context.locale != localeProvider.locale) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.setLocale(localeProvider.locale);
-            });
-          }
-
           final lightMaterialTheme =
               _buildMaterialTheme(AppTheme.lightTheme, isDark: false);
           final darkMaterialTheme =
@@ -120,7 +113,8 @@ class DigitalNurseApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
-              locale: localeProvider.locale,
+              // Use EasyLocalization's locale as the single source of truth for UI
+              locale: context.locale,
               theme: lightMaterialTheme,
               darkTheme: darkMaterialTheme,
               themeMode: themeProvider.themeMode,

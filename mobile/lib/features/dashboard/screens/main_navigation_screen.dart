@@ -35,6 +35,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final userRole = authProvider.currentUser?.role ?? UserRole.patient;
     final isCaregiver = userRole == UserRole.caregiver;
 
+    // Rebuild navigation entries when locale changes
     final navigationEntries = _buildNavigationEntries(context, isCaregiver);
     final maxIndex = navigationEntries.length - 1;
 

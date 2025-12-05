@@ -482,9 +482,9 @@ class FCMService {
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
         );
-        print(
-          '✅ Notification #$id scheduled successfully for "$title" at $scheduledDate (exact)',
-        );
+        // print(
+        //   '✅ Notification #$id scheduled successfully for "$title" at $scheduledDate (exact)',
+        // );
       } catch (e) {
         if (e.toString().contains('exact_alarms_not_permitted')) {
           print('⚠️ Exact alarm permission denied, using inexact scheduling');
@@ -503,7 +503,7 @@ class FCMService {
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
           );
-          print('✅ Notification #$id scheduled with inexact timing for "$title"');
+          // print('✅ Notification #$id scheduled with inexact timing for "$title"');
         } else {
           print('❌ Error scheduling notification #$id: $e');
           // Don't rethrow to prevent app crashes

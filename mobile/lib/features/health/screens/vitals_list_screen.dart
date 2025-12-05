@@ -582,7 +582,7 @@ class _VitalsHero extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            '$totalCount checks on $dateLabel',
+            '$totalCount Checks on $dateLabel',
             style: textTheme.headlineSmall?.copyWith(
                   color: onPrimary,
                   fontWeight: FontWeight.w700,

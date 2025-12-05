@@ -549,7 +549,7 @@ class _HeroSummary extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Text(
-                'medicines on $dateLabel',
+                'Medicines on $dateLabel',
                 style: textTheme.headlineSmall?.copyWith(
                       color: onPrimary,
                       fontWeight: FontWeight.w700,

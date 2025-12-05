@@ -108,8 +108,11 @@ class SettingsScreen extends StatelessWidget {
                                 )
                               : null,
                           onTap: () async {
+                            // Update EasyLocalization FIRST to ensure .tr() returns correct translations
+                            // before widgets rebuild
+                            await context.setLocale(option.locale);
+                            // Then persist to LocaleProvider (for app restart)
                             await localeProvider.setLocale(option.locale);
-                            context.setLocale(option.locale);
                           },
                         ),
                         if (option != localeProvider.localeOptions.last)

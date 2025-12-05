@@ -145,9 +145,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                           )
                         : null,
                     onTap: () async {
+                      // Update EasyLocalization FIRST to ensure .tr() returns correct translations
+                      // before widgets rebuild
+                      await buildContext.setLocale(option.locale);
+                      // Then persist to LocaleProvider (for app restart)
                       await localeProvider.setLocale(option.locale);
-                      // Use the outer buildContext which is in the EasyLocalization widget tree
-                      buildContext.setLocale(option.locale);
                       if (dialogContext.mounted) {
                         Navigator.of(dialogContext).pop();
                       }
