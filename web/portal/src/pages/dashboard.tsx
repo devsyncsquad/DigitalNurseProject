@@ -8,7 +8,6 @@ import {
   patientGrowth30Days,
   subscriptionBreakdown,
 } from "@/mocks/data"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -54,14 +53,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      {/* <Tabs defaultValue="all" className="w-full">
         <TabsList className="w-full justify-start gap-2 bg-muted/40">
           <TabsTrigger value="all">All Roles</TabsTrigger>
           <TabsTrigger value="admin">Clinical Admin</TabsTrigger>
           <TabsTrigger value="provider">Provider</TabsTrigger>
           <TabsTrigger value="coordinator">Care Coordinator</TabsTrigger>
         </TabsList>
-      </Tabs>
+      </Tabs> */}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {dashboardMetrics.map((metric) => (

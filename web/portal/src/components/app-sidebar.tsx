@@ -162,7 +162,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[0.65rem] uppercase tracking-wide text-muted-foreground/80 group-data-[collapsible=icon]/sidebar:hidden">
+          <SidebarGroupLabel className="text-[0.65rem] uppercase tracking-wide text-white group-data-[collapsible=icon]/sidebar:hidden">
             Main
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -170,7 +170,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[0.65rem] uppercase tracking-wide text-muted-foreground/80 group-data-[collapsible=icon]/sidebar:hidden">
+          <SidebarGroupLabel className="text-[0.65rem] uppercase tracking-wide text-white group-data-[collapsible=icon]/sidebar:hidden">
             Operations
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -191,15 +191,15 @@ export function AppSidebar() {
           )}
         >
           <Avatar className="size-10 rounded-2xl group-data-[collapsible=icon]/sidebar:size-12">
-            <AvatarFallback className="rounded-2xl bg-sidebar-primary/20 text-sidebar-primary">
+            <AvatarFallback className="rounded-2xl bg-sidebar-primary/20 text-white">
               AC
             </AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-1 flex-col text-xs group-data-[collapsible=icon]/sidebar:hidden">
-            <span className="truncate font-medium text-foreground">
+            <span className="truncate font-medium text-white">
               Ayesha Chaudhry
             </span>
-            <span className="truncate text-muted-foreground">
+            <span className="truncate text-white">
               Clinical Admin · Care Portal
             </span>
           </div>

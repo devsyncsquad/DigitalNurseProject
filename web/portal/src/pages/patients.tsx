@@ -4,7 +4,6 @@ import {
   type PatientRosterRow,
   type RiskLevel,
 } from "@/mocks/data"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -27,7 +26,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useDisclosure } from "@/hooks/use-disclosure"
-import { Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
 
@@ -50,8 +48,8 @@ const riskFilters: Array<"all" | RiskLevel> = [
 export default function PatientsPage() {
   const [search, setSearch] = useState("")
   const [planFilter, setPlanFilter] = useState<(typeof plans)[number]>("All plans")
-  const [riskFilter, setRiskFilter] = useState<(typeof riskFilters)[number]>("all")
-  const [segment, setSegment] = useState("all")
+  const [riskFilter, _setRiskFilter] = useState<(typeof riskFilters)[number]>("all")
+  const [segment, _setSegment] = useState("all")
   const escalationsOnlyDisclosure = useDisclosure()
 
   const filteredPatients = useMemo(() => {
@@ -99,14 +97,14 @@ export default function PatientsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Export CSV</Button>
-          <Button className="gap-2">
+          {/* <Button className="gap-2">
             <Users className="size-4" />
             Bulk Assign Caregiver
-          </Button>
+          </Button> */}
         </div>
       </div>
 
-      <Tabs
+      {/* <Tabs
         value={segment}
         onValueChange={setSegment}
         className="w-full"
@@ -117,7 +115,7 @@ export default function PatientsPage() {
           <TabsTrigger value="adherence-drop">Adherence dip</TabsTrigger>
           <TabsTrigger value="awaiting-docs">Awaiting documents</TabsTrigger>
         </TabsList>
-      </Tabs>
+      </Tabs> */}
 
       <Card>
         <CardHeader>
@@ -149,7 +147,7 @@ export default function PatientsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select
+          {/* <Select
             value={riskFilter}
             onValueChange={(value) =>
               setRiskFilter(value as (typeof riskFilters)[number])
@@ -165,7 +163,7 @@ export default function PatientsPage() {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
           <label className="flex items-center gap-2 text-xs text-muted-foreground md:col-span-2">
             <Checkbox
               checked={escalationsOnlyDisclosure.isOpen}
