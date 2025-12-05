@@ -9,40 +9,55 @@ export type DashboardMetric = {
   change: string
   changeLabel: string
   trend: "up" | "down" | "flat"
+  icon?: string
+  color?: string
+  description?: string
 }
 
 export const dashboardMetrics: DashboardMetric[] = [
   {
-    title: "Medication Adherence",
-    label: "Number of Patient",
-    value: "92%",
-    change: "+4.2%",
-    changeLabel: "vs last 30 days",
-    trend: "up",
+    title: "Number of Patient",
+    label: "",
+    value: "5",
+    change: "",
+    changeLabel: "",
+    trend: "flat",
+    icon: "Users",
+    color: "blue",
+    description: "Total active patients",
   },
   {
-    title: "Active Alerts",
-    label: "Number of Carigiver",
-    value: "34",
-    change: "-7",
-    changeLabel: "resolved in the last week",
-    trend: "down",
+    title: "Number of Caregiver",
+    label: "",
+    value: "3",
+    change: "",
+    changeLabel: "",
+    trend: "flat",
+    icon: "UserCog",
+    color: "purple",
+    description: "Active caregivers",
   },
   {
-    title: "Avg. Vital Stability",
-    label: "Number of Vitals Added",
-    value: "87%",
-    change: "+2.5%",
-    changeLabel: "patients within safe ranges",
-    trend: "up",
+    title: "Vitals added",
+    label: "",
+    value: "150",
+    change: "",
+    changeLabel: "",
+    trend: "flat",
+    icon: "Activity",
+    color: "green",
+    description: "Vitals recorded this period",
   },
   {
-    title: "Caregiver Response Time",
-    label: "Number of Medication Added",
-    value: "18m",
-    change: "-6m",
-    changeLabel: "median acknowledgement",
-    trend: "down",
+    title: "Medication added",
+    label: "",
+    value: "85",
+    change: "",
+    changeLabel: "",
+    trend: "flat",
+    icon: "Pill",
+    color: "orange",
+    description: "Medications logged this period",
   },
 ]
 
