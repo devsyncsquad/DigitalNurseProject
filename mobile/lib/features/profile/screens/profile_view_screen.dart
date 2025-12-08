@@ -61,15 +61,41 @@ class ProfileViewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: onPrimary.withValues(alpha: 0.15),
-                    child: Text(
-                      user.name[0].toUpperCase(),
-                      style: textTheme.headlineMedium?.copyWith(
-                            color: onPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  ClipOval(
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      color: onPrimary.withValues(alpha: 0.15),
+                      child: Image.network(
+                        'https://randomuser.me/api/portraits/${user.name.hashCode % 2 == 0 ? 'men' : 'women'}/${user.name.hashCode % 99}.jpg',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Text(
+                              user.name[0].toUpperCase(),
+                              style: textTheme.headlineMedium?.copyWith(
+                                    color: onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            return child;
+                          }
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: onPrimary,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -91,14 +117,20 @@ class ProfileViewScreen extends StatelessWidget {
                   SizedBox(height: 16.h),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    decoration: ModernSurfaceTheme.frostedChip(context),
+                    decoration: user.subscriptionTier == SubscriptionTier.premium
+                        ? ModernSurfaceTheme.frostedChip(context)
+                        : BoxDecoration(
+                            color: AppTheme.appleGreen,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                     child: Text(
                       user.subscriptionTier == SubscriptionTier.premium
                           ? 'Premium Member'
                           : 'Free Plan',
                       style: TextStyle(
-                        color:
-                            ModernSurfaceTheme.chipForegroundColor(Colors.white),
+                        color: user.subscriptionTier == SubscriptionTier.premium
+                            ? ModernSurfaceTheme.chipForegroundColor(Colors.white)
+                            : Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

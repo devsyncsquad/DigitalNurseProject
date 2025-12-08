@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import '../../../core/services/biometric_service.dart';
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 import '../../../core/theme/modern_surface_theme.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,6 +31,24 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkBiometricAvailability();
+    // Add phone number formatter
+    _phoneController.addListener(_formatPhoneInput);
+  }
+
+  void _formatPhoneInput() {
+    final text = _phoneController.text;
+    if (text.isEmpty) return;
+    
+    // If text doesn't start with +92, format it
+    if (!text.startsWith('+92')) {
+      final formatted = _formatPhoneNumber(text);
+      if (formatted != text) {
+        _phoneController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
+    }
   }
 
   Future<void> _checkBiometricAvailability() async {
@@ -44,17 +64,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    _phoneController.removeListener(_formatPhoneInput);
     _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Format phone number to include +92 prefix if not already present
+  String _formatPhoneNumber(String phone) {
+    // Remove any whitespace
+    String cleaned = phone.trim().replaceAll(RegExp(r'\s+'), '');
+    
+    // If already starts with +92, return as is
+    if (cleaned.startsWith('+92')) {
+      return cleaned;
+    }
+    
+    // If starts with 92 (without +), add +
+    if (cleaned.startsWith('92')) {
+      return '+$cleaned';
+    }
+    
+    // If starts with 0, replace 0 with +92
+    if (cleaned.startsWith('0')) {
+      return '+92${cleaned.substring(1)}';
+    }
+    
+    // Otherwise, add +92 prefix
+    return '+92$cleaned';
   }
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
+    
+    // Format phone number to include +92 prefix
+    final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
+    
     final success = await authProvider.login(
-      _phoneController.text.trim(),
+      formattedPhone,
       _passwordController.text,
     );
 
@@ -76,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         context.go('/home');
       } else {
-        _showErrorDialog(authProvider.error ?? 'Login failed');
+        _showErrorSnackBar(authProvider.error ?? 'Login failed');
       }
     }
   }
@@ -88,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final userIds = await authProvider.getUsersWithBiometricEnabled();
     
     if (userIds.isEmpty) {
-      _showErrorDialog('No biometric login set up.\n\nPlease login with your phone and password first, then you can enable biometric login for faster access.');
+      _showErrorSnackBar('No biometric login set up. Please login with your phone and password first, then you can enable biometric login for faster access.');
       return;
     }
     
@@ -128,26 +177,34 @@ class _LoginScreenState extends State<LoginScreen> {
           userFriendlyMessage = errorMessage;
         }
         
-        _showErrorDialog(userFriendlyMessage);
+        _showErrorSnackBar(userFriendlyMessage);
       }
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('auth.login.failed'.tr()),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: context.theme.colors.primary,
-            ),
-            child: Text('common.ok'.tr()),
-          ),
-        ],
+  void _showErrorSnackBar(String message) {
+    // Extract user-friendly error message
+    String errorMessage = message;
+    
+    // Remove common prefixes
+    if (errorMessage.contains('Unauthorized:')) {
+      errorMessage = errorMessage.split('Unauthorized:').last.trim();
+    }
+    if (errorMessage.contains('Exception: ')) {
+      errorMessage = errorMessage.replaceFirst('Exception: ', '');
+    }
+    
+    // If message is empty or generic, use a default message
+    if (errorMessage.isEmpty || errorMessage == 'Login failed') {
+      errorMessage = 'Invalid phone number or password. Please try again.';
+    }
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        backgroundColor: AppTheme.getErrorColor(context),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -176,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (currentUser != null) {
                   final success = await authProvider.saveCredentialsForBiometric(
                     userId: userId,
-                    phone: _phoneController.text.trim(),
+                    phone: _formatPhoneNumber(_phoneController.text.trim()),
                     password: _passwordController.text,
                   );
                   if (mounted && success) {
@@ -310,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       FTextField(
                         controller: _phoneController,
                         label: Text('auth.login.phone'.tr()),
-                        hint: 'auth.login.phoneHint'.tr(),
+                        hint: 'Enter phone number (e.g., 03001234567)',
                         keyboardType: TextInputType.phone,
                       ),
                       SizedBox(height: 20.h),
@@ -328,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         decoration: ModernSurfaceTheme.pillButton(
                           context,
-                          ModernSurfaceTheme.primaryTeal,
+                          AppTheme.appleGreen,
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -471,6 +528,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: Text(
                             'Use Patient Credentials',
+                            style: TextStyle(
+                              color: ModernSurfaceTheme.primaryTeal,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        TextButton(
+                          onPressed: () {
+                            _phoneController.text = '+923007654321';
+                            _passwordController.text = 'password123';
+                            setState(() {
+                              _showTestCredentials = false;
+                            });
+                          },
+                          child: Text(
+                            'Use Caregiver Credentials',
                             style: TextStyle(
                               color: ModernSurfaceTheme.primaryTeal,
                               fontWeight: FontWeight.w600,

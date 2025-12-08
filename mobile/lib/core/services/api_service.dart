@@ -358,7 +358,8 @@ class ApiService {
         case 400:
           return Exception('Bad request: $message');
         case 401:
-          return Exception('Unauthorized: Please login again');
+          // Use the actual error message from the API response
+          return Exception('Unauthorized: $message');
         case 403:
           return Exception('Forbidden: $message');
         case 404:

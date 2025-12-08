@@ -4,12 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppConfig {
   static const String _apiBaseUrlKey = 'api_base_url';
   static const String _geminiApiKeyKey = 'gemini_api_key';
+  static const String _geminiApiKeyFromDbKey = 'gemini_api_key_from_db';
   
   // Default URLs for different environments
   static const String _defaultLocalhost = 'http://100.42.177.77:3000/api';
   static const String _defaultAndroidEmulator = 'http://100.42.177.77:3000/api';
   
-  // Default Gemini API key (can be overridden by environment variable or saved preference)
+  // Default Gemini API key (fallback if database fetch fails)
   static const String _defaultGeminiApiKey = 'AIzaSyBB-nGNXzlo399N1viNLq011V4YJJDWzBg';
   
   // Convert localhost URLs to Android emulator URL (10.0.2.2)
@@ -95,26 +96,38 @@ class AppConfig {
     return _defaultLocalhost;
   }
 
-  // Get Gemini API key
+  // Get Gemini API key with priority:
+  // 1. Database (cached in SharedPreferences after login)
+  // 2. Environment variable
+  // 3. User-set preference
+  // 4. Hardcoded default (fallback)
   static Future<String?> getGeminiApiKey() async {
-    // First check environment variable
+    final prefs = await SharedPreferences.getInstance();
+    
+    // First check database-cached value (fetched after login)
+    final dbCachedKey = prefs.getString(_geminiApiKeyFromDbKey);
+    if (dbCachedKey != null && dbCachedKey.isNotEmpty) {
+      print('🔍 [CONFIG] Using Gemini API key from database (cached)');
+      return dbCachedKey;
+    }
+
+    // Then check environment variable
     const envKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
     if (envKey.isNotEmpty) {
       print('🔍 [CONFIG] Using Gemini API key from environment variable');
       return envKey;
     }
 
-    // Then check saved preference
-    final prefs = await SharedPreferences.getInstance();
+    // Then check user-saved preference
     final savedKey = prefs.getString(_geminiApiKeyKey);
     if (savedKey != null && savedKey.isNotEmpty) {
       print('🔍 [CONFIG] Using saved Gemini API key');
       return savedKey;
     }
 
-    // Use default API key
+    // Use default API key as fallback
     if (_defaultGeminiApiKey.isNotEmpty) {
-      print('🔍 [CONFIG] Using default Gemini API key');
+      print('🔍 [CONFIG] Using default Gemini API key (fallback)');
       return _defaultGeminiApiKey;
     }
 
@@ -122,14 +135,30 @@ class AppConfig {
     return null;
   }
 
-  // Set Gemini API key
+  // Cache Gemini API key fetched from database
+  // This is called after successful login
+  static Future<void> cacheGeminiApiKeyFromDatabase(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_geminiApiKeyFromDbKey, key);
+    print('✅ [CONFIG] Gemini API key from database cached');
+  }
+
+  // Clear database-cached Gemini API key
+  // Call this on logout if you want to force re-fetch on next login
+  static Future<void> clearDatabaseCachedGeminiApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_geminiApiKeyFromDbKey);
+    print('🗑️ [CONFIG] Database-cached Gemini API key cleared');
+  }
+
+  // Set Gemini API key (user preference)
   static Future<void> setGeminiApiKey(String key) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_geminiApiKeyKey, key);
     print('✅ [CONFIG] Gemini API key saved');
   }
 
-  // Clear Gemini API key
+  // Clear Gemini API key (user preference)
   static Future<void> clearGeminiApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_geminiApiKeyKey);
