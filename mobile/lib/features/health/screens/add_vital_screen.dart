@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -50,7 +49,8 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
       userId: userId,
     );
 
-    final success = await context.read<HealthProvider>().addVital(vital);
+    final healthProvider = context.read<HealthProvider>();
+    final success = await healthProvider.addVital(vital);
 
     if (mounted) {
       if (success) {
@@ -91,6 +91,9 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final healthProvider = context.watch<HealthProvider>();
+    final isSaving = healthProvider.isLoading;
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
@@ -118,73 +121,204 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  decoration: ModernSurfaceTheme.glassCard(context),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vital Type',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: ModernSurfaceTheme.deepTeal,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButton<VitalType>(
-                        value: _selectedType,
-                        isExpanded: true,
-                        items: VitalType.values.map((type) {
-                          return DropdownMenuItem(
+                _GlassFormSection(
+                  title: 'Vital Type',
+                  child: DropdownButton<VitalType>(
+                    value: _selectedType,
+                    isExpanded: true,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                    items: VitalType.values
+                        .map(
+                          (type) => DropdownMenuItem(
                             value: type,
-                            child: Text(type.displayName),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedType = value;
-                              _valueController.clear();
-                            });
-                          }
-                        },
-                      ),
-                    ],
+                            child: Text(
+                              type.displayName,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: isSaving
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedType = value;
+                                _valueController.clear();
+                              });
+                            }
+                          },
                   ),
                 ),
                 SizedBox(height: 16.h),
-                FTextField(
+                _CustomTextField(
                   controller: _valueController,
-                  label: Text('${_selectedType.displayName} (${_selectedType.unit})'),
+                  label: '${_selectedType.displayName} (${_selectedType.unit})',
                   hint: _getHintText(),
-                  keyboardType: TextInputType.text,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a value';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 16.h),
-                FTextField(
+                _CustomTextField(
                   controller: _notesController,
-                  label: const Text('Notes (Optional)'),
+                  label: 'Notes (Optional)',
                   hint: 'Additional notes',
                   maxLines: 3,
                 ),
                 SizedBox(height: 24.h),
                 ElevatedButton(
-                  onPressed: _handleSave,
+                  onPressed: isSaving ? null : _handleSave,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ModernSurfaceTheme.primaryTeal,
-                    foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
+                    backgroundColor: AppTheme.appleGreen,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text('Save Vital'),
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Save Vital'),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _GlassFormSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _GlassFormSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: ModernSurfaceTheme.glassCard(context),
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+          ),
+          SizedBox(height: 8.h),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final int? maxLines;
+  final String? Function(String?)? validator;
+
+  const _CustomTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    this.maxLines,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines ?? 1,
+          validator: validator,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurface,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+            ),
+            filled: true,
+            fillColor: colorScheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: AppTheme.appleGreen,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.error,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: colorScheme.error,
+                width: 2,
+              ),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
