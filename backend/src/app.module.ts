@@ -15,6 +15,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { LookupsModule } from './lookups/lookups.module';
 import { DevicesModule } from './devices/devices.module';
+import { AppConfigModule } from './config/config.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -35,6 +36,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     NotificationsModule,
     LookupsModule,
     DevicesModule,
+    AppConfigModule,
   ],
   controllers: [AppController],
   providers: [

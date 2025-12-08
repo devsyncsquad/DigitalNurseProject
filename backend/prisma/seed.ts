@@ -88,17 +88,54 @@ async function upsertUserWithRole(options: {
   return user;
 }
 
+async function upsertAppConfig(
+  configKey: string,
+  configValue: string,
+  description?: string,
+) {
+  await prisma.appConfig.upsert({
+    where: { configKey },
+    update: { configValue, description, isActive: true },
+    create: {
+      configKey,
+      configValue,
+      description,
+      isActive: true,
+    },
+  });
+}
+
 async function main() {
   console.log('Starting database seed...');
 
-  // Rename legacy elder role to patient if present
-  await prisma.role.updateMany({
-    where: { roleCode: 'elder' },
-    data: { roleCode: 'patient', roleName: 'Patient' },
+  // Handle legacy elder role migration to patient
+  const existingPatientRole = await prisma.role.findUnique({
+    where: { roleCode: 'patient' },
   });
+
+  if (existingPatientRole) {
+    // Patient role already exists, just delete any legacy elder role
+    await prisma.role.deleteMany({
+      where: { roleCode: 'elder' },
+    });
+  } else {
+    // No patient role exists, try to rename elder to patient
+    await prisma.role.updateMany({
+      where: { roleCode: 'elder' },
+      data: { roleCode: 'patient', roleName: 'Patient' },
+    });
+  }
 
   await upsertRole('patient', 'Patient');
   await upsertRole('caregiver', 'Caregiver');
+
+  // Seed application configuration
+  console.log('Seeding app configuration...');
+  await upsertAppConfig(
+    'gemini_api_key',
+    'AIzaSyBB-nGNXzlo399N1viNLq011V4YJJDWzBg',
+    'Google Gemini API key for AI features',
+  );
 
   const demoPatient = await upsertUserWithRole({
     email: 'patient@example.com',
