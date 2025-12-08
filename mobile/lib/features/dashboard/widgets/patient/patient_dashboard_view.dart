@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/providers/auth_provider.dart';
 import '../dashboard_theme.dart';
@@ -16,6 +17,10 @@ class PatientDashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final cardSpacing = 18.h;
     return SafeArea(
       bottom: false,
@@ -52,8 +57,12 @@ class PatientDashboardView extends StatelessWidget {
 class _PatientHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final user = context.watch<AuthProvider>().currentUser;
-    final userName = user?.name ?? 'there';
+    final userName = user?.name ?? 'common.user'.tr();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final onPrimary = colorScheme.onPrimary;
@@ -65,7 +74,7 @@ class _PatientHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome back, $userName!',
+            'patient.welcomeBack'.tr(namedArgs: {'name': userName}),
             style: textTheme.headlineSmall?.copyWith(
                   color: onPrimary,
                   fontWeight: FontWeight.w700,
@@ -73,7 +82,7 @@ class _PatientHero extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Stay on track with your health journey. Monitor medications, vitals, and wellness all in one place.',
+            'patient.heroDescription'.tr(),
             style: textTheme.bodyMedium?.copyWith(
                   color: onPrimary.withValues(alpha: 0.85),
                 ),

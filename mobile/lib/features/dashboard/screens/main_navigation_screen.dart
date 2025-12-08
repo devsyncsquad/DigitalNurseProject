@@ -31,6 +31,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes by creating a dependency on the locale
+    // ignore: unused_local_variable
+    final currentLocale = context.locale;
+
     final authProvider = context.watch<AuthProvider>();
     final userRole = authProvider.currentUser?.role ?? UserRole.patient;
     final isCaregiver = userRole == UserRole.caregiver;

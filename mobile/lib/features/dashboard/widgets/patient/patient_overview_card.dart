@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/providers/health_provider.dart';
 import '../../../../core/providers/medication_provider.dart';
@@ -14,6 +15,10 @@ class PatientOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final medicationProvider = context.watch<MedicationProvider>();
     final healthProvider = context.watch<HealthProvider>();
 
@@ -38,9 +43,9 @@ class PatientOverviewCard extends StatelessWidget {
 
     final cards = <_OverviewMetric>[
       _OverviewMetric(
-        label: 'Adherence',
+        label: 'patient.adherence'.tr(),
         value: '${adherencePercentage.toStringAsFixed(0)}%',
-        description: 'On-time doses across the last 7 days.',
+        description: 'patient.adherenceDescription'.tr(),
         icon: Icons.monitor_heart,
         accent: adherenceAccent,
       ),
@@ -59,18 +64,18 @@ class PatientOverviewCard extends StatelessWidget {
       //   accent: CaregiverDashboardTheme.accentBlue,
       // ),
       _OverviewMetric(
-        label: 'Alerts',
+        label: 'patient.alerts'.tr(),
         value: '${abnormalVitals.length}',
-        description: 'Abnormal vitals needing attention.',
+        description: 'patient.alertsDescription'.tr(),
         icon: Icons.warning_amber_rounded,
         accent: alertsAccent,
       ),
       if (latestVital != null)
         _OverviewMetric(
-          label: 'Last vital',
+          label: 'patient.lastVital'.tr(),
           value:
               '${latestVital.type.displayName}: ${latestVital.value} ${latestVital.type.unit}',
-          description: 'Most recent recording.',
+          description: 'patient.lastVitalDescription'.tr(),
           icon: Icons.favorite,
           accent: CaregiverDashboardTheme.primaryTeal,
           maxLines: 2,
@@ -123,14 +128,14 @@ class PatientOverviewCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Health Overview',
+                              'patient.healthOverview'.tr(),
                               style: CaregiverDashboardTheme.sectionTitleStyle(
                                 context,
                               ),
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              'Real-time snapshot of your adherence, alerts, and vitals.',
+                              'patient.overviewDescription'.tr(),
                               style:
                                   CaregiverDashboardTheme.sectionSubtitleStyle(
                                 context,

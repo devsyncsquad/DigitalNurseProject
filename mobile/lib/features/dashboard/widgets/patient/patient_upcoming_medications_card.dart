@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/models/medicine_model.dart';
 import '../../../../core/providers/medication_provider.dart';
@@ -15,6 +16,10 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final medicationProvider = context.watch<MedicationProvider>();
     final upcoming = [...medicationProvider.upcomingReminders]
       ..sort((a, b) {
@@ -35,8 +40,8 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.medication_liquid_outlined,
-      title: 'Upcoming Medicines',
-      subtitle: 'Stay prepared with your next doses in the queue.',
+      title: 'patient.upcomingMedicines'.tr(),
+      subtitle: 'patient.upcomingSubtitle'.tr(),
       count: '${nextReminders.length}',
       accentColor: CaregiverDashboardTheme.accentBlue,
       routeForViewDetails: '/medications',
@@ -67,7 +72,7 @@ class PatientUpcomingMedicationsCard extends StatelessWidget {
                   SizedBox(width: 12.w),
                   Expanded(
                 child: Text(
-                  'No upcoming doses scheduled.',
+                  'patient.noUpcomingDoses'.tr(),
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: CaregiverDashboardTheme.tintedForegroundColor(
@@ -120,6 +125,10 @@ class _UpcomingReminderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final accent = isSoon
         ? CaregiverDashboardTheme.accentCoral
         : CaregiverDashboardTheme.accentBlue;
@@ -127,12 +136,12 @@ class _UpcomingReminderRow extends StatelessWidget {
     final dayLabel = DateFormat('MMM d').format(time);
     final diff = time.difference(DateTime.now());
     final relative = diff.inMinutes <= 0
-        ? 'Due now'
+        ? 'patient.dueNow'.tr()
         : diff.inMinutes < 60
-            ? 'In ${diff.inMinutes} min'
+            ? 'patient.inMinutes'.tr(namedArgs: {'count': '${diff.inMinutes}'})
             : diff.inHours < 24
-                ? 'In ${diff.inHours} hrs'
-                : 'In ${diff.inDays} days';
+                ? 'patient.inHours'.tr(namedArgs: {'count': '${diff.inHours}'})
+                : 'patient.inDays'.tr(namedArgs: {'count': '${diff.inDays}'});
 
     final brightness = Theme.of(context).brightness;
     final onTint = CaregiverDashboardTheme.tintedForegroundColor(
@@ -222,7 +231,7 @@ class _UpcomingReminderRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: Text(isSoon ? 'Remind now' : 'Details'),
+                child: Text(isSoon ? 'patient.remindNow'.tr() : 'patient.details'.tr()),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/models/document_model.dart';
 import '../../../../core/providers/document_provider.dart';
@@ -15,6 +16,10 @@ class PatientDocumentsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final documentProvider = context.watch<DocumentProvider>();
     final documents = documentProvider.documents;
     final recentDocuments = documents.take(4).toList();
@@ -22,8 +27,8 @@ class PatientDocumentsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.article_outlined,
-      title: 'Your Documents',
-      subtitle: 'Access your health records and important files.',
+      title: 'patient.yourDocuments'.tr(),
+      subtitle: 'patient.documentsSubtitle'.tr(),
       count: '${documents.length}',
       accentColor: CaregiverDashboardTheme.accentYellow,
       routeForViewDetails: '/documents',
@@ -54,7 +59,7 @@ class PatientDocumentsCard extends StatelessWidget {
                   SizedBox(width: 12.w),
                   Expanded(
                 child: Text(
-                  'No documents found.',
+                  'patient.noDocumentsFound'.tr(),
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: CaregiverDashboardTheme.tintedForegroundColor(
@@ -99,6 +104,10 @@ class _DocumentRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final accent = CaregiverDashboardTheme.accentBlue; // Default accent for documents
     final brightness = Theme.of(context).brightness;
     final onTint = CaregiverDashboardTheme.tintedForegroundColor(
@@ -161,7 +170,7 @@ class _DocumentRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: const Text('View'),
+                child: Text('patient.view'.tr()),
               ),
             ],
           ),

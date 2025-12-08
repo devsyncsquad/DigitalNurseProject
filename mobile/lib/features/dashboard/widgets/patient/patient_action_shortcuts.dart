@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../dashboard_theme.dart';
 
@@ -11,7 +12,7 @@ class PatientActionShortcuts extends StatelessWidget {
   void _showComingSoon(BuildContext context, String action) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$action coming soon'),
+        content: Text('patient.comingSoon'.tr(namedArgs: {'action': action})),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -19,41 +20,45 @@ class PatientActionShortcuts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final actions = [
       _ActionShortcut(
         icon: Icons.medication,
-        label: 'Log Medication',
-        caption: 'Record when you take your doses.',
+        label: 'patient.logMedication'.tr(),
+        caption: 'patient.logMedicationCaption'.tr(),
         accent: CaregiverDashboardTheme.primaryTeal,
         onTap: () => context.push('/medications'),
       ),
       _ActionShortcut(
         icon: Icons.favorite,
-        label: 'Record Vital',
-        caption: 'Log your health measurements.',
+        label: 'patient.recordVital'.tr(),
+        caption: 'patient.recordVitalCaption'.tr(),
         accent: CaregiverDashboardTheme.accentCoral,
         onTap: () => context.push('/health'),
       ),
       _ActionShortcut(
         icon: Icons.directions_run,
-        label: 'Lifestyle',
-        caption: 'Track diet and exercise.',
+        label: 'patient.lifestyle'.tr(),
+        caption: 'patient.lifestyleCaption'.tr(),
         accent: CaregiverDashboardTheme.accentBlue,
         onTap: () => context.push('/lifestyle'),
       ),
       _ActionShortcut(
         icon: Icons.calendar_month,
-        label: 'View Schedule',
-        caption: 'See upcoming medicines.',
+        label: 'patient.viewSchedule'.tr(),
+        caption: 'patient.viewScheduleCaption'.tr(),
         accent: const Color.fromARGB(255, 0, 162, 255),
         onTap: () => context.push('/medications'),
       ),
       _ActionShortcut(
         icon: Icons.people,
-        label: 'Contact Caregiver',
-        caption: 'Reach out to your caregivers.',
+        label: 'patient.contactCaregiver'.tr(),
+        caption: 'patient.contactCaregiverCaption'.tr(),
         accent: const Color.fromARGB(255, 243, 173, 21),
-        onTap: () => _showComingSoon(context, 'Contacting caregiver'),
+        onTap: () => _showComingSoon(context, 'patient.contactCaregiver'.tr()),
       ),
     ];
 
@@ -91,14 +96,14 @@ class PatientActionShortcuts extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Quick Actions',
+                          'patient.quickActions'.tr(),
                           style: CaregiverDashboardTheme.sectionTitleStyle(
                             context,
                           ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          'Log medications, record vitals, or review your schedule without leaving the dashboard.',
+                          'patient.quickActionsDescription'.tr(),
                           style: CaregiverDashboardTheme.sectionSubtitleStyle(
                             context,
                           ),

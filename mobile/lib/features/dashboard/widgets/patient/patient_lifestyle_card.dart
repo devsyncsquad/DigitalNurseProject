@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/extensions/activity_type_extensions.dart';
 import '../../../../core/extensions/meal_type_extensions.dart';
@@ -17,6 +18,10 @@ class PatientLifestyleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final lifestyleProvider = context.watch<LifestyleProvider>();
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -38,8 +43,8 @@ class PatientLifestyleCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.directions_run_outlined,
-      title: 'Your Lifestyle',
-      subtitle: 'Track your diet and exercise activities.',
+      title: 'patient.yourLifestyle'.tr(),
+      subtitle: 'patient.lifestyleSubtitle'.tr(),
       count: '$todayTotalLogs',
       accentColor: CaregiverDashboardTheme.accentBlue,
       routeForViewDetails: '/lifestyle',
@@ -70,7 +75,7 @@ class PatientLifestyleCard extends StatelessWidget {
                   SizedBox(width: 12.w),
                   Expanded(
                 child: Text(
-                  'No diet or exercise logs for today.',
+                  'patient.noLifestyleLogs'.tr(),
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: CaregiverDashboardTheme.tintedForegroundColor(
@@ -88,7 +93,7 @@ class PatientLifestyleCard extends StatelessWidget {
               children: [
                 if (todayDietLogs.isNotEmpty) ...[
                   Text(
-                    'Meals',
+                    'patient.meals'.tr(),
                     style: context.theme.typography.sm.copyWith(
                       fontWeight: FontWeight.w700,
                       color: CaregiverDashboardTheme.deepTeal,
@@ -112,7 +117,7 @@ class PatientLifestyleCard extends StatelessWidget {
                 ],
                 if (todayExerciseLogs.isNotEmpty) ...[
                   Text(
-                    'Exercise',
+                    'patient.exercise'.tr(),
                     style: context.theme.typography.sm.copyWith(
                       fontWeight: FontWeight.w700,
                       color: CaregiverDashboardTheme.deepTeal,

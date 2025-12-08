@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/models/vital_measurement_model.dart';
 import '../../../../core/providers/health_provider.dart';
@@ -17,6 +18,10 @@ class PatientVitalsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final healthProvider = context.watch<HealthProvider>();
     final recentVitals = healthProvider.vitals.take(5).toList();
     final abnormalVitals = healthProvider.vitals
@@ -27,10 +32,10 @@ class PatientVitalsCard extends StatelessWidget {
 
     return ExpandablePatientCard(
       icon: Icons.monitor_heart_outlined,
-      title: 'Your Vitals',
+      title: 'patient.yourVitals'.tr(),
       subtitle: abnormalVitals.isNotEmpty
-          ? 'Track readings that fall outside normal ranges.'
-          : 'Your latest health measurements.',
+          ? 'patient.vitalsSubtitleAbnormal'.tr()
+          : 'patient.vitalsSubtitleNormal'.tr(),
       count: '${recentVitals.length}',
       accentColor: CaregiverDashboardTheme.accentCoral,
       routeForViewDetails: '/health',
@@ -61,7 +66,7 @@ class PatientVitalsCard extends StatelessWidget {
                   SizedBox(width: 12.w),
                   Expanded(
                 child: Text(
-                  'No vitals recorded yet.',
+                  'patient.noVitalsRecorded'.tr(),
                   style: context.theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: CaregiverDashboardTheme.tintedForegroundColor(
@@ -120,6 +125,10 @@ class _VitalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final brightness = Theme.of(context).brightness;
     final onTint = CaregiverDashboardTheme.tintedForegroundColor(
       accent,
@@ -180,7 +189,7 @@ class _VitalRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: const Text('Review'),
+                child: Text('patient.review'.tr()),
               ),
             ],
           ),

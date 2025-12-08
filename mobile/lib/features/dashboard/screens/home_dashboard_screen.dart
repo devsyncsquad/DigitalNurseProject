@@ -166,6 +166,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final authProvider = context.watch<AuthProvider>();
     final careContextProvider = context.watch<CareContextProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
@@ -174,7 +178,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     final unreadNotifications = notificationProvider.unreadCount;
     final isCaregiver = user?.role == UserRole.caregiver;
     final headerTitle = isCaregiver
-        ? 'Caregiver Dashboard'
+        ? 'patient.caregiverDashboard'.tr()
         : 'dashboard.hello'.tr(
             namedArgs: {'name': user?.name ?? 'dashboard.user'.tr()},
           );

@@ -19,6 +19,10 @@ class AdherenceStreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final accent = adherencePercentage >= 90
         ? CaregiverDashboardTheme.primaryTeal
         : adherencePercentage >= 75
@@ -88,7 +92,7 @@ class AdherenceStreakCard extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  '${adherencePercentage.toInt()}% adherence rate',
+                  'patient.adherenceRate'.tr(namedArgs: {'percent': '${adherencePercentage.toInt()}'}),
                   style: CaregiverDashboardTheme.sectionSubtitleStyle(context)
                       .copyWith(color: onTintMuted),
                 ),

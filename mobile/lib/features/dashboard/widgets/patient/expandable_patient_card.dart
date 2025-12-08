@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../dashboard_theme.dart';
 
@@ -77,6 +78,10 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    // ignore: unused_local_variable
+    final _ = context.locale;
+    
     final chipForeground =
         CaregiverDashboardTheme.chipForegroundColor(widget.accentColor);
     return Container(
@@ -238,7 +243,7 @@ class _ExpandablePatientCardState extends State<ExpandablePatientCard>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  child: const Text('View all'),
+                  child: Text('patient.viewAll'.tr()),
                 ),
               ),
             ),
