@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:forui/forui.dart';
+import '../core/theme/app_theme.dart';
 
 // ignore_for_file: unnecessary_ignore
 // ignore_for_file: avoid_redundant_argument_values
@@ -75,7 +76,7 @@ FBottomNavigationBarItemStyle _bottomNavigationBarItemStyle({
   required FStyle style,
 }) => FBottomNavigationBarItemStyle(
   iconStyle: FWidgetStateMap({
-    WidgetState.selected: IconThemeData(color: colors.primary, size: 24),
+    WidgetState.selected: IconThemeData(color: AppTheme.appleGreen, size: 26),
     WidgetState.any: IconThemeData(
       color: colors.mutedForeground,
       size: 24,
@@ -83,7 +84,7 @@ FBottomNavigationBarItemStyle _bottomNavigationBarItemStyle({
   }),
   textStyle: FWidgetStateMap({
     WidgetState.selected: typography.base.copyWith(
-      color: colors.primary,
+      color: AppTheme.appleGreen,
       fontSize: 10,
     ),
     WidgetState.any: typography.base.copyWith(
