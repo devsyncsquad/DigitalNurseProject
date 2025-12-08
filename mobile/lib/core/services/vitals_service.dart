@@ -258,18 +258,38 @@ Future<List<VitalMeasurementModel>> getVitalsByType(
       if (response.statusCode == 200) {
         final data = response.data;
         _log('✅ Trends calculated successfully');
-        return {
-          'average': (data['average'] ?? 0.0).toDouble(),
-          'count': (data['count'] ?? 0) as int,
-          'hasAbnormal': (data['hasAbnormal'] ?? false) as bool,
-          'measurements': (data['measurements'] ?? [])
-              .map((json) => VitalMapper.fromApiResponse(
-                    json is Map<String, dynamic>
-                        ? json
-                        : Map<String, dynamic>.from(json),
-                  ))
-              .toList(),
-        };
+        
+        // Handle empty array response - calculate locally as fallback
+        if (data is List && data.isEmpty) {
+          _log('⚠️ Empty trends data from API, calculating locally as fallback');
+          return await _calculateTrendsLocally(userId, type, days: days, elderUserId: elderUserId);
+        }
+        
+        // Handle Map response
+        if (data is Map<String, dynamic>) {
+          final count = (data['count'] ?? 0) as int;
+          // If API returns empty count, try local calculation as fallback
+          if (count == 0) {
+            _log('⚠️ API returned count=0, calculating locally as fallback');
+            return await _calculateTrendsLocally(userId, type, days: days, elderUserId: elderUserId);
+          }
+          return {
+            'average': (data['average'] ?? 0.0).toDouble(),
+            'count': count,
+            'hasAbnormal': (data['hasAbnormal'] ?? false) as bool,
+            'measurements': (data['measurements'] ?? [])
+                .map((json) => VitalMapper.fromApiResponse(
+                      json is Map<String, dynamic>
+                          ? json
+                          : Map<String, dynamic>.from(json),
+                    ))
+                .toList(),
+          };
+        }
+        
+        // Fallback for unexpected data types - calculate locally
+        _log('⚠️ Unexpected data type: ${data.runtimeType}, calculating locally as fallback');
+        return await _calculateTrendsLocally(userId, type, days: days, elderUserId: elderUserId);
       } else {
         _log('❌ Failed to calculate trends: ${response.statusMessage}');
         throw Exception(
@@ -277,8 +297,92 @@ Future<List<VitalMeasurementModel>> getVitalsByType(
       }
     } 
     catch (e) {
-      _log('❌ Error calculating trends: $e');
-      throw Exception(e.toString());
+      _log('❌ Error calculating trends from API: $e');
+      _log('🔄 Falling back to local calculation');
+      // Fallback to local calculation if API fails
+      try {
+        return await _calculateTrendsLocally(userId, type, days: days, elderUserId: elderUserId);
+      } catch (localError) {
+        _log('❌ Error in local calculation: $localError');
+        throw Exception('Failed to calculate trends: ${e.toString()}');
+      }
+    }
+  }
+
+  // Calculate trends locally from vitals data
+  Future<Map<String, dynamic>> _calculateTrendsLocally(
+    String userId,
+    VitalType type, {
+    int days = 7,
+    String? elderUserId,
+  }) async {
+    _log('📊 Calculating trends locally for ${type.toString()} (last $days days)');
+    try {
+      // Get all vitals for the user
+      final allVitals = await getVitals(userId, elderUserId: elderUserId);
+      
+      // Filter by type and date range
+      final cutoffDate = DateTime.now().subtract(Duration(days: days));
+      final filteredVitals = allVitals.where((vital) {
+        return vital.type == type && vital.timestamp.isAfter(cutoffDate);
+      }).toList();
+
+      if (filteredVitals.isEmpty) {
+        _log('⚠️ No vitals found for local calculation');
+        return {
+          'average': 0.0,
+          'count': 0,
+          'hasAbnormal': false,
+          'measurements': <VitalMeasurementModel>[],
+        };
+      }
+
+      // Calculate average (handle blood pressure specially)
+      double average = 0.0;
+      if (type == VitalType.bloodPressure) {
+        // For blood pressure, calculate average of systolic values
+        final systolicValues = filteredVitals
+            .map((v) {
+              final parts = v.value.split('/');
+              if (parts.length == 2) {
+                return int.tryParse(parts[0]) ?? 0;
+              }
+              return 0;
+            })
+            .where((v) => v > 0)
+            .toList();
+        if (systolicValues.isNotEmpty) {
+          average = systolicValues.reduce((a, b) => a + b) / systolicValues.length;
+        }
+      } else {
+        // For other vitals, parse numeric value
+        final numericValues = filteredVitals
+            .map((v) => double.tryParse(v.value) ?? 0.0)
+            .where((v) => v > 0)
+            .toList();
+        if (numericValues.isNotEmpty) {
+          average = numericValues.reduce((a, b) => a + b) / numericValues.length;
+        }
+      }
+
+      // Check for abnormal readings
+      final hasAbnormal = filteredVitals.any((v) => v.isAbnormal());
+
+      _log('✅ Local trends calculated: count=${filteredVitals.length}, average=$average');
+      return {
+        'average': average,
+        'count': filteredVitals.length,
+        'hasAbnormal': hasAbnormal,
+        'measurements': filteredVitals,
+      };
+    } catch (e) {
+      _log('❌ Error in local trends calculation: $e');
+      return {
+        'average': 0.0,
+        'count': 0,
+        'hasAbnormal': false,
+        'measurements': <VitalMeasurementModel>[],
+      };
     }
   }
 
