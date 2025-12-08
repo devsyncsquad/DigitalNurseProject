@@ -4,17 +4,37 @@ import '../models/user_model.dart';
 import 'api_service.dart';
 import 'token_service.dart';
 import 'secure_storage_service.dart';
+import 'config_service.dart';
+// Import AppConfig if you want to clear cached API key on logout:
+// import '../config/app_config.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
   final TokenService _tokenService = TokenService();
   final SecureStorageService _secureStorage = SecureStorageService();
+  final ConfigService _configService = ConfigService();
   static const String _userKey = 'current_user';
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _hasSeenWelcomeKey = 'has_seen_welcome';
 
   void _log(String message) {
     print('🔍 [AUTH] $message');
+  }
+
+  /// Fetch app configuration in background after login
+  /// This fetches the Gemini API key from the database and caches it locally
+  void _fetchConfigInBackground() {
+    // Run in background - don't await to avoid blocking login flow
+    _configService.fetchAndCacheGeminiApiKey().then((apiKey) {
+      if (apiKey != null) {
+        _log('✅ [AUTH] Gemini API key fetched from database');
+      } else {
+        _log('⚠️ [AUTH] Using fallback Gemini API key (database fetch failed or empty)');
+      }
+    }).catchError((e) {
+      _log('⚠️ [AUTH] Failed to fetch Gemini API key from database: $e');
+      // App will continue using fallback API key
+    });
   }
 
   // Login with phone and password
@@ -81,6 +101,11 @@ class AuthService {
         // Mark welcome screen as seen after successful login
         await setWelcomeScreenSeen();
         _log('💾 [AUTH] User saved: ${user.phone ?? user.email} (${user.id})');
+
+        // Fetch and cache Gemini API key from database (non-blocking)
+        // This runs in background and doesn't affect login flow
+        _fetchConfigInBackground();
+
         return user;
       } else {
         _log('❌ [AUTH] Login failed: ${response.statusMessage}');
@@ -429,6 +454,9 @@ class AuthService {
     await _tokenService.clearTokens();
     // Optionally clear biometric credentials (user might want to keep them)
     // await _secureStorage.clearCredentials();
+    // Note: We keep the cached Gemini API key for offline use
+    // If you want to clear it on logout, uncomment:
+    // await AppConfig.clearDatabaseCachedGeminiApiKey();
     _log('✅ [AUTH] Logout complete - tokens and user data cleared');
   }
 
