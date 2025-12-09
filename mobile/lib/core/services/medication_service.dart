@@ -9,7 +9,7 @@ class MedicationService {
   final FCMService _fcmService = FCMService();
 
   void _log(String message) {
-    print('🔍 [MEDICATION] $message');
+    // print('🔍 [MEDICATION] $message');
   }
 
   // Helper method to check if error is unauthorized (user logging out)
