@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/providers/care_context_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/utils/avatar_util.dart';
 import '../dashboard_theme.dart';
 import 'patient_cards_grid.dart';
 // import 'caregiver_action_shortcuts.dart';
@@ -25,7 +26,8 @@ class CaregiverDashboardView extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final currentUser = authProvider.currentUser;
     final caregiverName = currentUser?.name ?? 'Caregiver';
-    final caregiverAvatarUrl = currentUser?.avatarUrl;
+    final caregiverId = currentUser?.id ?? caregiverName;
+    final patientCount = careContext.careRecipients.length;
     final cardSpacing = 18.h;
 
     return SafeArea(
@@ -43,7 +45,8 @@ class CaregiverDashboardView extends StatelessWidget {
             // Welcome Message
             _WelcomeMessage(
               caregiverName: caregiverName,
-              avatarUrl: caregiverAvatarUrl,
+              caregiverId: caregiverId,
+              patientCount: patientCount,
             ),
             SizedBox(height: 24.h),
             PatientCardsGrid(
@@ -63,11 +66,13 @@ class CaregiverDashboardView extends StatelessWidget {
 
 class _WelcomeMessage extends StatelessWidget {
   final String caregiverName;
-  final String? avatarUrl;
+  final String caregiverId;
+  final int patientCount;
 
   const _WelcomeMessage({
     required this.caregiverName,
-    this.avatarUrl,
+    required this.caregiverId,
+    required this.patientCount,
   });
 
   @override
@@ -87,27 +92,22 @@ class _WelcomeMessage extends StatelessWidget {
               context,
               CaregiverDashboardTheme.primaryTeal,
             ),
-            child: avatarUrl != null && 
-                   avatarUrl!.isNotEmpty &&
-                   (avatarUrl!.startsWith('http://') || 
-                    avatarUrl!.startsWith('https://'))
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: avatarUrl!.trim(),
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                      errorWidget: (context, url, error) {
-                        debugPrint('Avatar image error: $error for URL: $url');
-                        return _buildPlaceholderIcon(context);
-                      },
-                    ),
-                  )
-                : _buildPlaceholderIcon(context),
+            child: ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: AvatarUtil.getRandomAvatarUrl(caregiverId),
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+                errorWidget: (context, url, error) {
+                  debugPrint('Avatar image error: $error for URL: $url');
+                  return _buildPlaceholderIcon(context);
+                },
+              ),
+            ),
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -122,6 +122,13 @@ class _WelcomeMessage extends StatelessWidget {
                 Text(
                   caregiverName,
                   style: CaregiverDashboardTheme.sectionTitleStyle(context),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '$patientCount ${patientCount == 1 ? 'patient' : 'patients'}',
+                  style: CaregiverDashboardTheme.sectionSubtitleStyle(context).copyWith(
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

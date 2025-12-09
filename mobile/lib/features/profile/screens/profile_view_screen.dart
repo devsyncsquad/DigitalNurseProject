@@ -10,6 +10,7 @@ import '../../../core/models/user_model.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/utils/avatar_util.dart';
 
 class ProfileViewScreen extends StatelessWidget {
   const ProfileViewScreen({super.key});
@@ -67,41 +68,28 @@ class ProfileViewScreen extends StatelessWidget {
                       width: 96,
                       height: 96,
                       color: onPrimary.withValues(alpha: 0.15),
-                      child: user.avatarUrl != null && 
-                             user.avatarUrl!.isNotEmpty &&
-                             (user.avatarUrl!.startsWith('http://') || 
-                              user.avatarUrl!.startsWith('https://'))
-                          ? CachedNetworkImage(
-                              imageUrl: user.avatarUrl!.trim(),
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Center(
-                                child: CircularProgressIndicator(
-                                  color: onPrimary,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                              errorWidget: (context, url, error) {
-                                debugPrint('Avatar image error: $error for URL: $url');
-                                return Center(
-                                  child: Text(
-                                    user.name[0].toUpperCase(),
-                                    style: textTheme.headlineMedium?.copyWith(
-                                          color: onPrimary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                      child: CachedNetworkImage(
+                        imageUrl: AvatarUtil.getRandomAvatarUrl(user.id.isNotEmpty ? user.id : user.name),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            color: onPrimary,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) {
+                          debugPrint('Avatar image error: $error for URL: $url');
+                          return Center(
+                            child: Text(
+                              user.name[0].toUpperCase(),
+                              style: textTheme.headlineMedium?.copyWith(
+                                    color: onPrimary,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                );
-                              },
-                            )
-                          : Center(
-                              child: Text(
-                                user.name[0].toUpperCase(),
-                                style: textTheme.headlineMedium?.copyWith(
-                                      color: onPrimary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
                             ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   SizedBox(height: 16.h),
