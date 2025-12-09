@@ -587,6 +587,208 @@ export class MedicationsService {
   }
 
   /**
+   * Get period-based adherence for all medications
+   */
+  async getPeriodAdherence(context: ActorContext, days: number = 7) {
+    const medications = await this.prisma.medication.findMany({
+      where: {
+        elderUserId: context.elderUserId,
+      },
+      include: {
+        schedules: {
+          select: {
+            medScheduleId: true,
+          },
+        },
+      },
+    });
+
+    if (medications.length === 0) {
+      return {
+        period: days === 30 ? 'monthly' : 'weekly',
+        startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+        dailyAdherence: [],
+        averageAdherence: 100,
+      };
+    }
+
+    // Get all schedule IDs
+    const allScheduleIds = medications.flatMap((m) =>
+      m.schedules.map((s) => s.medScheduleId),
+    );
+
+    if (allScheduleIds.length === 0) {
+      return {
+        period: days === 30 ? 'monthly' : 'weekly',
+        startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+        dailyAdherence: [],
+        averageAdherence: 100,
+      };
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    // Get all intakes for the period
+    const intakes = await this.prisma.medIntake.findMany({
+      where: {
+        medScheduleId: {
+          in: allScheduleIds,
+        },
+        dueAt: {
+          gte: cutoffDate,
+        },
+      },
+    });
+
+    // Group by date and calculate daily adherence
+    const dailyAdherence: Array<{ date: string; percentage: number }> = [];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    for (let i = days - 1; i >= 0; i--) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+
+      const dayIntakes = intakes.filter((intake: any) => {
+        const intakeDate = new Date(intake.dueAt);
+        return (
+          intakeDate.getFullYear() === checkDate.getFullYear() &&
+          intakeDate.getMonth() === checkDate.getMonth() &&
+          intakeDate.getDate() === checkDate.getDate()
+        );
+      });
+
+      let percentage = 100;
+      if (dayIntakes.length > 0) {
+        const taken = dayIntakes.filter((intake: any) => intake.status === 'taken').length;
+        percentage = Math.round((taken / dayIntakes.length) * 100 * 100) / 100;
+      }
+
+      dailyAdherence.push({
+        date: checkDate.toISOString().split('T')[0],
+        percentage,
+      });
+    }
+
+    // Calculate average
+    const totalPercentage = dailyAdherence.reduce((sum, day) => sum + day.percentage, 0);
+    const averageAdherence = dailyAdherence.length > 0
+      ? Math.round((totalPercentage / dailyAdherence.length) * 100) / 100
+      : 100;
+
+    return {
+      period: days === 30 ? 'monthly' : 'weekly',
+      startDate: dailyAdherence[0]?.date || new Date().toISOString().split('T')[0],
+      endDate: dailyAdherence[dailyAdherence.length - 1]?.date || new Date().toISOString().split('T')[0],
+      dailyAdherence,
+      averageAdherence,
+    };
+  }
+
+  /**
+   * Get medication status for a specific date
+   */
+  async getMedicationStatus(context: ActorContext, targetDate: Date) {
+    const medications = await this.prisma.medication.findMany({
+      where: {
+        elderUserId: context.elderUserId,
+      },
+      include: {
+        schedules: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+    });
+
+    const dateStart = new Date(targetDate);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(targetDate);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    let takenCount = 0;
+    let missedCount = 0;
+    let upcomingCount = 0;
+    const medicationStatuses: any[] = [];
+
+    const now = new Date();
+
+    for (const medication of medications) {
+      if (medication.schedules.length === 0) continue;
+
+      const schedule = medication.schedules[0];
+      const times = (schedule.timesLocal as string[]) || [];
+
+      if (!Array.isArray(times) || times.length === 0) continue;
+
+      // Check if medication is active on this date
+      if (schedule.startDate > dateEnd) continue;
+      if (schedule.endDate && schedule.endDate < dateStart) continue;
+
+      const medicationStatus: any = {
+        medicineId: medication.medicationId.toString(),
+        name: medication.medicationName,
+        scheduledTimes: [],
+        status: 'upcoming',
+      };
+
+      for (const timeStr of times) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const scheduledTime = new Date(targetDate);
+        scheduledTime.setHours(hours, minutes, 0, 0);
+
+        // Get intake for this scheduled time
+        const intake = await this.prisma.medIntake.findFirst({
+          where: {
+            medScheduleId: schedule.medScheduleId,
+            dueAt: scheduledTime,
+          },
+        });
+
+        let status = 'upcoming';
+        if (scheduledTime < now) {
+          if (intake) {
+            status = intake.status === 'taken' ? 'taken' : 'missed';
+            if (status === 'taken') takenCount++;
+            else missedCount++;
+          } else {
+            status = 'missed';
+            missedCount++;
+          }
+        } else {
+          upcomingCount++;
+        }
+
+        medicationStatus.scheduledTimes.push({
+          time: timeStr,
+          status,
+        });
+      }
+
+      // Determine overall medication status (worst case)
+      const allStatuses = medicationStatus.scheduledTimes.map((t: any) => t.status);
+      if (allStatuses.includes('missed')) medicationStatus.status = 'missed';
+      else if (allStatuses.includes('taken')) medicationStatus.status = 'taken';
+      else medicationStatus.status = 'upcoming';
+
+      medicationStatuses.push(medicationStatus);
+    }
+
+    return {
+      date: targetDate.toISOString().split('T')[0],
+      taken: takenCount,
+      missed: missedCount,
+      upcoming: upcomingCount,
+      medications: medicationStatuses,
+    };
+  }
+
+  /**
    * Get upcoming reminders
    */
   async getUpcomingReminders(context: ActorContext) {

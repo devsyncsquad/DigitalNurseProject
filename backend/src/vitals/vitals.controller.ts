@@ -75,17 +75,22 @@ export class VitalsController {
   }
 
   @Get('trends')
-  @ApiOperation({ summary: 'Get 7-day trends for vital measurements' })
+  @ApiOperation({ summary: 'Get trends for vital measurements' })
   @ApiQuery({ name: 'kindCode', required: false, type: String })
+  @ApiQuery({ name: 'period', required: false, type: String, description: 'weekly or monthly' })
+  @ApiQuery({ name: 'days', required: false, type: String })
   @ApiQuery({ name: 'elderUserId', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Trend data' })
   async getTrends(
     @CurrentUser() user: any,
     @Query('kindCode') kindCode?: string,
+    @Query('period') period?: string,
+    @Query('days') days?: string,
     @Query('elderUserId') elderUserId?: string,
   ) {
     const context = await this.resolveContext(user, elderUserId);
-    return this.vitalsService.getTrends(context, kindCode);
+    const daysNum = days ? parseInt(days, 10) : period === 'monthly' ? 30 : 7;
+    return this.vitalsService.getTrends(context, kindCode, daysNum);
   }
 
   @Get('abnormal')

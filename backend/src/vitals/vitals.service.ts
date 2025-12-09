@@ -252,33 +252,90 @@ export class VitalsService {
   }
 
   /**
-   * Get 7-day trends (use database view)
+   * Get trends for vital measurements
    */
-  async getTrends(context: ActorContext, kindCode?: string) {
+  async getTrends(context: ActorContext, kindCode?: string, days: number = 7) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const where: any = {
+      elderUserId: context.elderUserId,
+      recordedAt: {
+        gte: cutoffDate,
+      },
+    };
+
     if (kindCode) {
-      const results = await this.prisma.$queryRaw`
-        SELECT * FROM "v_vitals_trend_7d"
-        WHERE "elderUserId" = ${context.elderUserId}::bigint
-        AND "kindCode" = ${kindCode}
-      `;
-      return (results as any[]).map((r) => ({
-        kindCode: r.kindCode,
-        average: parseFloat(r.average?.toString() || '0'),
-        count: parseInt(r.count?.toString() || '0', 10),
-        measurements: r.measurements || [],
-      }));
-    } else {
-      const results = await this.prisma.$queryRaw`
-        SELECT * FROM "v_vitals_trend_7d"
-        WHERE "elderUserId" = ${context.elderUserId}::bigint
-      `;
-      return (results as any[]).map((r) => ({
-        kindCode: r.kindCode,
-        average: parseFloat(r.average?.toString() || '0'),
-        count: parseInt(r.count?.toString() || '0', 10),
-        measurements: r.measurements || [],
-      }));
+      where.kindCode = kindCode;
     }
+
+    const measurements = await this.prisma.vitalMeasurement.findMany({
+      where,
+      orderBy: {
+        recordedAt: 'asc',
+      },
+    });
+
+    if (measurements.length === 0) {
+      return kindCode
+        ? [
+            {
+              kindCode,
+              average: 0,
+              count: 0,
+              hasAbnormal: false,
+              measurements: [],
+            },
+          ]
+        : [];
+    }
+
+    // Group by kindCode
+    const grouped = new Map<string, any[]>();
+    for (const m of measurements) {
+      if (!grouped.has(m.kindCode)) {
+        grouped.set(m.kindCode, []);
+      }
+      grouped.get(m.kindCode)!.push(m);
+    }
+
+    const results: any[] = [];
+
+    for (const [code, vitals] of grouped.entries()) {
+      // Calculate average (handle different value types)
+      let sum = 0;
+      let count = 0;
+      const hasAbnormal = vitals.some((v) => this.isAbnormal(v));
+
+      for (const vital of vitals) {
+        if (vital.value1 !== null) {
+          sum += parseFloat(vital.value1.toString());
+          count++;
+        } else if (vital.valueText) {
+          // For blood pressure, parse "120/80" format
+          const parts = vital.valueText.split('/');
+          if (parts.length === 2) {
+            const systolic = parseFloat(parts[0]);
+            if (!isNaN(systolic)) {
+              sum += systolic;
+              count++;
+            }
+          }
+        }
+      }
+
+      const average = count > 0 ? sum / count : 0;
+
+      results.push({
+        kindCode: code,
+        average: Math.round(average * 100) / 100,
+        count: vitals.length,
+        hasAbnormal,
+        measurements: vitals.map((v) => this.mapToResponse(v)),
+      });
+    }
+
+    return results;
   }
 
   /**

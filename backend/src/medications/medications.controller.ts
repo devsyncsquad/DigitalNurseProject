@@ -154,5 +154,32 @@ export class MedicationsController {
     const context = await this.resolveContext(user, elderUserId);
     return this.medicationsService.getAdherenceStreak(context, BigInt(id));
   }
+
+  @Get('adherence')
+  @ApiOperation({ summary: 'Get period-based medication adherence for all medications' })
+  @ApiResponse({ status: 200, description: 'Period adherence data' })
+  async getPeriodAdherence(
+    @CurrentUser() user: any,
+    @Query('period') period?: string,
+    @Query('days') days?: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    const daysNum = days ? parseInt(days, 10) : period === 'monthly' ? 30 : 7;
+    return this.medicationsService.getPeriodAdherence(context, daysNum);
+  }
+
+  @Get('status')
+  @ApiOperation({ summary: 'Get medication status for a specific date' })
+  @ApiResponse({ status: 200, description: 'Medication status' })
+  async getMedicationStatus(
+    @CurrentUser() user: any,
+    @Query('date') date?: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    const targetDate = date ? new Date(date) : new Date();
+    return this.medicationsService.getMedicationStatus(context, targetDate);
+  }
 }
 

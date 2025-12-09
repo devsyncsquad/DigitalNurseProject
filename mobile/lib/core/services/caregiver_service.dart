@@ -301,4 +301,60 @@ class CaregiverService {
       return null;
     }
   }
+
+  // Get user details for a patient (including avatarUrl and age)
+  Future<Map<String, dynamic>> getUserDetails(String userId) async {
+    _log('📋 Fetching user details for: $userId');
+    try {
+      final response = await _apiService.get('/users/$userId');
+
+      if (response.statusCode == 200) {
+        _log('✅ Fetched user details successfully');
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : Map<String, dynamic>.from(response.data);
+      } else {
+        _log('❌ Failed to fetch user details: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch user details: ${response.statusMessage}',
+        );
+      }
+    } catch (e) {
+      _log('❌ Error fetching user details: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  // Get patient status summary (vitals, medications, activity)
+  Future<Map<String, dynamic>> getPatientStatusSummary(String elderId) async {
+    _log('📋 Fetching patient status summary for: $elderId');
+    try {
+      final response = await _apiService.get(
+        '/caregivers/assignments/$elderId/status',
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ Fetched patient status summary successfully');
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : Map<String, dynamic>.from(response.data);
+      } else {
+        _log('❌ Failed to fetch patient status: ${response.statusMessage}');
+        // Return empty status if endpoint doesn't exist yet
+        return {
+          'hasAbnormalVitals': false,
+          'hasMissedMedications': false,
+          'lastActivityTime': null,
+        };
+      }
+    } catch (e) {
+      _log('⚠️ Patient status endpoint may not exist, returning default: $e');
+      // Return default status if endpoint doesn't exist
+      return {
+        'hasAbnormalVitals': false,
+        'hasMissedMedications': false,
+        'lastActivityTime': null,
+      };
+    }
+  }
 }

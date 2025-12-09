@@ -10,6 +10,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { MedicationsModule } from './medications/medications.module';
 import { VitalsModule } from './vitals/vitals.module';
 import { CaregiversModule } from './caregivers/caregivers.module';
+import { CaregiverNotesModule } from './caregiver-notes/caregiver-notes.module';
 import { LifestyleModule } from './lifestyle/lifestyle.module';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -31,6 +32,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     MedicationsModule,
     VitalsModule,
     CaregiversModule,
+    CaregiverNotesModule,
     LifestyleModule,
     DocumentsModule,
     NotificationsModule,

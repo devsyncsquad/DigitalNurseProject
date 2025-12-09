@@ -19,6 +19,9 @@ import '../features/health/screens/abnormal_vitals_screen.dart';
 import '../features/caregiver/screens/add_caregiver_screen.dart';
 import '../features/caregiver/screens/caregiver_list_screen.dart';
 import '../features/caregiver/screens/invitation_accept_screen.dart';
+import '../features/caregiver/screens/patient_detail_screen.dart';
+import '../features/caregiver/screens/medication_management_screen.dart';
+import '../features/caregiver/screens/patient_reports_screen.dart';
 import '../features/lifestyle/screens/diet_exercise_log_screen.dart';
 import '../features/lifestyle/screens/add_meal_screen.dart';
 import '../features/lifestyle/screens/add_workout_screen.dart';
@@ -166,6 +169,27 @@ final goRouter = GoRouter(
         return null;
       },
       builder: (context, state) => const CaregiverListScreen(),
+    ),
+    GoRoute(
+      path: '/caregiver/patient/:elderId',
+      builder: (context, state) {
+        final elderId = state.pathParameters['elderId']!;
+        return PatientDetailScreen(elderId: elderId);
+      },
+    ),
+    GoRoute(
+      path: '/caregiver/patient/:elderId/medications',
+      builder: (context, state) {
+        final elderId = state.pathParameters['elderId']!;
+        return MedicationManagementScreen(elderId: elderId);
+      },
+    ),
+    GoRoute(
+      path: '/caregiver/patient/:elderId/reports',
+      builder: (context, state) {
+        final elderId = state.pathParameters['elderId']!;
+        return PatientReportsScreen(elderId: elderId);
+      },
     ),
     GoRoute(
       path: '/caregiver/add',

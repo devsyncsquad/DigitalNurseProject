@@ -43,6 +43,8 @@ model User {
   userInvitationsAsInviter    UserInvitation[]   @relation("InviterUser")
   userInvitationsAsElder      UserInvitation[]   @relation("ElderUserInvitation")
   userInvitationsAsAccepted   UserInvitation[]   @relation("AcceptedUser")
+  caregiverNotesAsElder       CaregiverNote[]    @relation("ElderUserNote")
+  caregiverNotesAsCaregiver   CaregiverNote[]    @relation("CaregiverUserNote")
   medications                 Medication[]
   vitalMeasurements           VitalMeasurement[]
   dietLogs                    DietLog[]
@@ -228,6 +230,24 @@ model UserInvitation {
   @@index([elderUserId])
   @@index([inviteCode])
   @@map("user_invitations")
+}
+
+model CaregiverNote {
+  noteId           BigInt   @id @default(autoincrement()) @map("note_id")
+  elderUserId      BigInt   @map("elder_user_id")
+  caregiverUserId BigInt   @map("caregiver_user_id")
+  noteText         String   @map("note_text")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  elderUser     User @relation("ElderUserNote", fields: [elderUserId], references: [userId], onDelete: Cascade)
+  caregiverUser User @relation("CaregiverUserNote", fields: [caregiverUserId], references: [userId], onDelete: Cascade)
+
+  @@index([elderUserId])
+  @@index([caregiverUserId])
+  @@index([createdAt])
+  @@map("caregiver_notes")
 }
 
 // ============================================
