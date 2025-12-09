@@ -98,39 +98,57 @@ class CareContextProvider with ChangeNotifier {
     MedicationProvider? medicationProvider,
     LifestyleProvider? lifestyleProvider,
   }) async {
+    print('🔍 [CARE_CONTEXT] Enriching recipient: ${recipient.elderId} (${recipient.name})');
+    
     // Check cache first
     if (_enrichedRecipients.containsKey(recipient.elderId)) {
+      print('✅ [CARE_CONTEXT] Using cached enriched data for ${recipient.elderId}');
       return _enrichedRecipients[recipient.elderId]!;
     }
 
     try {
       // Fetch user details
+      print('📡 [CARE_CONTEXT] Fetching user details for ${recipient.elderId}...');
       final userDetails = await _caregiverService.getUserDetails(recipient.elderId);
+      print('📦 [CARE_CONTEXT] User details received: ${userDetails.keys.toList()}');
+      print('   - age: ${userDetails['age']}');
+      print('   - dob: ${userDetails['dob']}');
+      print('   - avatarUrl: ${userDetails['avatarUrl']}');
+      
       final avatarUrl = userDetails['avatarUrl']?.toString();
       final age = userDetails['age']?.toString() ?? 
                   (userDetails['dob'] != null 
                     ? _calculateAge(userDetails['dob'].toString())
                     : null);
+      print('✅ [CARE_CONTEXT] Calculated age: $age, avatarUrl: $avatarUrl');
 
       // Calculate last activity time
       DateTime? lastActivityTime;
       if (healthProvider != null || medicationProvider != null || lifestyleProvider != null) {
+        print('⏰ [CARE_CONTEXT] Calculating last activity time...');
         lastActivityTime = await _calculateLastActivity(
           recipient.elderId,
           healthProvider: healthProvider,
           medicationProvider: medicationProvider,
           lifestyleProvider: lifestyleProvider,
         );
+        print('   - Last activity: $lastActivityTime');
+      } else {
+        print('⚠️ [CARE_CONTEXT] No providers available for activity calculation');
       }
 
       // Calculate patient status
       PatientStatus? status;
       if (healthProvider != null || medicationProvider != null) {
+        print('🏥 [CARE_CONTEXT] Calculating patient status...');
         status = await _calculatePatientStatus(
           recipient.elderId,
           healthProvider: healthProvider,
           medicationProvider: medicationProvider,
         );
+        print('   - Status: $status');
+      } else {
+        print('⚠️ [CARE_CONTEXT] No providers available for status calculation');
       }
 
       final enriched = recipient.copyWith(
@@ -140,9 +158,17 @@ class CareContextProvider with ChangeNotifier {
         status: status,
       );
 
+      print('✨ [CARE_CONTEXT] Enrichment complete for ${recipient.name}:');
+      print('   - age: ${enriched.age}');
+      print('   - avatarUrl: ${enriched.avatarUrl}');
+      print('   - lastActivityTime: ${enriched.lastActivityTime}');
+      print('   - status: ${enriched.status}');
+
       _enrichedRecipients[recipient.elderId] = enriched;
       return enriched;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [CARE_CONTEXT] Error enriching recipient ${recipient.elderId}: $e');
+      print('   Stack trace: $stackTrace');
       // Return original if enrichment fails
       return recipient;
     }

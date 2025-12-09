@@ -60,6 +60,35 @@ export class UsersService {
     };
   }
 
+  async getUserById(userId: bigint) {
+    const user = await this.prisma.user.findUnique({
+      where: { userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Calculate age from dob
+    const age = user.dob
+      ? Math.floor((new Date().getTime() - new Date(user.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : null;
+
+    return {
+      id: user.userId.toString(),
+      email: user.email || null,
+      name: user.full_name,
+      phone: user.phone || null,
+      dob: user.dob ? user.dob.toISOString().split('T')[0] : null,
+      age: age?.toString() || null,
+      avatarUrl: user.avatarUrl || null,
+      gender: user.gender || null,
+      address: user.address || null,
+      medicalConditions: user.medicalConditions || null,
+      emergencyContact: user.emergencyContact || null,
+    };
+  }
+
   async updateProfile(userId: bigint, updateProfileDto: UpdateProfileDto) {
     const updateData: any = {};
     if (updateProfileDto.name) updateData.full_name = updateProfileDto.name;

@@ -307,20 +307,26 @@ class CaregiverService {
     _log('📋 Fetching user details for: $userId');
     try {
       final response = await _apiService.get('/users/$userId');
+      _log('📡 API Response status: ${response.statusCode}');
+      _log('📡 API Response data type: ${response.data.runtimeType}');
 
       if (response.statusCode == 200) {
-        _log('✅ Fetched user details successfully');
-        return response.data is Map<String, dynamic>
+        final data = response.data is Map<String, dynamic>
             ? response.data
             : Map<String, dynamic>.from(response.data);
+        _log('✅ Fetched user details successfully');
+        _log('📦 Response data keys: ${data.keys.toList()}');
+        _log('📦 Full response: $data');
+        return data;
       } else {
         _log('❌ Failed to fetch user details: ${response.statusMessage}');
         throw Exception(
           'Failed to fetch user details: ${response.statusMessage}',
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       _log('❌ Error fetching user details: $e');
+      _log('   Stack trace: $stackTrace');
       throw Exception(e.toString());
     }
   }

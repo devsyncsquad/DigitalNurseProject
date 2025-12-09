@@ -1,32 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/models/care_recipient_model.dart';
 import '../dashboard_theme.dart';
 
 class PatientCard extends StatelessWidget {
   final CareRecipientModel patient;
   final VoidCallback? onTap;
-  final VoidCallback? onCall;
-  final VoidCallback? onChat;
+  final int? index; // Optional index for color assignment
 
   const PatientCard({
     super.key,
     required this.patient,
     this.onTap,
-    this.onCall,
-    this.onChat,
+    this.index,
   });
+
+  /// Get a color for the patient card based on index or elderId hash
+  Color _getCardColor() {
+    // Use a hash of elderId to consistently assign colors
+    final hash = patient.elderId.hashCode;
+    final colors = [
+      CaregiverDashboardTheme.primaryTeal,
+      CaregiverDashboardTheme.accentBlue,
+      CaregiverDashboardTheme.accentYellow,
+      CaregiverDashboardTheme.accentCoral,
+      const Color(0xFF9B59B6), // Purple
+      const Color(0xFFE67E22), // Orange
+      const Color(0xFF3498DB), // Blue
+      const Color(0xFF1ABC9C), // Turquoise
+    ];
+    return colors[hash.abs() % colors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isStable = patient.status == PatientStatus.stable;
-    final statusColor = isStable
-        ? CaregiverDashboardTheme.primaryTeal
-        : CaregiverDashboardTheme.accentCoral;
-    final statusText = isStable ? 'Stable' : 'Needs Attention';
-    final statusIcon = isStable ? Icons.check_circle : Icons.warning_amber_rounded;
+    final accentColor = _getCardColor();
+    final brightness = Theme.of(context).brightness;
+    final contentColor = CaregiverDashboardTheme.tintedForegroundColor(
+      accentColor,
+      brightness: brightness,
+    );
+    final mutedContent = CaregiverDashboardTheme.tintedMutedColor(
+      accentColor,
+      brightness: brightness,
+    );
 
     return Material(
       color: Colors.transparent,
@@ -34,148 +52,96 @@ class PatientCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: CaregiverDashboardTheme.cardRadius(),
         child: Container(
-          padding: CaregiverDashboardTheme.cardPadding(),
-          decoration: CaregiverDashboardTheme.glassCard(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+          decoration: CaregiverDashboardTheme.tintedCard(context, accentColor),
+          child: Row(
             children: [
-              // Header with photo and status
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Patient photo
-                  Container(
-                    width: 60.w,
-                    height: 60.w,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: CaregiverDashboardTheme.primaryTeal.withOpacity(0.1),
-                      border: Border.all(
-                        color: CaregiverDashboardTheme.primaryTeal.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: patient.avatarUrl != null && patient.avatarUrl!.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              patient.avatarUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholderAvatar(context),
-                            ),
-                          )
-                        : _buildPlaceholderAvatar(context),
-                  ),
-                  SizedBox(width: 12.w),
-                  // Name and age
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          patient.name,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              // Colored Icon Badge
+              Container(
+                width: 48.w,
+                height: 48.w,
+                decoration: CaregiverDashboardTheme.iconBadge(context, accentColor),
+                child: patient.avatarUrl != null && patient.avatarUrl!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          patient.avatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildPlaceholderIcon(context, accentColor),
                         ),
-                        if (patient.age != null) ...[
-                          SizedBox(height: 4.h),
-                          Text(
-                            '${patient.age} years old',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Status badge
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          statusIcon,
-                          size: 14,
-                          color: statusColor,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          statusText,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: statusColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      )
+                    : _buildPlaceholderIcon(context, accentColor),
               ),
-              SizedBox(height: 16.h),
-              // Last activity
-              if (patient.lastActivityTime != null) ...[
-                Row(
+              SizedBox(width: 16.w),
+              // Patient Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      FIcons.clock,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    SizedBox(width: 6.w),
+                    // Patient ID
                     Text(
-                      _formatLastActivity(patient.lastActivityTime!),
+                      '#PAT${patient.elderId}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: mutedContent,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
                           ),
                     ),
+                    SizedBox(height: 4.h),
+                    // Name
+                    Text(
+                      patient.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: contentColor,
+                            fontSize: 16.sp,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (patient.relationship != null || patient.age != null) ...[
+                      SizedBox(height: 2.h),
+                      // Relationship and Age
+                      Row(
+                        children: [
+                          if (patient.relationship != null) ...[
+                            Text(
+                              patient.relationship!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: mutedContent,
+                                    fontSize: 13.sp,
+                                  ),
+                            ),
+                            if (patient.age != null) ...[
+                              Text(
+                                ' • ',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: mutedContent,
+                                      fontSize: 13.sp,
+                                    ),
+                              ),
+                            ],
+                          ],
+                          if (patient.age != null)
+                            Text(
+                              '${patient.age} Yrs.',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: mutedContent,
+                                    fontSize: 13.sp,
+                                  ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
-                SizedBox(height: 16.h),
-              ],
-              // Quick action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: _ActionButton(
-                      label: 'View Details',
-                      icon: FIcons.eye,
-                      onTap: onTap ?? () {},
-                      color: CaregiverDashboardTheme.primaryTeal,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  if (patient.phone != null) ...[
-                    _ActionButton(
-                      label: 'Call',
-                      icon: FIcons.phone,
-                      onTap: onCall ?? () {},
-                      color: CaregiverDashboardTheme.accentBlue,
-                      isCompact: true,
-                    ),
-                    SizedBox(width: 8.w),
-                  ],
-                  _ActionButton(
-                    label: 'Chat',
-                    icon: FIcons.messageCircle,
-                    onTap: onChat ?? () {},
-                    color: CaregiverDashboardTheme.accentYellow,
-                    isCompact: true,
-                  ),
-                ],
+              ),
+              // Navigation Arrow
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: mutedContent,
               ),
             ],
           ),
@@ -184,124 +150,13 @@ class PatientCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderAvatar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            CaregiverDashboardTheme.primaryTeal,
-            CaregiverDashboardTheme.primaryTeal.withOpacity(0.7),
-          ],
-        ),
-      ),
+  Widget _buildPlaceholderIcon(BuildContext context, Color accentColor) {
+    return Center(
       child: Icon(
         FIcons.user,
         color: Colors.white,
-        size: 30.w,
-      ),
-    );
-  }
-
-  String _formatLastActivity(DateTime lastActivity) {
-    final now = DateTime.now();
-    final difference = now.difference(lastActivity);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return DateFormat('MMM d').format(lastActivity);
-    }
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color color;
-  final bool isCompact;
-
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    required this.color,
-    this.isCompact = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isCompact) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: color.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: color,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: color.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: color,
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
-        ),
+        size: 24.w,
       ),
     );
   }
 }
-

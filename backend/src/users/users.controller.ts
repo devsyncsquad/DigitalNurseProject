@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
@@ -26,6 +26,16 @@ export class UsersController {
   async getProfile(@CurrentUser() user: any) {
     const userId = typeof user.userId === 'bigint' ? user.userId : BigInt(user.userId);
     return this.usersService.getProfile(userId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user details by ID' })
+  @ApiResponse({ status: 200, description: 'User details retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserById(@Param('id') id: string) {
+    const userId = BigInt(id);
+    return this.usersService.getUserById(userId);
   }
 
   @Patch('profile')

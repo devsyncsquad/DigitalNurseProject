@@ -209,7 +209,7 @@ class _PatientCardsGridState extends State<PatientCardsGrid> {
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: crossAxisSpacing,
                 mainAxisSpacing: mainAxisSpacing,
-                childAspectRatio: isWide ? 1.1 : 1.3,
+                childAspectRatio: isWide ? 2.5 : 3.5,
               ),
               itemCount: recipients.length,
               itemBuilder: (context, index) {
@@ -219,24 +219,6 @@ class _PatientCardsGridState extends State<PatientCardsGrid> {
                   onTap: () {
                     widget.onPatientSelected?.call(patient.elderId);
                     context.push('/caregiver/patient/${patient.elderId}');
-                  },
-                  onCall: patient.phone != null
-                      ? () {
-                          // TODO: Implement call functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Calling ${patient.name}...'),
-                            ),
-                          );
-                        }
-                      : null,
-                  onChat: () {
-                    // TODO: Implement chat functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Opening chat with ${patient.name}...'),
-                      ),
-                    );
                   },
                 );
               },
