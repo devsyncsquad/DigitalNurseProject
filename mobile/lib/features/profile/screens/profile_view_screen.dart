@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/models/user_model.dart';
@@ -66,36 +67,41 @@ class ProfileViewScreen extends StatelessWidget {
                       width: 96,
                       height: 96,
                       color: onPrimary.withValues(alpha: 0.15),
-                      child: Image.network(
-                        'https://randomuser.me/api/portraits/${user.name.hashCode % 2 == 0 ? 'men' : 'women'}/${user.name.hashCode % 99}.jpg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Text(
-                              user.name[0].toUpperCase(),
-                              style: textTheme.headlineMedium?.copyWith(
-                                    color: onPrimary,
-                                    fontWeight: FontWeight.bold,
+                      child: user.avatarUrl != null && 
+                             user.avatarUrl!.isNotEmpty &&
+                             (user.avatarUrl!.startsWith('http://') || 
+                              user.avatarUrl!.startsWith('https://'))
+                          ? CachedNetworkImage(
+                              imageUrl: user.avatarUrl!.trim(),
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Center(
+                                child: CircularProgressIndicator(
+                                  color: onPrimary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) {
+                                debugPrint('Avatar image error: $error for URL: $url');
+                                return Center(
+                                  child: Text(
+                                    user.name[0].toUpperCase(),
+                                    style: textTheme.headlineMedium?.copyWith(
+                                          color: onPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
+                                );
+                              },
+                            )
+                          : Center(
+                              child: Text(
+                                user.name[0].toUpperCase(),
+                                style: textTheme.headlineMedium?.copyWith(
+                                      color: onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
                             ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child;
-                          }
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: onPrimary,
-                              strokeWidth: 2,
-                            ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                   SizedBox(height: 16.h),

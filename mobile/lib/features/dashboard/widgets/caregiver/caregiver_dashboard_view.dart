@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/providers/care_context_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
@@ -24,6 +25,7 @@ class CaregiverDashboardView extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final currentUser = authProvider.currentUser;
     final caregiverName = currentUser?.name ?? 'Caregiver';
+    final caregiverAvatarUrl = currentUser?.avatarUrl;
     final cardSpacing = 18.h;
 
     return SafeArea(
@@ -39,7 +41,10 @@ class CaregiverDashboardView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Welcome Message
-            _WelcomeMessage(caregiverName: caregiverName),
+            _WelcomeMessage(
+              caregiverName: caregiverName,
+              avatarUrl: caregiverAvatarUrl,
+            ),
             SizedBox(height: 24.h),
             PatientCardsGrid(
               careContext: careContext,
@@ -58,9 +63,11 @@ class CaregiverDashboardView extends StatelessWidget {
 
 class _WelcomeMessage extends StatelessWidget {
   final String caregiverName;
+  final String? avatarUrl;
 
   const _WelcomeMessage({
     required this.caregiverName,
+    this.avatarUrl,
   });
 
   @override
@@ -80,11 +87,27 @@ class _WelcomeMessage extends StatelessWidget {
               context,
               CaregiverDashboardTheme.primaryTeal,
             ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 24,
-            ),
+            child: avatarUrl != null && 
+                   avatarUrl!.isNotEmpty &&
+                   (avatarUrl!.startsWith('http://') || 
+                    avatarUrl!.startsWith('https://'))
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: avatarUrl!.trim(),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) {
+                        debugPrint('Avatar image error: $error for URL: $url');
+                        return _buildPlaceholderIcon(context);
+                      },
+                    ),
+                  )
+                : _buildPlaceholderIcon(context),
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -104,6 +127,16 @@ class _WelcomeMessage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderIcon(BuildContext context) {
+    return const Center(
+      child: Icon(
+        Icons.person,
+        color: Colors.white,
+        size: 24,
       ),
     );
   }

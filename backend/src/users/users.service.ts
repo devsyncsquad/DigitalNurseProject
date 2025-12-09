@@ -57,6 +57,7 @@ export class UsersService {
       medicalConditions: user.medicalConditions || null,
       emergencyContact: user.emergencyContact || null,
       phone: user.phone || null,
+      avatarUrl: user.avatarUrl || null,
     };
   }
 

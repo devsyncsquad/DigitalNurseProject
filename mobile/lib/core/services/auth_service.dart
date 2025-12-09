@@ -94,6 +94,7 @@ class AuthService {
           medicalConditions: userData['medicalConditions']?.toString(),
           emergencyContact: userData['emergencyContact']?.toString(),
           phone: userData['phone']?.toString() ?? phone,
+          avatarUrl: userData['avatarUrl']?.toString().trim(),
         );
 
         // Save user to shared preferences
@@ -295,6 +296,7 @@ class AuthService {
           medicalConditions: userData['medicalConditions']?.toString(),
           emergencyContact: userData['emergencyContact']?.toString(),
           phone: userData['phone']?.toString(),
+          avatarUrl: userData['avatarUrl']?.toString().trim(),
         );
 
         await _saveUser(user);
@@ -372,6 +374,7 @@ class AuthService {
           medicalConditions: userData['medicalConditions']?.toString(),
           emergencyContact: userData['emergencyContact']?.toString(),
           phone: userData['phone']?.toString(),
+          avatarUrl: userData['avatarUrl']?.toString().trim(),
         );
 
         await _saveUser(updatedUser);

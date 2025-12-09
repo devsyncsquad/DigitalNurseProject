@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/models/care_recipient_model.dart';
 import '../dashboard_theme.dart';
 
@@ -63,11 +64,19 @@ class PatientCard extends StatelessWidget {
                 decoration: CaregiverDashboardTheme.iconBadge(context, accentColor),
                 child: patient.avatarUrl != null && patient.avatarUrl!.isNotEmpty
                     ? ClipOval(
-                        child: Image.network(
-                          patient.avatarUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: patient.avatarUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildPlaceholderIcon(context, accentColor),
+                          placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) {
+                            debugPrint('Patient avatar image error: $error for URL: $url');
+                            return _buildPlaceholderIcon(context, accentColor);
+                          },
                         ),
                       )
                     : _buildPlaceholderIcon(context, accentColor),

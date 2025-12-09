@@ -237,6 +237,13 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ],
             ),
           ),
+          // Profile button for caregivers (since bottom navigation is hidden)
+          if (isCaregiver)
+            IconButton(
+              icon: const Icon(FIcons.user),
+              color: Colors.white,
+              onPressed: () => context.push('/profile'),
+            ),
           const SizedBox(width: 4),
         ],
       ),
