@@ -7,11 +7,14 @@ class AppConfig {
   static const String _geminiApiKeyFromDbKey = 'gemini_api_key_from_db';
   
   // Default URLs for different environments
-  static const String _defaultLocalhost = 'http://100.42.177.77:3000/api';
+ // static const String _defaultLocalhost = 'http://localhost:3000/api';
+  //static const String _defaultAndroidEmulator = 'http://localhost:3000/api';
+    static const String _defaultLocalhost = 'http://100.42.177.77:3000/api';
   static const String _defaultAndroidEmulator = 'http://100.42.177.77:3000/api';
   
   // Default Gemini API key (fallback if database fetch fails)
-  static const String _defaultGeminiApiKey = 'AIzaSyCzb0eqtLtj5KwwA33kE7jsc49hrh2yqH4';
+  // NOTE: This should be empty in production. API keys should come from the database.
+  static const String _defaultGeminiApiKey = '';
   
   // Convert localhost URLs to Android emulator URL (10.0.2.2)
   // This is needed because Android emulators can't access host machine's localhost directly
@@ -100,39 +103,34 @@ class AppConfig {
   // 1. Database (cached in SharedPreferences after login)
   // 2. Environment variable
   // 3. User-set preference
-  // 4. Hardcoded default (fallback)
+  // 4. Hardcoded default (fallback - should be empty in production)
   static Future<String?> getGeminiApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // For debugging/development: If the hardcoded key is different from cached one, use hardcoded one
-    // This allows developers to change key in code and have it take effect immediately
+    // First priority: Database cached key (fetched after login)
     final dbCachedKey = prefs.getString(_geminiApiKeyFromDbKey);
     if (dbCachedKey != null && dbCachedKey.isNotEmpty) {
-      if (_defaultGeminiApiKey.isNotEmpty && dbCachedKey != _defaultGeminiApiKey) {
-        print('⚠️ [CONFIG] Cached Gemini key differs from hardcoded default. Using default for development.');
-        return _defaultGeminiApiKey;
-      }
       print('🔍 [CONFIG] Using Gemini API key from database (cached)');
       return dbCachedKey;
     }
 
-    // Then check environment variable
+    // Second priority: Environment variable
     const envKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
     if (envKey.isNotEmpty) {
       print('🔍 [CONFIG] Using Gemini API key from environment variable');
       return envKey;
     }
 
-    // Then check user-saved preference
+    // Third priority: User-saved preference
     final savedKey = prefs.getString(_geminiApiKeyKey);
     if (savedKey != null && savedKey.isNotEmpty) {
       print('🔍 [CONFIG] Using saved Gemini API key');
       return savedKey;
     }
 
-    // Use default API key as fallback
+    // Last resort: Default API key (should be empty in production)
     if (_defaultGeminiApiKey.isNotEmpty) {
-      print('🔍 [CONFIG] Using default Gemini API key (fallback)');
+      print('⚠️ [CONFIG] Using default Gemini API key (fallback - not recommended for production)');
       return _defaultGeminiApiKey;
     }
 

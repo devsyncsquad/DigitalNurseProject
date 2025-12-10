@@ -88,4 +88,39 @@ class ConfigService {
 
     return config;
   }
+
+  /// Update Gemini API key in the database
+  /// Returns true if successful, false otherwise
+  Future<bool> updateGeminiApiKey(String apiKey) async {
+    _log('🔑 Updating Gemini API key in database...');
+    try {
+      final response = await _apiService.put(
+        '/config/gemini-api-key',
+        data: {'apiKey': apiKey},
+      );
+
+      if (response.statusCode == 200) {
+        // Clear old cached key and cache the new one
+        await AppConfig.clearDatabaseCachedGeminiApiKey();
+        await AppConfig.cacheGeminiApiKeyFromDatabase(apiKey);
+        _log('✅ Gemini API key updated and cached successfully');
+        return true;
+      } else {
+        _log('❌ Failed to update API key: ${response.statusMessage}');
+        return false;
+      }
+    } catch (e) {
+      _log('❌ Error updating Gemini API key: $e');
+      return false;
+    }
+  }
+
+  /// Clear cached Gemini API key
+  /// This forces the app to fetch a new key from the database on next use
+  Future<void> clearCachedGeminiApiKey() async {
+    _log('🗑️ Clearing cached Gemini API key...');
+    await AppConfig.clearDatabaseCachedGeminiApiKey();
+    await AppConfig.clearGeminiApiKey();
+    _log('✅ Cached Gemini API key cleared');
+  }
 }

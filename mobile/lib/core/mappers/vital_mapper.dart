@@ -108,9 +108,10 @@ class VitalMapper {
     }
 
     // For blood pressure, parse the value string
+    // Ensure value is always sent as a string (not a number)
     Map<String, dynamic> request = {
       'type': type,
-      'value': vital.value,
+      'value': vital.value.toString(), // Ensure it's always a string
       'timestamp': vital.timestamp.toIso8601String(),
     };
 
@@ -119,7 +120,8 @@ class VitalMapper {
     }
 
     if (elderUserId != null && elderUserId.isNotEmpty) {
-      request['elderUserId'] = elderUserId;
+      // Ensure elderUserId is always sent as a string
+      request['elderUserId'] = elderUserId.toString();
     }
 
     return request;

@@ -36,7 +36,9 @@ export class AccessControlService {
         throw new BadRequestException('Caregiver must specify an elderUserId.');
       }
 
-      const elderUserId = BigInt(requestedElderUserId);
+      // Ensure requestedElderUserId is converted to string if it's a number
+      const elderUserIdStr = String(requestedElderUserId);
+      const elderUserId = BigInt(elderUserIdStr);
 
       const assignment = await this.prisma.elderAssignment.findFirst({
         where: {
@@ -59,7 +61,9 @@ export class AccessControlService {
     }
 
     if (requestedElderUserId) {
-      const elderUserId = BigInt(requestedElderUserId);
+      // Ensure requestedElderUserId is converted to string if it's a number
+      const elderUserIdStr = String(requestedElderUserId);
+      const elderUserId = BigInt(elderUserIdStr);
       if (elderUserId !== actorUserId) {
         throw new ForbiddenException(
           'Patients are not allowed to access other user records.',

@@ -36,8 +36,17 @@ export class VitalsController {
   @ApiOperation({ summary: 'Create a new vital measurement' })
   @ApiResponse({ status: 201, description: 'Vital measurement created successfully' })
   async create(@CurrentUser() user: any, @Body() createDto: CreateVitalDto) {
-    const context = await this.resolveContext(user, createDto.elderUserId);
-    return this.vitalsService.create(context, createDto);
+    try {
+      // Ensure elderUserId is a string if provided
+      const elderUserId = createDto.elderUserId 
+        ? String(createDto.elderUserId) 
+        : undefined;
+      const context = await this.resolveContext(user, elderUserId);
+      return this.vitalsService.create(context, createDto);
+    } catch (error) {
+      console.error('Error creating vital:', error);
+      throw error;
+    }
   }
 
   @Get()

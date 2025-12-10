@@ -98,25 +98,35 @@ export class VitalsService {
    * Create vital measurement
    */
   async create(context: ActorContext, createDto: CreateVitalDto) {
-    const { type, value, timestamp, notes } = createDto;
-    const { value1, value2, valueText } = this.parseValue(type, value);
+    try {
+      const { type, value, timestamp, notes } = createDto;
+      
+      // Ensure value is a string for parsing
+      const valueStr = typeof value === 'string' ? value : String(value);
+      const { value1, value2, valueText } = this.parseValue(type, valueStr);
 
-    const measurement = await this.prisma.vitalMeasurement.create({
-      data: {
-        elderUserId: context.elderUserId,
-        kindCode: this.typeToKindCode(type),
-        unitCode: this.getUnitCode(type),
-        value1: value1,
-        value2: value2,
-        valueText: valueText,
-        recordedAt: new Date(timestamp),
-        source: 'manual',
-        notes: notes || null,
-        recordedByUserId: context.actorUserId,
-      },
-    });
+      const measurement = await this.prisma.vitalMeasurement.create({
+        data: {
+          elderUserId: context.elderUserId,
+          kindCode: this.typeToKindCode(type),
+          unitCode: this.getUnitCode(type),
+          value1: value1,
+          value2: value2,
+          valueText: valueText,
+          recordedAt: new Date(timestamp),
+          source: 'manual',
+          notes: notes || null,
+          recordedByUserId: context.actorUserId,
+        },
+      });
 
-    return this.mapToResponse(measurement);
+      return this.mapToResponse(measurement);
+    } catch (error) {
+      console.error('Error in VitalsService.create:', error);
+      console.error('Context:', context);
+      console.error('DTO:', createDto);
+      throw error;
+    }
   }
 
   /**
