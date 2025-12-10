@@ -1,12 +1,12 @@
 import { Fragment } from "react"
 import {
-  dashboardAlerts,
   dashboardMetrics,
-  documents,
   patientRoster,
   patientGrowth7Days,
   patientGrowth30Days,
   subscriptionBreakdown,
+  cityPatientData,
+  cityRevenueData,
 } from "@/mocks/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -14,8 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { DashboardMetricCard } from "@/components/dashboard/dashboard-metric-card"
 import { PatientsGrowthCard } from "@/components/dashboard/patients-growth-card"
 import { SubscriptionBreakdownCard } from "@/components/dashboard/subscription-breakdown-card"
-import { AlertsCard } from "@/components/dashboard/alerts-card"
-import { DocumentsSummaryCard } from "@/components/dashboard/documents-summary-card"
+import { CityPatientsBarChart } from "@/components/dashboard/city-patients-bar-chart"
+import { CityRevenueGrid } from "@/components/dashboard/city-revenue-grid"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -77,11 +77,16 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <AlertsCard alerts={dashboardAlerts} />
-        <DocumentsSummaryCard documents={documents.slice(0, 3)} />
+        <CityPatientsBarChart data={cityPatientData} />
+        <CityRevenueGrid data={cityRevenueData} />
       </div>
 
-      <Card>
+      {/* <div className="grid gap-4 lg:grid-cols-2">
+        <AlertsCard alerts={dashboardAlerts} />
+        <DocumentsSummaryCard documents={documents.slice(0, 3)} />
+      </div> */}
+
+      {/* <Card>
         <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-sm font-semibold text-muted-foreground">
@@ -151,7 +156,7 @@ export default function DashboardPage() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card> */}
     </section>
   )
 }

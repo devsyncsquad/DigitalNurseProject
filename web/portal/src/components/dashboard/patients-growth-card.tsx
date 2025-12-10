@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { PatientGrowthPoint } from "@/mocks/data"
 
-const lineColor = "#2563eb"
+const lineColor = "#7FD991" // appleGreen
 
 export function PatientsGrowthCard({
   data7Days,
