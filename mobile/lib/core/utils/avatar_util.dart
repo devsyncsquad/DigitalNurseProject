@@ -10,8 +10,9 @@ class AvatarUtil {
   static String getRandomAvatarUrl(String seed) {
     // Use DiceBear API with avataaars style and seed for consistency
     // The seed ensures the same user always gets the same avatar
+    // Using PNG format instead of SVG for Flutter compatibility
     final encodedSeed = Uri.encodeComponent(seed);
-    return 'https://api.dicebear.com/7.x/avataaars/svg?seed=$encodedSeed';
+    return 'https://api.dicebear.com/7.x/avataaars/png?seed=$encodedSeed';
   }
 }
 

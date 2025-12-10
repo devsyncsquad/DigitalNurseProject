@@ -26,8 +26,6 @@ class AlertCard extends StatelessWidget {
   final AlertSeverity severity;
   final String message;
   final DateTime timestamp;
-  final VoidCallback? onCall;
-  final VoidCallback? onMessage;
   final VoidCallback? onDismiss;
 
   const AlertCard({
@@ -38,8 +36,6 @@ class AlertCard extends StatelessWidget {
     required this.severity,
     required this.message,
     required this.timestamp,
-    this.onCall,
-    this.onMessage,
     this.onDismiss,
   });
 
@@ -123,24 +119,6 @@ class AlertCard extends StatelessWidget {
                       ),
                 ),
               ),
-              if (onCall != null)
-                IconButton(
-                  icon: Icon(Icons.phone, size: 20),
-                  color: severityColor,
-                  onPressed: onCall,
-                  tooltip: 'Call',
-                  padding: EdgeInsets.all(8.w),
-                  constraints: const BoxConstraints(),
-                ),
-              if (onMessage != null)
-                IconButton(
-                  icon: Icon(Icons.message, size: 20),
-                  color: severityColor,
-                  onPressed: onMessage,
-                  tooltip: 'Message',
-                  padding: EdgeInsets.all(8.w),
-                  constraints: const BoxConstraints(),
-                ),
             ],
           ),
         ],

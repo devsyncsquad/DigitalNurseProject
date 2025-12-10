@@ -118,18 +118,6 @@ class EmergencyAlertsSection extends StatelessWidget {
                   severity: alert['severity'] as AlertSeverity,
                   message: alert['message'] as String,
                   timestamp: alert['timestamp'] as DateTime,
-                  onCall: () {
-                    // TODO: Implement call
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Calling emergency contact...')),
-                    );
-                  },
-                  onMessage: () {
-                    // TODO: Implement message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening message...')),
-                    );
-                  },
                   onDismiss: () {
                     // TODO: Dismiss alert
                   },

@@ -117,28 +117,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.phone, color: Colors.white),
-            onPressed: _patient!.phone != null
-                ? () {
-                    // TODO: Implement call
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Calling ${_patient!.name}...')),
-                    );
-                  }
-                : null,
-          ),
-          IconButton(
-            icon: const Icon(Icons.message, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement chat
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Opening chat with ${_patient!.name}...')),
-              );
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: RefreshIndicator(
         onRefresh: _loadPatientData,
@@ -334,40 +313,14 @@ class _QuickActionsSection extends StatelessWidget {
             style: ModernSurfaceTheme.sectionTitleStyle(context),
           ),
           SizedBox(height: 16.h),
-          Wrap(
-            spacing: 12.w,
-            runSpacing: 12.h,
-            children: [
-              _QuickActionButton(
-                icon: Icons.assessment,
-                label: 'View Reports',
-                color: ModernSurfaceTheme.primaryTeal,
-                onTap: onViewReports,
-              ),
-              if (patient.phone != null)
-                _QuickActionButton(
-                  icon: Icons.phone,
-                  label: 'Call',
-                  color: ModernSurfaceTheme.accentBlue,
-                  onTap: () {
-                    // TODO: Implement call
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Calling ${patient.name}...')),
-                    );
-                  },
-                ),
-              _QuickActionButton(
-                icon: Icons.message,
-                label: 'Chat',
-                color: ModernSurfaceTheme.accentYellow,
-                onTap: () {
-                  // TODO: Implement chat
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Opening chat with ${patient.name}...')),
-                  );
-                },
-              ),
-            ],
+          SizedBox(
+            width: double.infinity,
+            child: _QuickActionButton(
+              icon: Icons.assessment,
+              label: 'View Reports',
+              color: ModernSurfaceTheme.primaryTeal,
+              onTap: onViewReports,
+            ),
           ),
         ],
       ),
@@ -396,6 +349,7 @@ class _QuickActionButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
+          width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: color.withOpacity(0.15),

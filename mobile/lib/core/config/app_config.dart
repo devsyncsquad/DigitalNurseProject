@@ -11,7 +11,7 @@ class AppConfig {
   static const String _defaultAndroidEmulator = 'http://100.42.177.77:3000/api';
   
   // Default Gemini API key (fallback if database fetch fails)
-  static const String _defaultGeminiApiKey = 'AIzaSyBB-nGNXzlo399N1viNLq011V4YJJDWzBg';
+  static const String _defaultGeminiApiKey = 'AIzaSyCzb0eqtLtj5KwwA33kE7jsc49hrh2yqH4';
   
   // Convert localhost URLs to Android emulator URL (10.0.2.2)
   // This is needed because Android emulators can't access host machine's localhost directly
@@ -104,9 +104,14 @@ class AppConfig {
   static Future<String?> getGeminiApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // First check database-cached value (fetched after login)
+    // For debugging/development: If the hardcoded key is different from cached one, use hardcoded one
+    // This allows developers to change key in code and have it take effect immediately
     final dbCachedKey = prefs.getString(_geminiApiKeyFromDbKey);
     if (dbCachedKey != null && dbCachedKey.isNotEmpty) {
+      if (_defaultGeminiApiKey.isNotEmpty && dbCachedKey != _defaultGeminiApiKey) {
+        print('⚠️ [CONFIG] Cached Gemini key differs from hardcoded default. Using default for development.');
+        return _defaultGeminiApiKey;
+      }
       print('🔍 [CONFIG] Using Gemini API key from database (cached)');
       return dbCachedKey;
     }
