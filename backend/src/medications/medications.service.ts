@@ -549,6 +549,7 @@ export class MedicationsService {
     }
 
     // Calculate streak
+    // Streak counts consecutive days (going backwards from today) where all scheduled intakes were taken
     let streak = 0;
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -566,19 +567,33 @@ export class MedicationsService {
         );
       });
 
+      // If no intakes exist for this day
       if (dayIntakes.length === 0) {
-        if (i === 0 || streak > 0) {
-          if (i > 0) streak++;
-        } else {
+        // For today (i === 0), if there are no intakes, streak is 0
+        if (i === 0) {
           break;
         }
+        // For past days, if we've already started counting a streak, 
+        // a day with no intakes breaks the streak
+        // Note: This assumes that if intakes exist in the database, they represent
+        // all scheduled intakes. Days with no intakes might mean:
+        // 1. No intakes were scheduled (e.g., weekend for weekday-only med) - should skip
+        // 2. Intakes were scheduled but never logged - breaks streak
+        // Since we can't distinguish, we break the streak to be conservative
+        if (streak > 0) {
+          break;
+        }
+        // If no streak yet, continue checking older days
         continue;
       }
 
+      // Check if all intakes for this day were taken
       const allTaken = dayIntakes.every((intake: any) => intake.status === 'taken');
       if (allTaken) {
         streak++;
-      } else if (i > 0) {
+      } else {
+        // If not all intakes were taken, break the streak
+        // (unless it's today and we haven't started counting yet, which we handle above)
         break;
       }
     }
