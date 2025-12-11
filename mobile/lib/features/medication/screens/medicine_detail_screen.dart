@@ -51,9 +51,54 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
   Future<void> _handleLogIntake(IntakeStatus status) async {
     final authProvider = context.read<AuthProvider>();
-    await context.read<MedicationProvider>().logIntake(
+    final medicationProvider = context.read<MedicationProvider>();
+    final medicine = medicationProvider.medicines.firstWhere(
+      (m) => m.id == widget.medicineId,
+    );
+
+    // Get the most recent scheduled time that has passed (or current scheduled time)
+    DateTime scheduledTime = DateTime.now();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Find the most recent scheduled time for today
+    DateTime? mostRecentPastTime;
+    DateTime? nextUpcomingTime;
+
+    for (final timeStr in medicine.reminderTimes) {
+      final parts = timeStr.split(':');
+      if (parts.length != 2) continue;
+      
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+      if (hour == null || minute == null) continue;
+
+      final scheduledDateTime = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        hour,
+        minute,
+      );
+
+      // Track the most recent past time and the next upcoming time
+      if (scheduledDateTime.isBefore(now) || scheduledDateTime.isAtSameMomentAs(now)) {
+        if (mostRecentPastTime == null || scheduledDateTime.isAfter(mostRecentPastTime)) {
+          mostRecentPastTime = scheduledDateTime;
+        }
+      } else {
+        if (nextUpcomingTime == null || scheduledDateTime.isBefore(nextUpcomingTime)) {
+          nextUpcomingTime = scheduledDateTime;
+        }
+      }
+    }
+
+    // Use the most recent past time if available, otherwise use the next upcoming time
+    scheduledTime = mostRecentPastTime ?? nextUpcomingTime ?? DateTime.now();
+
+    await medicationProvider.logIntake(
       medicineId: widget.medicineId,
-      scheduledTime: DateTime.now(),
+      scheduledTime: scheduledTime, // Use actual scheduled time
       status: status,
       userId: authProvider.currentUser!.id,
     );
