@@ -8,6 +8,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/avatar_util.dart';
 import '../dashboard_theme.dart';
 import 'patient_cards_grid.dart';
+import '../../../../features/ai/widgets/ai_insights_dashboard_widget.dart';
 // import 'caregiver_action_shortcuts.dart';
 // import 'caregiver_overview_card.dart';
 
@@ -54,6 +55,11 @@ class CaregiverDashboardView extends StatelessWidget {
               onPatientSelected: onRecipientSelected,
             ),
             SizedBox(height: cardSpacing),
+            if (careContext.selectedElderId != null)
+              AIInsightsDashboardWidget(
+                elderUserId: int.tryParse(careContext.selectedElderId ?? ''),
+              ),
+            if (careContext.selectedElderId != null) SizedBox(height: cardSpacing),
             // const CaregiverOverviewCard(),
             // SizedBox(height: cardSpacing),
             // const CaregiverActionShortcuts(),

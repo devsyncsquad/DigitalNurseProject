@@ -17,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { LookupsModule } from './lookups/lookups.module';
 import { DevicesModule } from './devices/devices.module';
 import { AppConfigModule } from './config/config.module';
+import { AIModule } from './ai/ai.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -39,6 +40,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     LookupsModule,
     DevicesModule,
     AppConfigModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [

@@ -30,6 +30,11 @@ import '../features/documents/screens/document_viewer_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
 import '../core/services/notification_test.dart';
 import '../features/notifications/screens/notifications_screen.dart';
+import '../features/ai/screens/ai_assistant_screen.dart';
+import '../features/ai/screens/ai_insights_screen.dart';
+import '../features/ai/screens/health_analysis_screen.dart';
+import '../features/ai/screens/semantic_search_screen.dart';
+import '../features/ai/screens/document_qa_screen.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/welcome',
@@ -271,6 +276,28 @@ final goRouter = GoRouter(
           payload: payload,
         );
       },
+    ),
+
+    // AI Routes
+    GoRoute(
+      path: '/ai/assistant',
+      builder: (context, state) => const AIAssistantScreen(),
+    ),
+    GoRoute(
+      path: '/ai/insights',
+      builder: (context, state) => const AIInsightsScreen(),
+    ),
+    GoRoute(
+      path: '/ai/analysis',
+      builder: (context, state) => const HealthAnalysisScreen(),
+    ),
+    GoRoute(
+      path: '/ai/search',
+      builder: (context, state) => const SemanticSearchScreen(),
+    ),
+    GoRoute(
+      path: '/ai/document-qa',
+      builder: (context, state) => const DocumentQAScreen(),
     ),
   ],
 );

@@ -11,6 +11,7 @@ import 'patient_lifestyle_card.dart';
 import 'patient_overview_card.dart';
 import 'patient_upcoming_medications_card.dart';
 import 'patient_vitals_card.dart';
+import '../../../../features/ai/widgets/ai_insights_dashboard_widget.dart';
 
 class PatientDashboardView extends StatelessWidget {
   const PatientDashboardView({super.key});
@@ -43,6 +44,8 @@ class PatientDashboardView extends StatelessWidget {
             const PatientUpcomingMedicationsCard(),
             SizedBox(height: cardSpacing),
             const PatientVitalsCard(),
+            SizedBox(height: cardSpacing),
+            const AIInsightsDashboardWidget(),
             SizedBox(height: cardSpacing),
             const PatientDocumentsCard(),
             SizedBox(height: cardSpacing),
