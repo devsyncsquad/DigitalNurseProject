@@ -23,33 +23,74 @@ export class AIInsightsService {
    * Generate and store an AI insight
    */
   async generateInsight(dto: GenerateInsightDto, userId: bigint) {
+    // Validate that elderUserId is provided and exists
+    // Convert to BigInt if it's a number (JSON parsing gives numbers, not BigInt)
+    if (dto.elderUserId == null || dto.elderUserId === undefined) {
+      throw new Error(
+        'elderUserId is required. Please provide a valid user ID for whom the insight should be generated.',
+      );
+    }
+
+    // Convert to BigInt if it's a number
+    const elderUserId = typeof dto.elderUserId === 'bigint' 
+      ? dto.elderUserId 
+      : BigInt(dto.elderUserId);
+    
+    // Validate that elderUserId is not 0 (invalid user ID)
+    if (elderUserId === BigInt(0)) {
+      throw new Error(
+        'elderUserId cannot be 0. Please provide a valid user ID for whom the insight should be generated.',
+      );
+    }
+
+    // Validate that elder_user_id exists in users table
+    const elderUser = await this.prisma.$queryRawUnsafe<Array<{ count: string }>>(
+      `SELECT COUNT(*)::text as count FROM users WHERE "userId" = ${elderUserId}::bigint`,
+    );
+    
+    if (
+      elderUser.length === 0 ||
+      !elderUser[0] ||
+      elderUser[0].count === '0'
+    ) {
+      throw new Error(
+        `Elder user with ID ${elderUserId} does not exist in the database. Please provide a valid user ID.`,
+      );
+    }
+
+    this.logger.log(
+      `Generating ${dto.insightType} insight for elder user ID: ${elderUserId} (requested by user ID: ${userId})`,
+    );
+
     let insight: {
       title: string;
       content: string;
       confidence: number;
       recommendations?: any[];
-    };
+    } | null;
 
     switch (dto.insightType) {
       case InsightType.MEDICATION_ADHERENCE:
-        insight = await this.generateMedicationAdherenceInsight(
-          dto.elderUserId,
-        );
+        insight = await this.generateMedicationAdherenceInsight(elderUserId);
         break;
       case InsightType.HEALTH_TREND:
-        insight = await this.generateHealthTrendInsight(dto.elderUserId);
+        insight = await this.generateHealthTrendInsight(elderUserId);
         break;
       case InsightType.RECOMMENDATION:
-        insight = await this.generateRecommendationInsight(dto.elderUserId);
+        insight = await this.generateRecommendationInsight(elderUserId);
         break;
       case InsightType.ALERT:
-        insight = await this.generateAlertInsight(dto.elderUserId);
+        insight = await this.generateAlertInsight(elderUserId);
         break;
       case InsightType.PATTERN_DETECTION:
-        insight = await this.generatePatternInsight(dto.elderUserId);
+        insight = await this.generatePatternInsight(elderUserId);
         break;
       default:
         throw new Error(`Unknown insight type: ${dto.insightType}`);
+    }
+
+    if (!insight) {
+      throw new Error('No insight generated');
     }
 
     // Generate embedding for the insight
@@ -58,16 +99,18 @@ export class AIInsightsService {
 
     // Store the insight
     const embeddingArray = `[${embedding.join(',')}]`;
+    // Use the normalized elderUserId (will always be a valid bigint at this point)
+    const elderUserIdValue = elderUserId.toString();
     const result = await this.prisma.$executeRawUnsafe(
       `INSERT INTO ai_insights (
         user_id, elder_user_id, insight_type, title, content,
         confidence, priority, category, recommendations, embedding,
         metadata, generated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10::vector, $11, NOW()
+        $1::bigint, $2::bigint, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::vector, $11::jsonb, NOW()
       ) RETURNING insight_id`,
       userId.toString(),
-      dto.elderUserId.toString(),
+      elderUserIdValue,
       dto.insightType,
       insight.title,
       insight.content,
@@ -104,26 +147,26 @@ export class AIInsightsService {
         expires_at,
         created_at
       FROM ai_insights
-      WHERE user_id = ${userId}
+      WHERE user_id = ${userId}::bigint
         AND is_archived = false
     `;
 
     if (dto.elderUserId) {
-      query += ` AND elder_user_id = ${dto.elderUserId}`;
+      query += ` AND elder_user_id = ${dto.elderUserId}::bigint`;
     }
 
     if (dto.types && dto.types.length > 0) {
-      const types = dto.types.map((t) => `'${t}'`).join(',');
+      const types = dto.types.map((t) => `'${t.replace(/'/g, "''")}'`).join(',');
       query += ` AND insight_type IN (${types})`;
     }
 
     if (dto.priorities && dto.priorities.length > 0) {
-      const priorities = dto.priorities.map((p) => `'${p}'`).join(',');
+      const priorities = dto.priorities.map((p) => `'${p.replace(/'/g, "''")}'`).join(',');
       query += ` AND priority IN (${priorities})`;
     }
 
     if (dto.categories && dto.categories.length > 0) {
-      const categories = dto.categories.map((c) => `'${c}'`).join(',');
+      const categories = dto.categories.map((c) => `'${c.replace(/'/g, "''")}'`).join(',');
       query += ` AND category IN (${categories})`;
     }
 
@@ -134,23 +177,45 @@ export class AIInsightsService {
     query += ` ORDER BY generated_at DESC LIMIT ${dto.limit || 20}`;
 
     const results = await this.prisma.$queryRawUnsafe(query);
-    return (results as any[]).map((r) => ({
-      id: r.insight_id.toString(),
-      userId: r.user_id.toString(),
-      elderUserId: r.elder_user_id?.toString(),
-      type: r.insight_type,
-      title: r.title,
-      content: r.content,
-      confidence: r.confidence ? parseFloat(r.confidence) : null,
-      priority: r.priority,
-      category: r.category,
-      recommendations: r.recommendations ? JSON.parse(r.recommendations) : [],
-      isRead: r.is_read,
-      isArchived: r.is_archived,
-      generatedAt: r.generated_at,
-      expiresAt: r.expires_at,
-      createdAt: r.created_at,
-    }));
+    return (results as any[]).map((r) => {
+      // Parse recommendations - JSONB columns might be strings or already parsed
+      let recommendations = [];
+      if (r.recommendations) {
+        if (typeof r.recommendations === 'string') {
+          try {
+            recommendations = r.recommendations.trim() 
+              ? JSON.parse(r.recommendations) 
+              : [];
+          } catch (error) {
+            this.logger.warn(
+              `Failed to parse recommendations for insight ${r.insight_id}: ${error}`,
+            );
+            recommendations = [];
+          }
+        } else {
+          // Already parsed (JSONB returns as object/array)
+          recommendations = r.recommendations;
+        }
+      }
+
+      return {
+        id: r.insight_id.toString(),
+        userId: r.user_id.toString(),
+        elderUserId: r.elder_user_id?.toString(),
+        type: r.insight_type,
+        title: r.title,
+        content: r.content,
+        confidence: r.confidence ? parseFloat(r.confidence) : null,
+        priority: r.priority,
+        category: r.category,
+        recommendations,
+        isRead: r.is_read,
+        isArchived: r.is_archived,
+        generatedAt: r.generated_at,
+        expiresAt: r.expires_at,
+        createdAt: r.created_at,
+      };
+    });
   }
 
   /**
@@ -160,7 +225,9 @@ export class AIInsightsService {
     await this.prisma.$executeRawUnsafe(
       `UPDATE ai_insights 
        SET is_read = true, updated_at = NOW() 
-       WHERE insight_id = ${insightId} AND user_id = ${userId}`,
+       WHERE insight_id = $1::bigint AND user_id = $2::bigint`,
+      insightId.toString(),
+      userId.toString(),
     );
   }
 
@@ -171,7 +238,9 @@ export class AIInsightsService {
     await this.prisma.$executeRawUnsafe(
       `UPDATE ai_insights 
        SET is_archived = true, updated_at = NOW() 
-       WHERE insight_id = ${insightId} AND user_id = ${userId}`,
+       WHERE insight_id = $1::bigint AND user_id = $2::bigint`,
+      insightId.toString(),
+      userId.toString(),
     );
   }
 

@@ -24,11 +24,6 @@ class TokenService {
   Future<String?> getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_accessTokenKey);
-    if (token != null) {
-      _log('🔑 Access token found (${token.substring(0, 20)}...)');
-    } else {
-      _log('❌ No access token found');
-    }
     return token;
   }
 

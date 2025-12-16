@@ -3,7 +3,11 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AIInsightsService } from './ai-insights.service';
 import { AppConfigService } from '../../config/config.service';
-import { InsightType } from '../dto/generate-insight.dto';
+import {
+  InsightType,
+  InsightPriority,
+  InsightCategory,
+} from '../dto/generate-insight.dto';
 
 @Injectable()
 export class AutomatedInsightsService {
@@ -65,8 +69,8 @@ export class AutomatedInsightsService {
             {
               insightType: InsightType.MEDICATION_ADHERENCE,
               elderUserId: user.userId,
-              priority: 'medium',
-              category: 'medication',
+              priority: InsightPriority.MEDIUM,
+              category: InsightCategory.MEDICATION,
             },
             user.userId,
           );
@@ -76,8 +80,8 @@ export class AutomatedInsightsService {
             {
               insightType: InsightType.HEALTH_TREND,
               elderUserId: user.userId,
-              priority: 'medium',
-              category: 'vitals',
+              priority: InsightPriority.MEDIUM,
+              category: InsightCategory.VITALS,
             },
             user.userId,
           );
@@ -87,8 +91,8 @@ export class AutomatedInsightsService {
             {
               insightType: InsightType.RECOMMENDATION,
               elderUserId: user.userId,
-              priority: 'low',
-              category: 'general',
+              priority: InsightPriority.LOW,
+              category: InsightCategory.GENERAL,
             },
             user.userId,
           );
@@ -136,8 +140,8 @@ export class AutomatedInsightsService {
         {
           insightType: InsightType.MEDICATION_ADHERENCE,
           elderUserId,
-          priority: 'medium',
-          category: 'medication',
+          priority: InsightPriority.MEDIUM,
+          category: InsightCategory.MEDICATION,
         },
         userId,
       );
@@ -146,8 +150,8 @@ export class AutomatedInsightsService {
         {
           insightType: InsightType.HEALTH_TREND,
           elderUserId,
-          priority: 'medium',
-          category: 'vitals',
+          priority: InsightPriority.MEDIUM,
+          category: InsightCategory.VITALS,
         },
         userId,
       );

@@ -26,7 +26,12 @@ class AIService {
           if (elderUserId != null) 'elderUserId': elderUserId,
         },
       );
-      return response.data;
+      // Convert conversationId from string to int if present
+      final data = response.data as Map<String, dynamic>;
+      if (data['conversationId'] != null) {
+        data['conversationId'] = int.tryParse(data['conversationId'].toString()) ?? data['conversationId'];
+      }
+      return data;
     } catch (e) {
       throw Exception('Failed to send chat message: $e');
     }
@@ -132,6 +137,21 @@ class AIService {
       await _apiService.put('/ai/insights/$insightId/archive');
     } catch (e) {
       throw Exception('Failed to archive insight: $e');
+    }
+  }
+
+  // Generate insights for user
+  Future<Map<String, dynamic>> generateInsightsForUser({
+    required int elderUserId,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '/ai/insights/generate-for-user',
+        data: {'elderUserId': elderUserId},
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Failed to generate insights: $e');
     }
   }
 

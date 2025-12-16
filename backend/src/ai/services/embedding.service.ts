@@ -9,13 +9,41 @@ export class EmbeddingService {
   private embeddingModel: string = 'text-embedding-3-small';
   private embeddingDimensions: number = 1536;
   private openaiApiKey: string | null = null;
+  private apiBaseUrl: string = 'https://api.openai.com/v1';
 
   constructor(
     private configService: ConfigService,
     private appConfigService: AppConfigService,
     private prisma: PrismaService,
   ) {
+    // Initialize API key synchronously (from environment)
+    this.initializeApiKey();
+    // Initialize async config (model, dimensions from database)
     this.initializeConfig();
+  }
+
+  private initializeApiKey() {
+    // Try to get OpenAI API key from environment or config
+    const rawKey = this.configService.get<string>('OPENAI_API_KEY');
+    this.openaiApiKey = rawKey ? rawKey.trim() : null;
+
+    // Detect if using OpenRouter (keys start with sk-or-v1-)
+    if (this.openaiApiKey?.startsWith('sk-or-v1-')) {
+      this.apiBaseUrl = 'https://openrouter.ai/api/v1';
+      this.logger.log('Using OpenRouter API endpoint');
+    } else {
+      this.apiBaseUrl = 'https://api.openai.com/v1';
+    }
+
+    if (!this.openaiApiKey) {
+      this.logger.warn(
+        'OpenAI API key not found. Embedding generation will fail. Set OPENAI_API_KEY in environment or app_config.',
+      );
+    } else {
+      this.logger.log(
+        `API key configured (${this.openaiApiKey.substring(0, 10)}...), using ${this.apiBaseUrl}`,
+      );
+    }
   }
 
   private async initializeConfig() {
@@ -32,16 +60,6 @@ export class EmbeddingService {
       );
       if (dimensionsConfig) {
         this.embeddingDimensions = parseInt(dimensionsConfig.configValue, 10);
-      }
-
-      // Try to get OpenAI API key from environment or config
-      this.openaiApiKey =
-        this.configService.get<string>('OPENAI_API_KEY') || null;
-
-      if (!this.openaiApiKey) {
-        this.logger.warn(
-          'OpenAI API key not found. Embedding generation will fail. Set OPENAI_API_KEY in environment or app_config.',
-        );
       }
     } catch (error) {
       this.logger.error('Error initializing embedding config:', error);
@@ -61,7 +79,7 @@ export class EmbeddingService {
     }
 
     try {
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
+      const response = await fetch(`${this.apiBaseUrl}/embeddings`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.openaiApiKey}`,
@@ -108,7 +126,7 @@ export class EmbeddingService {
     }
 
     try {
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
+      const response = await fetch(`${this.apiBaseUrl}/embeddings`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.openaiApiKey}`,

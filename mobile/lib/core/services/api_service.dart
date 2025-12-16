@@ -105,9 +105,6 @@ class ApiService {
           final token = await _tokenService.getAccessToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
-            _log('🔐 [API] Request with auth token');
-          } else {
-            _log('🔓 [API] Request without auth token');
           }
           
           _logRequest(options);
@@ -131,6 +128,11 @@ class ApiService {
   }
 
   void _logRequest(RequestOptions options) {
+    // Skip logging for medication intakes endpoint
+    if (options.path.contains('/medications/') && options.path.endsWith('/intakes')) {
+      return;
+    }
+    
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     print('📤 [API REQUEST]');
     print('   Method: ${options.method}');
@@ -148,6 +150,12 @@ class ApiService {
   }
 
   void _logResponse(Response response) {
+    // Skip logging for medication intakes endpoint
+    if (response.requestOptions.path.contains('/medications/') && 
+        response.requestOptions.path.endsWith('/intakes')) {
+      return;
+    }
+    
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     print('📥 [API RESPONSE]');
     print('   Status: ${response.statusCode} ${response.statusMessage}');
@@ -165,6 +173,12 @@ class ApiService {
   }
 
   void _logError(DioException error) {
+    // Skip logging for medication intakes endpoint
+    if (error.requestOptions.path.contains('/medications/') && 
+        error.requestOptions.path.endsWith('/intakes')) {
+      return;
+    }
+    
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     print('❌ [API ERROR]');
     print('   Type: ${error.type}');

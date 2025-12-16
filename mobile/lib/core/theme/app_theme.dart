@@ -22,7 +22,9 @@ class AppTheme {
   static const Color darkSurfaceVariant = Color(0xFF2A3142);
 
   // Apple Green Color (Secondary)
+  // RULE: appleGreen is the standard button color with white text
   static const Color appleGreen = Color(0xFF7FD991); // Apple green
+  static const Color buttonTextColor = Colors.white; // Standard button text color
   
   // Blue Color (Tertiary)
   static const Color blueTertiary = Color(0xFF3B82F6); // Blue tertiary

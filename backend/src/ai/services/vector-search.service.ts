@@ -119,13 +119,13 @@ export class VectorSearchService {
     threshold: number = 0.7,
     limit: number = 10,
   ): Promise<SearchResult[]> {
-    const embeddingArray = `[${queryEmbedding.join(',')}]`;
+    const embeddingArray = `'[${queryEmbedding.join(',')}]'::vector`;
     let query = `
       SELECT 
         note_id::text as id,
         'caregiver_notes' as entity_type,
         note_text as content,
-        1 - (embedding <=> ${embeddingArray}::vector) as similarity,
+        1 - (embedding <=> ${embeddingArray}) as similarity,
         jsonb_build_object(
           'elderUserId', elder_user_id::text,
           'caregiverUserId', caregiver_user_id::text,
@@ -133,14 +133,14 @@ export class VectorSearchService {
         ) as metadata
       FROM caregiver_notes
       WHERE embedding IS NOT NULL
-        AND (1 - (embedding <=> ${embeddingArray}::vector)) >= ${threshold}
+        AND (1 - (embedding <=> ${embeddingArray})) >= ${threshold}
     `;
 
     if (elderUserId) {
       query += ` AND elder_user_id = ${elderUserId}`;
     }
 
-    query += ` ORDER BY embedding <=> ${embeddingArray}::vector LIMIT ${limit}`;
+    query += ` ORDER BY embedding <=> ${embeddingArray} LIMIT ${limit}`;
 
     const results = await this.prisma.$queryRawUnsafe(query);
     return (results as any[]).map((r) => ({
@@ -161,13 +161,13 @@ export class VectorSearchService {
     threshold: number = 0.7,
     limit: number = 10,
   ): Promise<SearchResult[]> {
-    const embeddingArray = `[${queryEmbedding.join(',')}]`;
+    const embeddingArray = `'[${queryEmbedding.join(',')}]'::vector`;
     let query = `
       SELECT 
         "medicationId"::text as id,
         'medications' as entity_type,
         COALESCE(notes, instructions, '') as content,
-        1 - (notes_embedding <=> ${embeddingArray}::vector) as similarity,
+        1 - (notes_embedding <=> ${embeddingArray}) as similarity,
         jsonb_build_object(
           'medicationName', "medicationName",
           'elderUserId', "elderUserId"::text,
@@ -175,14 +175,14 @@ export class VectorSearchService {
         ) as metadata
       FROM medications
       WHERE notes_embedding IS NOT NULL
-        AND (1 - (notes_embedding <=> ${embeddingArray}::vector)) >= ${threshold}
+        AND (1 - (notes_embedding <=> ${embeddingArray})) >= ${threshold}
     `;
 
     if (elderUserId) {
       query += ` AND "elderUserId" = ${elderUserId}`;
     }
 
-    query += ` ORDER BY notes_embedding <=> ${embeddingArray}::vector LIMIT ${limit}`;
+    query += ` ORDER BY notes_embedding <=> ${embeddingArray} LIMIT ${limit}`;
 
     const results = await this.prisma.$queryRawUnsafe(query);
     return (results as any[]).map((r) => ({
@@ -203,13 +203,13 @@ export class VectorSearchService {
     threshold: number = 0.7,
     limit: number = 10,
   ): Promise<SearchResult[]> {
-    const embeddingArray = `[${queryEmbedding.join(',')}]`;
+    const embeddingArray = `'[${queryEmbedding.join(',')}]'::vector`;
     let query = `
       SELECT 
         "vitalMeasurementId"::text as id,
         'vital_measurements' as entity_type,
         COALESCE(notes, '') as content,
-        1 - (notes_embedding <=> ${embeddingArray}::vector) as similarity,
+        1 - (notes_embedding <=> ${embeddingArray}) as similarity,
         jsonb_build_object(
           'kindCode', "kindCode",
           'elderUserId', "elderUserId"::text,
@@ -217,14 +217,14 @@ export class VectorSearchService {
         ) as metadata
       FROM vital_measurements
       WHERE notes_embedding IS NOT NULL
-        AND (1 - (notes_embedding <=> ${embeddingArray}::vector)) >= ${threshold}
+        AND (1 - (notes_embedding <=> ${embeddingArray})) >= ${threshold}
     `;
 
     if (elderUserId) {
       query += ` AND "elderUserId" = ${elderUserId}`;
     }
 
-    query += ` ORDER BY notes_embedding <=> ${embeddingArray}::vector LIMIT ${limit}`;
+    query += ` ORDER BY notes_embedding <=> ${embeddingArray} LIMIT ${limit}`;
 
     const results = await this.prisma.$queryRawUnsafe(query);
     return (results as any[]).map((r) => ({
@@ -245,15 +245,15 @@ export class VectorSearchService {
     threshold: number = 0.7,
     limit: number = 10,
   ): Promise<SearchResult[]> {
-    const embeddingArray = `[${queryEmbedding.join(',')}]`;
+    const embeddingArray = `'[${queryEmbedding.join(',')}]'::vector`;
     let query = `
       SELECT 
         diet_id::text as id,
         'diet_logs' as entity_type,
         COALESCE(food_items, notes, '') as content,
         GREATEST(
-          COALESCE(1 - (food_items_embedding <=> ${embeddingArray}::vector), 0),
-          COALESCE(1 - (notes_embedding <=> ${embeddingArray}::vector), 0)
+          COALESCE(1 - (food_items_embedding <=> ${embeddingArray}), 0),
+          COALESCE(1 - (notes_embedding <=> ${embeddingArray}), 0)
         ) as similarity,
         jsonb_build_object(
           'mealType', meal_type,
@@ -263,8 +263,8 @@ export class VectorSearchService {
       FROM diet_logs
       WHERE (food_items_embedding IS NOT NULL OR notes_embedding IS NOT NULL)
         AND GREATEST(
-          COALESCE(1 - (food_items_embedding <=> ${embeddingArray}::vector), 0),
-          COALESCE(1 - (notes_embedding <=> ${embeddingArray}::vector), 0)
+          COALESCE(1 - (food_items_embedding <=> ${embeddingArray}), 0),
+          COALESCE(1 - (notes_embedding <=> ${embeddingArray}), 0)
         ) >= ${threshold}
     `;
 
@@ -293,15 +293,15 @@ export class VectorSearchService {
     threshold: number = 0.7,
     limit: number = 10,
   ): Promise<SearchResult[]> {
-    const embeddingArray = `[${queryEmbedding.join(',')}]`;
+    const embeddingArray = `'[${queryEmbedding.join(',')}]'::vector`;
     let query = `
       SELECT 
         exercise_id::text as id,
         'exercise_logs' as entity_type,
         COALESCE(description, notes, '') as content,
         GREATEST(
-          COALESCE(1 - (description_embedding <=> ${embeddingArray}::vector), 0),
-          COALESCE(1 - (notes_embedding <=> ${embeddingArray}::vector), 0)
+          COALESCE(1 - (description_embedding <=> ${embeddingArray}), 0),
+          COALESCE(1 - (notes_embedding <=> ${embeddingArray}), 0)
         ) as similarity,
         jsonb_build_object(
           'exerciseType', exercise_type,
@@ -311,8 +311,8 @@ export class VectorSearchService {
       FROM exercise_logs
       WHERE (description_embedding IS NOT NULL OR notes_embedding IS NOT NULL)
         AND GREATEST(
-          COALESCE(1 - (description_embedding <=> ${embeddingArray}::vector), 0),
-          COALESCE(1 - (notes_embedding <=> ${embeddingArray}::vector), 0)
+          COALESCE(1 - (description_embedding <=> ${embeddingArray}), 0),
+          COALESCE(1 - (notes_embedding <=> ${embeddingArray}), 0)
         ) >= ${threshold}
     `;
 

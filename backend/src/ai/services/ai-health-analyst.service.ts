@@ -177,7 +177,7 @@ export class AIHealthAnalystService {
 
     const trendResults = Object.entries(vitalsByType).map(([type, measurements]) => {
       const values = measurements
-        .map((m) => m.value1 || parseFloat(m.valueText || '0') || 0)
+        .map((m) => (m.value1 ? Number(m.value1) : parseFloat(m.valueText || '0') || 0))
         .filter((v) => v > 0);
 
       if (values.length === 0) {
@@ -359,7 +359,7 @@ export class AIHealthAnalystService {
 
     if (bpReadings.length > 0) {
       const avgSystolic =
-        bpReadings.reduce((sum, v) => sum + (v.systolic || 0), 0) /
+        bpReadings.reduce((sum, v) => sum + Number(v.systolic || 0), 0) /
         bpReadings.length;
       if (avgSystolic > 140) {
         riskFactors.push({

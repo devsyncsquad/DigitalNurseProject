@@ -22,23 +22,27 @@ export class BatchEmbeddingService {
     let processed = 0;
 
     while (true) {
-      const notes = await this.prisma.caregiverNote.findMany({
-        where: {
-          embedding: null,
-          noteText: { not: null },
-        },
-        take: batchSize,
-        skip: offset,
-      });
+      // Use raw SQL since embedding is not in Prisma schema
+      const notes = await this.prisma.$queryRawUnsafe<Array<{
+        note_id: bigint;
+        note_text: string;
+      }>>(
+        `SELECT note_id, note_text 
+         FROM caregiver_notes 
+         WHERE embedding IS NULL 
+         LIMIT $1 OFFSET $2`,
+        batchSize,
+        offset,
+      );
 
       if (notes.length === 0) break;
 
       for (const note of notes) {
         try {
-          if (!note.noteText || note.noteText.trim().length === 0) continue;
+          if (!note.note_text || note.note_text.trim().length === 0) continue;
 
           const embedding = await this.embeddingService.generateEmbedding(
-            note.noteText,
+            note.note_text,
           );
           const embeddingArray = `[${embedding.join(',')}]`;
 
@@ -47,14 +51,14 @@ export class BatchEmbeddingService {
              SET embedding = $1::vector 
              WHERE note_id = $2`,
             embeddingArray,
-            note.noteId.toString(),
+            note.note_id.toString(),
           );
 
           processed++;
-          this.logger.log(`Processed caregiver note ${note.noteId}`);
+          this.logger.log(`Processed caregiver note ${note.note_id}`);
         } catch (error) {
           this.logger.error(
-            `Error processing caregiver note ${note.noteId}:`,
+            `Error processing caregiver note ${note.note_id}:`,
             error,
           );
         }
@@ -77,13 +81,19 @@ export class BatchEmbeddingService {
     let processed = 0;
 
     while (true) {
-      const medications = await this.prisma.medication.findMany({
-        where: {
-          notes_embedding: null,
-        },
-        take: batchSize,
-        skip: offset,
-      });
+      // Use raw SQL since notes_embedding is not in Prisma schema
+      const medications = await this.prisma.$queryRawUnsafe<Array<{
+        medicationId: bigint;
+        notes: string | null;
+        instructions: string | null;
+      }>>(
+        `SELECT "medicationId", notes, instructions 
+         FROM medications 
+         WHERE notes_embedding IS NULL 
+         LIMIT $1 OFFSET $2`,
+        batchSize,
+        offset,
+      );
 
       if (medications.length === 0) break;
 

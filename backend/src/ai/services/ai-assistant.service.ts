@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { VectorSearchService } from './vector-search.service';
 import { EmbeddingService } from './embedding.service';
@@ -16,25 +17,29 @@ interface ConversationContext {
 @Injectable()
 export class AIAssistantService {
   private readonly logger = new Logger(AIAssistantService.name);
-  private geminiApiKey: string | null = null;
+  private openRouterApiKey: string | null = null;
+  private readonly openRouterModel: string = 'openai/gpt-oss-20b:free';
 
   constructor(
     private prisma: PrismaService,
     private vectorSearchService: VectorSearchService,
     private embeddingService: EmbeddingService,
     private appConfigService: AppConfigService,
+    private configService: ConfigService,
   ) {
-    this.initializeGeminiKey();
+    this.initializeOpenRouterKey();
   }
 
-  private async initializeGeminiKey() {
+  private initializeOpenRouterKey() {
     try {
-      this.geminiApiKey = await this.appConfigService.getGeminiApiKey();
-      if (!this.geminiApiKey) {
-        this.logger.warn('Gemini API key not found. AI Assistant will not work.');
+      this.openRouterApiKey = this.configService.get<string>('OPENAI_API_KEY') || null;
+      if (!this.openRouterApiKey) {
+        this.logger.warn('OpenRouter API key not found. AI Assistant will not work. Set OPENAI_API_KEY in environment.');
+      } else {
+        this.logger.log('OpenRouter API key initialized successfully');
       }
     } catch (error) {
-      this.logger.error('Error initializing Gemini API key:', error);
+      this.logger.error('Error initializing OpenRouter API key:', error);
     }
   }
 
@@ -44,9 +49,9 @@ export class AIAssistantService {
   async chat(
     userId: bigint,
     dto: ChatMessageDto,
-  ): Promise<{ message: string; conversationId: bigint; sources?: any[] }> {
-    if (!this.geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+  ): Promise<{ message: string; conversationId: string; sources?: any[] }> {
+    if (!this.openRouterApiKey) {
+      throw new Error('OpenRouter API key not configured');
     }
 
     // Get or create conversation
@@ -66,11 +71,18 @@ export class AIAssistantService {
       dto.message,
     );
 
-    // Build prompt with context
-    const prompt = this.buildPrompt(dto.message, context);
+    // Build system prompt with context (without user question)
+    const systemPrompt = this.buildSystemPrompt(context);
 
-    // Generate response using Gemini
-    const response = await this.generateResponse(prompt);
+    // Get conversation history for context
+    const conversationHistory = await this.getConversationHistory(conversationId);
+
+    // Generate response using OpenRouter
+    const response = await this.generateResponse(
+      dto.message,
+      systemPrompt,
+      conversationHistory,
+    );
 
     // Store messages
     await this.storeMessage(conversationId, 'user', dto.message);
@@ -83,7 +95,7 @@ export class AIAssistantService {
 
     return {
       message: response.message,
-      conversationId,
+      conversationId: conversationId.toString(),
       sources: response.sources,
     };
   }
@@ -104,51 +116,69 @@ export class AIAssistantService {
       exerciseLogs: [],
     };
 
+    // If no elderUserId provided, use the authenticated user's ID
+    // This handles the case where a regular patient (not caregiver) is asking
+    const targetUserId = elderUserId || userId;
+
+    if (!targetUserId) {
+      return context;
+    }
+
     if (query) {
       // Use semantic search to find relevant information
-      const searchResults = await this.vectorSearchService.searchAll({
-        query,
-        elderUserId,
-        limit: 5,
-      });
+      try {
+        const searchResults = await this.vectorSearchService.searchAll({
+          query,
+          elderUserId: targetUserId,
+          limit: 10,
+        });
 
-      // Group results by entity type
-      searchResults.forEach((result) => {
-        switch (result.entityType) {
-          case 'medications':
-            context.medications.push(result);
-            break;
-          case 'vital_measurements':
-            context.vitals.push(result);
-            break;
-          case 'caregiver_notes':
-            context.notes.push(result);
-            break;
-          case 'diet_logs':
-            context.dietLogs.push(result);
-            break;
-          case 'exercise_logs':
-            context.exerciseLogs.push(result);
-            break;
-        }
-      });
-    } else {
-      // Get recent data if no query
-      if (elderUserId) {
+        this.logger.debug(`Vector search found ${searchResults.length} results for query: "${query}"`);
+
+        // Group results by entity type
+        searchResults.forEach((result) => {
+          switch (result.entityType) {
+            case 'medications':
+              context.medications.push(result);
+              break;
+            case 'vital_measurements':
+              context.vitals.push(result);
+              break;
+            case 'caregiver_notes':
+              context.notes.push(result);
+              break;
+            case 'diet_logs':
+              context.dietLogs.push(result);
+              break;
+            case 'exercise_logs':
+              context.exerciseLogs.push(result);
+              break;
+          }
+        });
+      } catch (error) {
+        this.logger.warn('Vector search failed, falling back to recent data:', error);
+      }
+    }
+
+    // Fallback: Get recent data if search returned no results or if no query
+    // This ensures we always have some context even if embeddings don't exist
+    if (context.vitals.length === 0 && context.medications.length === 0 && context.notes.length === 0) {
+      this.logger.debug('No search results found, fetching recent data as fallback');
+      try {
         const [medications, vitals, notes] = await Promise.all([
           this.prisma.medication.findMany({
-            where: { elderUserId },
-            take: 5,
+            where: { elderUserId: targetUserId },
+            take: 10,
             orderBy: { createdAt: 'desc' },
           }),
           this.prisma.vitalMeasurement.findMany({
-            where: { elderUserId },
-            take: 5,
+            where: { elderUserId: targetUserId },
+            take: 10,
             orderBy: { recordedAt: 'desc' },
           }),
           this.prisma.caregiverNote.findMany({
-            where: { elderUserId },
-            take: 5,
+            where: { elderUserId: targetUserId },
+            take: 10,
             orderBy: { createdAt: 'desc' },
           }),
         ]);
@@ -156,6 +186,10 @@ export class AIAssistantService {
         context.medications = medications;
         context.vitals = vitals;
         context.notes = notes;
+
+        this.logger.debug(`Fallback: Found ${vitals.length} vitals, ${medications.length} medications, ${notes.length} notes`);
+      } catch (error) {
+        this.logger.error('Error fetching fallback data:', error);
       }
     }
 
@@ -163,70 +197,148 @@ export class AIAssistantService {
   }
 
   /**
-   * Build prompt with context for Gemini
+   * Build system prompt with context for OpenRouter
    */
-  private buildPrompt(message: string, context: ConversationContext): string {
-    let prompt = `You are a helpful AI health assistant for Digital Nurse. Answer the user's question based on their health data.
-
-User Question: ${message}
+  private buildSystemPrompt(context: ConversationContext): string {
+    let systemPrompt = `You are a helpful AI health assistant for Digital Nurse. Answer the user's questions based on their health data.
 
 Relevant Health Data:
 `;
 
     if (context.medications.length > 0) {
-      prompt += `\nMedications:\n`;
+      systemPrompt += `\nMedications:\n`;
       context.medications.forEach((med: any) => {
-        prompt += `- ${med.medicationName || med.metadata?.medicationName || 'Medication'}: ${med.content || med.instructions || ''}\n`;
+        const name = med.medicationName || med.metadata?.medicationName || 'Medication';
+        const content = med.content || med.instructions || med.notes || '';
+        systemPrompt += `- ${name}: ${content}\n`;
       });
     }
 
     if (context.vitals.length > 0) {
-      prompt += `\nRecent Vital Measurements:\n`;
+      systemPrompt += `\nRecent Vital Measurements:\n`;
       context.vitals.forEach((vital: any) => {
-        prompt += `- ${vital.metadata?.kindCode || 'Vital'}: ${vital.content || ''}\n`;
+        // Handle both search results and direct database results
+        const kindCode = vital.kindCode || vital.metadata?.kindCode || 'Vital';
+        const value1 = vital.value1;
+        const value2 = vital.value2;
+        const valueText = vital.valueText;
+        const notes = vital.notes;
+        const recordedAt = vital.recordedAt || vital.metadata?.recordedAt;
+        
+        let vitalInfo = kindCode;
+        if (value1 !== null && value1 !== undefined) {
+          vitalInfo += `: ${value1}`;
+          if (value2 !== null && value2 !== undefined) {
+            vitalInfo += `/${value2}`;
+          }
+        } else if (valueText) {
+          vitalInfo += `: ${valueText}`;
+        }
+        if (notes) {
+          vitalInfo += ` (${notes})`;
+        }
+        if (recordedAt) {
+          const date = new Date(recordedAt).toLocaleDateString();
+          vitalInfo += ` - ${date}`;
+        }
+        
+        // If it's from search results, use content
+        if (vital.content && !value1 && !valueText) {
+          vitalInfo = `${kindCode}: ${vital.content}`;
+        }
+        
+        systemPrompt += `- ${vitalInfo}\n`;
       });
     }
 
     if (context.notes.length > 0) {
-      prompt += `\nCaregiver Notes:\n`;
+      systemPrompt += `\nCaregiver Notes:\n`;
       context.notes.forEach((note: any) => {
-        prompt += `- ${note.content || note.noteText || ''}\n`;
+        const content = note.content || note.noteText || '';
+        const createdAt = note.createdAt || note.metadata?.createdAt;
+        let noteInfo = content;
+        if (createdAt) {
+          const date = new Date(createdAt).toLocaleDateString();
+          noteInfo += ` (${date})`;
+        }
+        systemPrompt += `- ${noteInfo}\n`;
       });
     }
 
-    prompt += `\nInstructions:
-- Answer based on the provided health data
+    if (context.vitals.length === 0 && context.medications.length === 0 && context.notes.length === 0) {
+      systemPrompt += `\nNo recent health data available.`;
+    }
+
+    systemPrompt += `\nInstructions:
+- Answer based on the provided health data above
+- Be specific and reference actual values when available
+- If the user asks about specific vitals (like blood pressure), look for those in the data above
 - Be concise and helpful
-- If you don't have enough information, say so
+- If you don't have enough information, say so clearly
 - Always recommend consulting healthcare providers for medical advice
-- Use a friendly, supportive tone
+- Use a friendly, supportive tone`;
 
-Answer:`;
-
-    return prompt;
+    return systemPrompt;
   }
 
   /**
-   * Generate response using Gemini API
+   * Get conversation history for context
    */
-  private async generateResponse(prompt: string): Promise<{
+  private async getConversationHistory(conversationId: bigint): Promise<Array<{ role: string; content: string }>> {
+    try {
+      const messages = await this.prisma.$queryRawUnsafe(
+        `SELECT role, content FROM ai_conversation_messages 
+         WHERE conversation_id = ${conversationId} 
+         ORDER BY created_at ASC 
+         LIMIT 10`,
+      );
+
+      return (messages as any[]).map((msg) => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content,
+      }));
+    } catch (error) {
+      this.logger.warn('Error fetching conversation history:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Generate response using OpenRouter API
+   */
+  private async generateResponse(
+    userMessage: string,
+    systemPrompt: string,
+    conversationHistory: Array<{ role: string; content: string }> = [],
+  ): Promise<{
     message: string;
     sources?: any[];
   }> {
     try {
+      // Build messages array with system prompt, conversation history, and current user message
+      const messages = [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...conversationHistory,
+        {
+          role: 'user',
+          content: userMessage,
+        },
+      ];
+
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.geminiApiKey}`,
+        'https://openrouter.ai/api/v1/chat/completions',
         {
           method: 'POST',
           headers: {
+            'Authorization': `Bearer ${this.openRouterApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
+            model: this.openRouterModel,
+            messages: messages,
           }),
         },
       );
@@ -234,13 +346,13 @@ Answer:`;
       if (!response.ok) {
         const error = await response.json();
         throw new Error(
-          `Gemini API error: ${error.error?.message || response.statusText}`,
+          `OpenRouter API error: ${error.error?.message || response.statusText}`,
         );
       }
 
       const data = await response.json();
       const message =
-        data.candidates?.[0]?.content?.parts?.[0]?.text ||
+        data.choices?.[0]?.message?.content ||
         'I apologize, but I could not generate a response.';
 
       return { message };
@@ -257,12 +369,11 @@ Answer:`;
     userId: bigint,
     elderUserId?: bigint,
   ): Promise<{ conversationId: bigint }> {
-    const result = await this.prisma.$executeRawUnsafe(
+    const elderUserIdValue = elderUserId ? `${elderUserId}` : 'NULL';
+    
+    await this.prisma.$executeRawUnsafe(
       `INSERT INTO ai_conversations (user_id, elder_user_id, created_at, updated_at)
-       VALUES ($1, $2, NOW(), NOW())
-       RETURNING conversation_id`,
-      userId.toString(),
-      elderUserId?.toString() || null,
+       VALUES (${userId}, ${elderUserIdValue}, NOW(), NOW())`,
     );
 
     const conversations = await this.prisma.$queryRawUnsafe(
@@ -285,14 +396,14 @@ Answer:`;
     content: string,
     metadata?: any,
   ) {
+    // Escape single quotes in content and metadata to prevent SQL injection
+    const escapedContent = content.replace(/'/g, "''");
+    const metadataJson = JSON.stringify(metadata || {}).replace(/'/g, "''");
+    
     await this.prisma.$executeRawUnsafe(
       `INSERT INTO ai_conversation_messages 
        (conversation_id, role, content, metadata, created_at)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      conversationId.toString(),
-      role,
-      content,
-      JSON.stringify(metadata || {}),
+       VALUES (${conversationId}, '${role}', '${escapedContent}', '${metadataJson}'::jsonb, NOW())`,
     );
   }
 
@@ -326,9 +437,20 @@ Answer:`;
        ORDER BY created_at ASC`,
     );
 
+    const conv = (conversation as any[])[0];
+    const msgs = (messages as any[]).map((msg) => ({
+      ...msg,
+      conversation_id: msg.conversation_id?.toString(),
+    }));
+
     return {
-      conversation: (conversation as any[])[0],
-      messages: messages as any[],
+      conversation: {
+        ...conv,
+        conversation_id: conv.conversation_id?.toString(),
+        user_id: conv.user_id?.toString(),
+        elder_user_id: conv.elder_user_id?.toString(),
+      },
+      messages: msgs,
     };
   }
 
@@ -343,7 +465,12 @@ Answer:`;
     query += ` ORDER BY updated_at DESC`;
 
     const conversations = await this.prisma.$queryRawUnsafe(query);
-    return conversations as any[];
+    return (conversations as any[]).map((conv) => ({
+      ...conv,
+      conversation_id: conv.conversation_id?.toString(),
+      user_id: conv.user_id?.toString(),
+      elder_user_id: conv.elder_user_id?.toString(),
+    }));
   }
 }
 

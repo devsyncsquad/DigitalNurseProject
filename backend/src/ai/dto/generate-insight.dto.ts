@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNumber, IsEnum, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsArray, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum InsightType {
@@ -29,13 +30,15 @@ export class GenerateInsightDto {
     enum: InsightType,
   })
   @IsEnum(InsightType)
-  insightType: InsightType;
+  insightType!: InsightType;
 
   @ApiProperty({
-    description: 'Elder user ID for the insight',
+    description: 'Elder user ID for whom the insight should be generated. This must be a valid user ID that exists in the database.',
+    example: 1,
   })
   @IsNumber()
-  elderUserId: bigint;
+  @Type(() => Number)
+  elderUserId!: bigint;
 
   @ApiPropertyOptional({
     description: 'Priority level',
@@ -68,6 +71,11 @@ export class GetInsightsDto {
     isArray: true,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split(',');
+    return value;
+  })
   @IsArray()
   @IsEnum(InsightType, { each: true })
   types?: InsightType[];
@@ -78,6 +86,11 @@ export class GetInsightsDto {
     isArray: true,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split(',');
+    return value;
+  })
   @IsArray()
   @IsEnum(InsightPriority, { each: true })
   priorities?: InsightPriority[];
@@ -88,6 +101,11 @@ export class GetInsightsDto {
     isArray: true,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split(',');
+    return value;
+  })
   @IsArray()
   @IsEnum(InsightCategory, { each: true })
   categories?: InsightCategory[];
@@ -96,20 +114,28 @@ export class GetInsightsDto {
     description: 'Filter by read status',
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
+  @IsBoolean()
   isRead?: boolean;
 
   @ApiPropertyOptional({
     description: 'Elder user ID to filter',
   })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  elderUserId?: bigint;
+  elderUserId?: number;
 
   @ApiPropertyOptional({
     description: 'Limit number of results',
     default: 20,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   limit?: number;
 }
