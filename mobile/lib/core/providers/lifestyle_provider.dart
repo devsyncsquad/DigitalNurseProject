@@ -388,4 +388,48 @@ class LifestyleProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  // Get diet plan compliance
+  Future<Map<String, dynamic>> getDietPlanCompliance(
+    String planId,
+    DateTime startDate,
+    DateTime endDate, {
+    String? elderUserId,
+  }) async {
+    try {
+      final result = await _service.getDietPlanCompliance(
+        planId,
+        startDate,
+        endDate,
+        elderUserId: elderUserId,
+      );
+      _error = null;
+      return result;
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    }
+  }
+
+  // Get exercise plan compliance
+  Future<Map<String, dynamic>> getExercisePlanCompliance(
+    String planId,
+    DateTime startDate,
+    DateTime endDate, {
+    String? elderUserId,
+  }) async {
+    try {
+      final result = await _service.getExercisePlanCompliance(
+        planId,
+        startDate,
+        endDate,
+        elderUserId: elderUserId,
+      );
+      _error = null;
+      return result;
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    }
+  }
 }

@@ -19,6 +19,7 @@ import { UpdateDietPlanDto } from './dto/update-diet-plan.dto';
 import { CreateExercisePlanDto } from './dto/create-exercise-plan.dto';
 import { UpdateExercisePlanDto } from './dto/update-exercise-plan.dto';
 import { ApplyPlanDto } from './dto/apply-plan.dto';
+import { PlanComplianceResponseDto } from './dto/plan-compliance.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AccessControlService } from '../common/services/access-control.service';
@@ -202,6 +203,28 @@ export class LifestyleController {
     return this.lifestyleService.applyDietPlan(context, BigInt(id), applyDto);
   }
 
+  @Get('diet-plans/:id/compliance')
+  @ApiOperation({ summary: 'Get diet plan compliance data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan compliance data',
+    type: PlanComplianceResponseDto,
+  })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  async getDietPlanCompliance(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+    return this.lifestyleService.getDietPlanCompliance(context, BigInt(id), start, end);
+  }
+
   // ============================================
   // Exercise Plan Endpoints
   // ============================================
@@ -272,6 +295,28 @@ export class LifestyleController {
   ) {
     const context = await this.resolveContext(user, applyDto.elderUserId);
     return this.lifestyleService.applyExercisePlan(context, BigInt(id), applyDto);
+  }
+
+  @Get('exercise-plans/:id/compliance')
+  @ApiOperation({ summary: 'Get exercise plan compliance data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan compliance data',
+    type: PlanComplianceResponseDto,
+  })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  async getExercisePlanCompliance(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('elderUserId') elderUserId?: string,
+  ) {
+    const context = await this.resolveContext(user, elderUserId);
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+    return this.lifestyleService.getExercisePlanCompliance(context, BigInt(id), start, end);
   }
 }
 

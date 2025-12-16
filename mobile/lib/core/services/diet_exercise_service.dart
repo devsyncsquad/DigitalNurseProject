@@ -677,4 +677,68 @@ class DietExerciseService {
       throw Exception(e.toString());
     }
   }
+
+  Future<Map<String, dynamic>> getDietPlanCompliance(
+    String planId,
+    DateTime startDate,
+    DateTime endDate, {
+    String? elderUserId,
+  }) async {
+    _log('📊 Getting diet plan compliance: $planId');
+    try {
+      final queryParams = <String, dynamic>{
+        'startDate': startDate.toIso8601String().split('T')[0],
+        'endDate': endDate.toIso8601String().split('T')[0],
+        if (elderUserId != null) 'elderUserId': elderUserId,
+      };
+
+      final response = await _apiService.get(
+        '/lifestyle/diet-plans/$planId/compliance',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ Diet plan compliance retrieved successfully');
+        return response.data;
+      } else {
+        _log('❌ Failed to get diet plan compliance: ${response.statusMessage}');
+        throw Exception('Failed to get diet plan compliance: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error getting diet plan compliance: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>> getExercisePlanCompliance(
+    String planId,
+    DateTime startDate,
+    DateTime endDate, {
+    String? elderUserId,
+  }) async {
+    _log('📊 Getting exercise plan compliance: $planId');
+    try {
+      final queryParams = <String, dynamic>{
+        'startDate': startDate.toIso8601String().split('T')[0],
+        'endDate': endDate.toIso8601String().split('T')[0],
+        if (elderUserId != null) 'elderUserId': elderUserId,
+      };
+
+      final response = await _apiService.get(
+        '/lifestyle/exercise-plans/$planId/compliance',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ Exercise plan compliance retrieved successfully');
+        return response.data;
+      } else {
+        _log('❌ Failed to get exercise plan compliance: ${response.statusMessage}');
+        throw Exception('Failed to get exercise plan compliance: ${response.statusMessage}');
+      }
+    } catch (e) {
+      _log('❌ Error getting exercise plan compliance: $e');
+      throw Exception(e.toString());
+    }
+  }
 }

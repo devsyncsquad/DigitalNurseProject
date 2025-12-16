@@ -257,42 +257,48 @@ model CaregiverNote {
 // ============================================
 
 model DietLog {
-  dietId    BigInt    @id @default(autoincrement()) @map("diet_id")
-  userId    BigInt    @map("user_id")
-  logDate   DateTime  @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
-  mealType  String    @map("meal_type")
-  foodItems String?   @map("food_items")
-  calories  Int?      @map("calories")
-  notes     String?   @map("notes")
-  createdAt DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+  dietId       BigInt     @id @default(autoincrement()) @map("diet_id")
+  userId       BigInt     @map("user_id")
+  logDate      DateTime   @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
+  mealType     String     @map("meal_type")
+  foodItems    String?    @map("food_items")
+  calories     Int?       @map("calories")
+  notes        String?    @map("notes")
+  sourcePlanId BigInt?    @map("source_plan_id")
+  createdAt    DateTime?  @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  updatedAt    DateTime?  @map("updated_at")
 
   // Relations
-  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  sourcePlan DietPlan? @relation("DietLogSourcePlan", fields: [sourcePlanId], references: [planId], onDelete: SetNull)
 
   @@index([userId])
   @@index([logDate])
+  @@index([sourcePlanId])
   @@map("diet_logs")
 }
 
 model ExerciseLog {
-  exerciseId      BigInt    @id @default(autoincrement()) @map("exercise_id")
-  userId          BigInt    @map("user_id")
-  logDate         DateTime  @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
-  exerciseType    String    @map("exercise_type")
-  durationMinutes Int?      @map("duration_minutes")
-  caloriesBurned  Int?      @map("calories_burned")
-  intensity       String?   @map("intensity")
-  description     String?   @map("description")
-  notes           String?   @map("notes")
-  createdAt       DateTime? @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
-  updatedAt       DateTime? @map("updated_at")
+  exerciseId      BigInt        @id @default(autoincrement()) @map("exercise_id")
+  userId          BigInt        @map("user_id")
+  logDate         DateTime      @default(dbgenerated("CURRENT_DATE")) @map("log_date") @db.Date
+  exerciseType    String        @map("exercise_type")
+  durationMinutes Int?          @map("duration_minutes")
+  caloriesBurned  Int?          @map("calories_burned")
+  intensity       String?       @map("intensity")
+  description     String?       @map("description")
+  notes           String?       @map("notes")
+  sourcePlanId    BigInt?       @map("source_plan_id")
+  createdAt       DateTime?     @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  updatedAt       DateTime?     @map("updated_at")
 
   // Relations
-  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  sourcePlan ExercisePlan? @relation("ExerciseLogSourcePlan", fields: [sourcePlanId], references: [planId], onDelete: SetNull)
 
   @@index([userId])
   @@index([logDate])
+  @@index([sourcePlanId])
   @@map("exercise_logs")
 }
 
@@ -306,8 +312,9 @@ model DietPlan {
   updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at")
 
   // Relations
-  user  User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  items DietPlanItem[]
+  user        User           @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  items       DietPlanItem[]
+  sourceLogs  DietLog[]      @relation("DietLogSourcePlan")
 
   @@index([userId])
   @@map("diet_plans")
@@ -341,8 +348,9 @@ model ExercisePlan {
   updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at")
 
   // Relations
-  user  User              @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  items ExercisePlanItem[]
+  user        User              @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  items       ExercisePlanItem[]
+  sourceLogs  ExerciseLog[]     @relation("ExerciseLogSourcePlan")
 
   @@index([userId])
   @@map("exercise_plans")

@@ -27,7 +27,10 @@ class _WeeklyPlansScreenState extends State<WeeklyPlansScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadPlans();
+    // Defer loading until after build phase completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPlans();
+    });
   }
 
   @override
@@ -161,6 +164,9 @@ class _DietPlansTab extends StatelessWidget {
                             onApply: () => _showApplyDialog(context, plan.id, true),
                             onEdit: () => context.push('/lifestyle/plans/diet/edit/${plan.id}'),
                             onDelete: () => _showDeleteDialog(context, plan.id, plan.planName, true),
+                            onViewCompliance: () => context.push(
+                              '/lifestyle/plans/compliance?isDietPlan=true&planId=${plan.id}&planName=${Uri.encodeComponent(plan.planName)}',
+                            ),
                           );
                         },
                       ),
@@ -319,6 +325,9 @@ class _ExercisePlansTab extends StatelessWidget {
                             onApply: () => _showApplyDialog(context, plan.id, false),
                             onEdit: () => context.push('/lifestyle/plans/exercise/edit/${plan.id}'),
                             onDelete: () => _showDeleteDialog(context, plan.id, plan.planName, false),
+                            onViewCompliance: () => context.push(
+                              '/lifestyle/plans/compliance?isDietPlan=false&planId=${plan.id}&planName=${Uri.encodeComponent(plan.planName)}',
+                            ),
                           );
                         },
                       ),
@@ -426,6 +435,7 @@ class _PlanCard extends StatelessWidget {
   final VoidCallback onApply;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onViewCompliance;
 
   const _PlanCard({
     required this.plan,
@@ -433,6 +443,7 @@ class _PlanCard extends StatelessWidget {
     required this.onApply,
     required this.onEdit,
     required this.onDelete,
+    required this.onViewCompliance,
   });
 
   @override
@@ -503,9 +514,16 @@ class _PlanCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 4.w,
+              runSpacing: 4.h,
               children: [
+                TextButton.icon(
+                  onPressed: onViewCompliance,
+                  icon: const Icon(Icons.analytics, size: 16),
+                  label: const Text('Compliance'),
+                ),
                 TextButton.icon(
                   onPressed: onApply,
                   icon: const Icon(FIcons.calendar, size: 16),

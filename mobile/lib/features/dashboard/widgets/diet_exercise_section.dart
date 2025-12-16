@@ -94,14 +94,47 @@ class DietExerciseSection extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      log.mealType.displayName,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            log.mealType.displayName,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
+                                        ),
+                                        if (log.sourcePlanId != null)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.getSuccessColor(context).withValues(alpha: 0.2),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  FIcons.calendar,
+                                                  size: 10,
+                                                  color: AppTheme.getSuccessColor(context),
+                                                ),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  'Plan',
+                                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                        color: AppTheme.getSuccessColor(context),
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: 9,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     Text(
                                       log.description,
@@ -164,14 +197,47 @@ class DietExerciseSection extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      log.activityType.displayName,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            log.activityType.displayName,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
+                                        ),
+                                        if (log.sourcePlanId != null)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: ModernSurfaceTheme.accentBlue.withValues(alpha: 0.2),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  FIcons.calendar,
+                                                  size: 10,
+                                                  color: ModernSurfaceTheme.accentBlue,
+                                                ),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  'Plan',
+                                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                        color: ModernSurfaceTheme.accentBlue,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: 9,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     Text(
                                       log.description,

@@ -5,6 +5,7 @@ class DietLogModel {
   final int calories;
   final DateTime timestamp;
   final String userId;
+  final String? sourcePlanId;
 
   DietLogModel({
     required this.id,
@@ -13,6 +14,7 @@ class DietLogModel {
     required this.calories,
     required this.timestamp,
     required this.userId,
+    this.sourcePlanId,
   });
 
   DietLogModel copyWith({
@@ -22,6 +24,7 @@ class DietLogModel {
     int? calories,
     DateTime? timestamp,
     String? userId,
+    String? sourcePlanId,
   }) {
     return DietLogModel(
       id: id ?? this.id,
@@ -30,6 +33,7 @@ class DietLogModel {
       calories: calories ?? this.calories,
       timestamp: timestamp ?? this.timestamp,
       userId: userId ?? this.userId,
+      sourcePlanId: sourcePlanId ?? this.sourcePlanId,
     );
   }
 
@@ -41,6 +45,7 @@ class DietLogModel {
       'calories': calories,
       'timestamp': timestamp.toIso8601String(),
       'userId': userId,
+      if (sourcePlanId != null) 'sourcePlanId': sourcePlanId,
     };
   }
 
@@ -55,6 +60,7 @@ class DietLogModel {
       calories: json['calories'],
       timestamp: DateTime.parse(json['timestamp']),
       userId: json['userId'],
+      sourcePlanId: json['sourcePlanId']?.toString(),
     );
   }
 }

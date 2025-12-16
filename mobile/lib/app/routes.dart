@@ -27,6 +27,7 @@ import '../features/lifestyle/screens/add_meal_screen.dart';
 import '../features/lifestyle/screens/add_workout_screen.dart';
 import '../features/lifestyle/screens/weekly_plans_screen.dart';
 import '../features/lifestyle/screens/create_weekly_plan_screen.dart';
+import '../features/lifestyle/screens/plan_compliance_screen.dart';
 import '../features/documents/screens/upload_document_screen.dart';
 import '../features/documents/screens/document_viewer_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
@@ -255,6 +256,19 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return CreateWeeklyPlanScreen(isDietPlan: false, planId: id);
+      },
+    ),
+    GoRoute(
+      path: '/lifestyle/plans/compliance',
+      builder: (context, state) {
+        final isDietPlan = state.uri.queryParameters['isDietPlan'] == 'true';
+        final planId = state.uri.queryParameters['planId'] ?? '';
+        final planName = state.uri.queryParameters['planName'] ?? 'Plan';
+        return PlanComplianceScreen(
+          isDietPlan: isDietPlan,
+          planId: planId,
+          planName: Uri.decodeComponent(planName),
+        );
       },
     ),
 

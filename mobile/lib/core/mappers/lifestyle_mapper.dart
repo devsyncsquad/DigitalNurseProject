@@ -63,6 +63,7 @@ class LifestyleMapper {
       calories: int.tryParse(json['calories']?.toString() ?? '0') ?? 0,
       timestamp: timestamp,
       userId: json['userId']?.toString() ?? json['elderUserId']?.toString() ?? '',
+      sourcePlanId: json['sourcePlanId']?.toString(),
     );
   }
 
@@ -172,6 +173,7 @@ class LifestyleMapper {
       caloriesBurned: int.tryParse(json['caloriesBurned']?.toString() ?? '0') ?? 0,
       timestamp: timestamp,
       userId: json['userId']?.toString() ?? json['elderUserId']?.toString() ?? '',
+      sourcePlanId: json['sourcePlanId']?.toString(),
     );
   }
 

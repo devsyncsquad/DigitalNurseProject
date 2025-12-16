@@ -177,12 +177,45 @@ class _MealsTab extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    meal.mealType.displayName,
-                                    style: textTheme.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.onSurface,
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          meal.mealType.displayName,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: colorScheme.onSurface,
+                                              ),
                                         ),
+                                      ),
+                                      if (meal.sourcePlanId != null)
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                          decoration: BoxDecoration(
+                                            color: ModernSurfaceTheme.primaryTeal.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                FIcons.calendar,
+                                                size: 12,
+                                                color: ModernSurfaceTheme.primaryTeal,
+                                              ),
+                                              SizedBox(width: 4.w),
+                                              Text(
+                                                'Plan',
+                                                style: textTheme.bodySmall?.copyWith(
+                                                      color: ModernSurfaceTheme.primaryTeal,
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 10,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
@@ -355,12 +388,45 @@ class _WorkoutsTab extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    workout.activityType.displayName,
-                                    style: textTheme.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.onSurface,
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          workout.activityType.displayName,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: colorScheme.onSurface,
+                                              ),
                                         ),
+                                      ),
+                                      if (workout.sourcePlanId != null)
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                          decoration: BoxDecoration(
+                                            color: ModernSurfaceTheme.accentBlue.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                FIcons.calendar,
+                                                size: 12,
+                                                color: ModernSurfaceTheme.accentBlue,
+                                              ),
+                                              SizedBox(width: 4.w),
+                                              Text(
+                                                'Plan',
+                                                style: textTheme.bodySmall?.copyWith(
+                                                      color: ModernSurfaceTheme.accentBlue,
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 10,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(

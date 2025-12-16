@@ -217,6 +217,7 @@ export class LifestyleService {
       calories: log.calories || 0,
       timestamp: log.logDate.toISOString(),
       userId: log.userId.toString(),
+      sourcePlanId: log.sourcePlanId?.toString() || null,
     };
   }
 
@@ -224,6 +225,7 @@ export class LifestyleService {
     return {
       id: log.exerciseId.toString(),
       activityType: log.exerciseType,
+      sourcePlanId: log.sourcePlanId?.toString() || null,
       description: log.description || '',
       durationMinutes: log.durationMinutes || 0,
       caloriesBurned: log.caloriesBurned || 0,
@@ -419,6 +421,7 @@ export class LifestyleService {
             foodItems: item.description,
             calories: item.calories || null,
             notes: item.notes || null,
+            sourcePlanId: planId,
           },
         });
         createdLogs.push(this.mapDietLogToResponse(log));
@@ -629,6 +632,7 @@ export class LifestyleService {
             caloriesBurned: item.caloriesBurned || null,
             intensity: item.intensity || null,
             notes: item.notes || null,
+            sourcePlanId: planId,
           },
         });
         createdLogs.push(this.mapExerciseLogToResponse(log));
@@ -643,6 +647,267 @@ export class LifestyleService {
         created: createdLogs,
         skipped: skippedLogs,
       },
+    };
+  }
+
+  // ============================================
+  // Plan Compliance Methods
+  // ============================================
+
+  async getDietPlanCompliance(
+    context: ActorContext,
+    planId: bigint,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const plan = await this.findDietPlanById(context, planId);
+
+    // Get all plan items grouped by day of week
+    const itemsByDayOfWeek = new Map<number, any[]>();
+    plan.items.forEach((item: any) => {
+      if (!itemsByDayOfWeek.has(item.dayOfWeek)) {
+        itemsByDayOfWeek.set(item.dayOfWeek, []);
+      }
+      itemsByDayOfWeek.get(item.dayOfWeek)!.push(item);
+    });
+
+    const dailyBreakdown = [];
+    let totalPlanned = 0;
+    let totalMatched = 0;
+
+    // Process each day in the date range
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay();
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const plannedItems = itemsByDayOfWeek.get(dayOfWeek) || [];
+
+      // Get actual logs for this date
+      const actualLogs = await this.prisma.dietLog.findMany({
+        where: {
+          userId: context.elderUserId,
+          logDate: currentDate,
+        },
+      });
+
+      // Match planned items with actual logs
+      const details = [];
+      const matchedItems = new Set<number>();
+
+      for (const plannedItem of plannedItems) {
+        let matched = false;
+        let matchedLog = null;
+
+        // Try to find a matching log by mealType
+        for (let i = 0; i < actualLogs.length; i++) {
+          if (
+            !matchedItems.has(i) &&
+            actualLogs[i].mealType === plannedItem.mealType
+          ) {
+            matched = true;
+            matchedLog = actualLogs[i];
+            matchedItems.add(i);
+            break;
+          }
+        }
+
+        details.push({
+          planned: {
+            mealType: plannedItem.mealType,
+            description: plannedItem.description,
+            calories: plannedItem.calories || 0,
+          },
+          actual: matchedLog
+            ? {
+                mealType: matchedLog.mealType,
+                description: matchedLog.foodItems || '',
+                calories: matchedLog.calories || 0,
+              }
+            : null,
+          matched,
+        });
+
+        if (matched) {
+          totalMatched++;
+        }
+      }
+
+      // Add extra logs (not matched to any planned item)
+      for (let i = 0; i < actualLogs.length; i++) {
+        if (!matchedItems.has(i)) {
+          details.push({
+            planned: null,
+            actual: {
+              mealType: actualLogs[i].mealType,
+              description: actualLogs[i].foodItems || '',
+              calories: actualLogs[i].calories || 0,
+            },
+            matched: false,
+          });
+        }
+      }
+
+      const compliance =
+        plannedItems.length > 0
+          ? (details.filter((d) => d.matched && d.planned).length /
+              plannedItems.length) *
+            100
+          : 100;
+
+      dailyBreakdown.push({
+        date: dateStr,
+        planned: plannedItems.length,
+        actual: actualLogs.length,
+        matched: details.filter((d) => d.matched && d.planned).length,
+        compliance: Math.round(compliance * 100) / 100,
+        details,
+      });
+
+      totalPlanned += plannedItems.length;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const overallCompliance =
+      totalPlanned > 0 ? (totalMatched / totalPlanned) * 100 : 100;
+
+    return {
+      planId: planId.toString(),
+      period: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      },
+      overallCompliance: Math.round(overallCompliance * 100) / 100,
+      dailyBreakdown,
+    };
+  }
+
+  async getExercisePlanCompliance(
+    context: ActorContext,
+    planId: bigint,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const plan = await this.findExercisePlanById(context, planId);
+
+    // Get all plan items grouped by day of week
+    const itemsByDayOfWeek = new Map<number, any[]>();
+    plan.items.forEach((item: any) => {
+      if (!itemsByDayOfWeek.has(item.dayOfWeek)) {
+        itemsByDayOfWeek.set(item.dayOfWeek, []);
+      }
+      itemsByDayOfWeek.get(item.dayOfWeek)!.push(item);
+    });
+
+    const dailyBreakdown = [];
+    let totalPlanned = 0;
+    let totalMatched = 0;
+
+    // Process each day in the date range
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay();
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const plannedItems = itemsByDayOfWeek.get(dayOfWeek) || [];
+
+      // Get actual logs for this date
+      const actualLogs = await this.prisma.exerciseLog.findMany({
+        where: {
+          userId: context.elderUserId,
+          logDate: currentDate,
+        },
+      });
+
+      // Match planned items with actual logs
+      const details = [];
+      const matchedItems = new Set<number>();
+
+      for (const plannedItem of plannedItems) {
+        let matched = false;
+        let matchedLog = null;
+
+        // Try to find a matching log by activityType
+        for (let i = 0; i < actualLogs.length; i++) {
+          if (
+            !matchedItems.has(i) &&
+            actualLogs[i].exerciseType === plannedItem.activityType
+          ) {
+            matched = true;
+            matchedLog = actualLogs[i];
+            matchedItems.add(i);
+            break;
+          }
+        }
+
+        details.push({
+          planned: {
+            activityType: plannedItem.activityType,
+            description: plannedItem.description,
+            durationMinutes: plannedItem.durationMinutes || 0,
+            caloriesBurned: plannedItem.caloriesBurned || 0,
+          },
+          actual: matchedLog
+            ? {
+                activityType: matchedLog.exerciseType,
+                description: matchedLog.description || '',
+                durationMinutes: matchedLog.durationMinutes || 0,
+                caloriesBurned: matchedLog.caloriesBurned || 0,
+              }
+            : null,
+          matched,
+        });
+
+        if (matched) {
+          totalMatched++;
+        }
+      }
+
+      // Add extra logs (not matched to any planned item)
+      for (let i = 0; i < actualLogs.length; i++) {
+        if (!matchedItems.has(i)) {
+          details.push({
+            planned: null,
+            actual: {
+              activityType: actualLogs[i].exerciseType,
+              description: actualLogs[i].description || '',
+              durationMinutes: actualLogs[i].durationMinutes || 0,
+              caloriesBurned: actualLogs[i].caloriesBurned || 0,
+            },
+            matched: false,
+          });
+        }
+      }
+
+      const compliance =
+        plannedItems.length > 0
+          ? (details.filter((d) => d.matched && d.planned).length /
+              plannedItems.length) *
+            100
+          : 100;
+
+      dailyBreakdown.push({
+        date: dateStr,
+        planned: plannedItems.length,
+        actual: actualLogs.length,
+        matched: details.filter((d) => d.matched && d.planned).length,
+        compliance: Math.round(compliance * 100) / 100,
+        details,
+      });
+
+      totalPlanned += plannedItems.length;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const overallCompliance =
+      totalPlanned > 0 ? (totalMatched / totalPlanned) * 100 : 100;
+
+    return {
+      planId: planId.toString(),
+      period: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      },
+      overallCompliance: Math.round(overallCompliance * 100) / 100,
+      dailyBreakdown,
     };
   }
 
