@@ -40,7 +40,7 @@ class ExerciseLogModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'activityType': activityType.toString(),
+      'activityType': activityType.name,
       'description': description,
       'durationMinutes': durationMinutes,
       'caloriesBurned': caloriesBurned,
@@ -53,7 +53,8 @@ class ExerciseLogModel {
     return ExerciseLogModel(
       id: json['id'],
       activityType: ActivityType.values.firstWhere(
-        (e) => e.toString() == json['activityType'],
+        (e) => e.name == json['activityType'],
+        orElse: () => ActivityType.walking,
       ),
       description: json['description'],
       durationMinutes: json['durationMinutes'],

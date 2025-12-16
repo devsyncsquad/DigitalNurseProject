@@ -279,9 +279,15 @@ class _CreateWeeklyPlanScreenState extends State<CreateWeeklyPlanScreen> {
                       // Plan name and description
                       TextFormField(
                         controller: _planNameController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                         decoration: InputDecoration(
                           labelText: 'Plan Name',
+                          labelStyle: const TextStyle(color: Colors.white70),
                           hintText: 'e.g., Weekly Weight Loss Plan',
+                          hintStyle: const TextStyle(color: Colors.white70),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -296,9 +302,15 @@ class _CreateWeeklyPlanScreenState extends State<CreateWeeklyPlanScreen> {
                       SizedBox(height: 16.h),
                       TextFormField(
                         controller: _descriptionController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                         decoration: InputDecoration(
                           labelText: 'Description (Optional)',
+                          labelStyle: const TextStyle(color: Colors.white70),
                           hintText: 'Describe your plan',
+                          hintStyle: const TextStyle(color: Colors.white70),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -636,6 +648,10 @@ class _AddItemDialogState extends State<_AddItemDialog> {
             SizedBox(height: 16.h),
             TextField(
               controller: _descriptionController,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+              ),
               decoration: InputDecoration(
                 labelText: widget.isDietPlan ? 'Food Description' : 'Exercise Description',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -645,6 +661,10 @@ class _AddItemDialogState extends State<_AddItemDialog> {
             if (widget.isDietPlan) ...[
               TextField(
                 controller: _caloriesController,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Calories',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -654,6 +674,10 @@ class _AddItemDialogState extends State<_AddItemDialog> {
             ] else ...[
               TextField(
                 controller: _durationController,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Duration (minutes)',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -663,6 +687,10 @@ class _AddItemDialogState extends State<_AddItemDialog> {
               SizedBox(height: 16.h),
               TextField(
                 controller: _caloriesBurnedController,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Calories Burned',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -691,6 +719,10 @@ class _AddItemDialogState extends State<_AddItemDialog> {
             SizedBox(height: 16.h),
             TextField(
               controller: _notesController,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+              ),
               decoration: InputDecoration(
                 labelText: 'Notes (Optional)',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

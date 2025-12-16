@@ -124,7 +124,7 @@ class ExercisePlanItemModel {
     return {
       'id': id,
       'dayOfWeek': dayOfWeek,
-      'activityType': activityType.toString(),
+      'activityType': activityType.name,
       'description': description,
       'durationMinutes': durationMinutes,
       'caloriesBurned': caloriesBurned,
@@ -138,7 +138,7 @@ class ExercisePlanItemModel {
       id: json['id']?.toString() ?? '',
       dayOfWeek: json['dayOfWeek'] ?? 0,
       activityType: ActivityType.values.firstWhere(
-        (e) => e.toString() == json['activityType'],
+        (e) => e.name == json['activityType'],
         orElse: () => ActivityType.walking,
       ),
       description: json['description'] ?? '',

@@ -351,7 +351,7 @@ class DietExerciseService {
         'description': plan.description,
         'items': plan.items.map((item) => <String, dynamic>{
           'dayOfWeek': item.dayOfWeek,
-          'mealType': item.mealType.toString(),
+          'mealType': item.mealType.name,
           'description': item.description,
           'calories': item.calories,
           'notes': item.notes,
@@ -386,7 +386,7 @@ class DietExerciseService {
         'description': plan.description,
         'items': plan.items.map((item) => <String, dynamic>{
           'dayOfWeek': item.dayOfWeek,
-          'mealType': item.mealType.toString(),
+          'mealType': item.mealType.name,
           'description': item.description,
           'calories': item.calories,
           'notes': item.notes,
@@ -463,7 +463,7 @@ class DietExerciseService {
         data: requestData,
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         _log('✅ Diet plan applied successfully');
         return response.data;
       } else {
@@ -548,7 +548,7 @@ class DietExerciseService {
         'description': plan.description,
         'items': plan.items.map((item) => <String, dynamic>{
           'dayOfWeek': item.dayOfWeek,
-          'activityType': item.activityType.toString(),
+          'activityType': item.activityType.name,
           'description': item.description,
           'durationMinutes': item.durationMinutes,
           'caloriesBurned': item.caloriesBurned,
@@ -586,7 +586,7 @@ class DietExerciseService {
         'description': plan.description,
         'items': plan.items.map((item) => <String, dynamic>{
           'dayOfWeek': item.dayOfWeek,
-          'activityType': item.activityType.toString(),
+          'activityType': item.activityType.name,
           'description': item.description,
           'durationMinutes': item.durationMinutes,
           'caloriesBurned': item.caloriesBurned,
@@ -665,7 +665,7 @@ class DietExerciseService {
         data: requestData,
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         _log('✅ Exercise plan applied successfully');
         return response.data;
       } else {

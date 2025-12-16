@@ -116,7 +116,7 @@ class DietPlanItemModel {
     return {
       'id': id,
       'dayOfWeek': dayOfWeek,
-      'mealType': mealType.toString(),
+      'mealType': mealType.name,
       'description': description,
       'calories': calories,
       'notes': notes,
@@ -128,7 +128,7 @@ class DietPlanItemModel {
       id: json['id']?.toString() ?? '',
       dayOfWeek: json['dayOfWeek'] ?? 0,
       mealType: MealType.values.firstWhere(
-        (e) => e.toString() == json['mealType'],
+        (e) => e.name == json['mealType'],
         orElse: () => MealType.breakfast,
       ),
       description: json['description'] ?? '',

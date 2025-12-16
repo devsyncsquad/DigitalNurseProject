@@ -36,7 +36,7 @@ class DietLogModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'mealType': mealType.toString(),
+      'mealType': mealType.name,
       'description': description,
       'calories': calories,
       'timestamp': timestamp.toIso8601String(),
@@ -48,7 +48,8 @@ class DietLogModel {
     return DietLogModel(
       id: json['id'],
       mealType: MealType.values.firstWhere(
-        (e) => e.toString() == json['mealType'],
+        (e) => e.name == json['mealType'],
+        orElse: () => MealType.breakfast,
       ),
       description: json['description'],
       calories: json['calories'],
