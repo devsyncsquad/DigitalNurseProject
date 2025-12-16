@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 import '../../../core/services/ai_service.dart';
 import '../../../core/providers/care_context_provider.dart';
+import '../../../core/theme/app_theme.dart';
 import '../widgets/ai_chat_bubble.dart';
 
 class AIAssistantScreen extends StatefulWidget {
@@ -175,12 +176,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'Ask me anything about your health',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'I can help you understand your medications, vitals, and health trends',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -243,11 +248,18 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _isLoading ? null : _sendMessage,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.appleGreen,
+                      foregroundColor: AppTheme.buttonTextColor,
+                    ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.buttonTextColor,
+                            ),
                           )
                         : const Icon(Icons.send),
                   ),
@@ -274,11 +286,13 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return FilledButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 18),
       label: Text(label),
-      style: OutlinedButton.styleFrom(
+      style: FilledButton.styleFrom(
+        backgroundColor: AppTheme.appleGreen,
+        foregroundColor: AppTheme.buttonTextColor,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
