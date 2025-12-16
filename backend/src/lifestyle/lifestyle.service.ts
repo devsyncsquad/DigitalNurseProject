@@ -2,6 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDietLogDto } from './dto/create-diet-log.dto';
 import { CreateExerciseLogDto } from './dto/create-exercise-log.dto';
+import { CreateDietPlanDto } from './dto/create-diet-plan.dto';
+import { UpdateDietPlanDto } from './dto/update-diet-plan.dto';
+import { CreateExercisePlanDto } from './dto/create-exercise-plan.dto';
+import { UpdateExercisePlanDto } from './dto/update-exercise-plan.dto';
+import { ApplyPlanDto } from './dto/apply-plan.dto';
 import { ActorContext } from '../common/services/access-control.service';
 
 @Injectable()
@@ -224,6 +229,466 @@ export class LifestyleService {
       caloriesBurned: log.caloriesBurned || 0,
       timestamp: log.logDate.toISOString(),
       userId: log.userId.toString(),
+    };
+  }
+
+  // ============================================
+  // Diet Plan Methods
+  // ============================================
+
+  async createDietPlan(context: ActorContext, createDto: CreateDietPlanDto) {
+    const plan = await this.prisma.dietPlan.create({
+      data: {
+        userId: context.elderUserId,
+        planName: createDto.planName,
+        description: createDto.description || null,
+        isActive: true,
+        items: {
+          create: createDto.items.map((item) => ({
+            dayOfWeek: item.dayOfWeek,
+            mealType: item.mealType,
+            description: item.description,
+            calories: item.calories || null,
+            notes: item.notes || null,
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return this.mapDietPlanToResponse(plan);
+  }
+
+  async findAllDietPlans(context: ActorContext) {
+    const plans = await this.prisma.dietPlan.findMany({
+      where: {
+        userId: context.elderUserId,
+      },
+      include: {
+        items: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return plans.map((plan) => this.mapDietPlanToResponse(plan));
+  }
+
+  async findDietPlanById(context: ActorContext, planId: bigint) {
+    const plan = await this.prisma.dietPlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Diet plan not found');
+    }
+
+    return this.mapDietPlanToResponse(plan);
+  }
+
+  async updateDietPlan(context: ActorContext, planId: bigint, updateDto: UpdateDietPlanDto) {
+    const existingPlan = await this.prisma.dietPlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+    });
+
+    if (!existingPlan) {
+      throw new NotFoundException('Diet plan not found');
+    }
+
+    // Delete existing items if items are being updated
+    if (updateDto.items) {
+      await this.prisma.dietPlanItem.deleteMany({
+        where: { planId },
+      });
+    }
+
+    const plan = await this.prisma.dietPlan.update({
+      where: { planId },
+      data: {
+        ...(updateDto.planName && { planName: updateDto.planName }),
+        ...(updateDto.description !== undefined && { description: updateDto.description || null }),
+        ...(updateDto.items && {
+          items: {
+            create: updateDto.items.map((item) => ({
+              dayOfWeek: item.dayOfWeek,
+              mealType: item.mealType,
+              description: item.description,
+              calories: item.calories || null,
+              notes: item.notes || null,
+            })),
+          },
+        }),
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return this.mapDietPlanToResponse(plan);
+  }
+
+  async deleteDietPlan(context: ActorContext, planId: bigint) {
+    const plan = await this.prisma.dietPlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Diet plan not found');
+    }
+
+    await this.prisma.dietPlan.delete({
+      where: { planId },
+    });
+
+    return { message: 'Diet plan deleted successfully' };
+  }
+
+  async applyDietPlan(context: ActorContext, planId: bigint, applyDto: ApplyPlanDto) {
+    const plan = await this.findDietPlanById(context, planId);
+    const startDate = new Date(applyDto.startDate);
+    const overwriteExisting = applyDto.overwriteExisting || false;
+
+    const createdLogs = [];
+    const skippedLogs = [];
+
+    // Group items by day of week
+    const itemsByDay = new Map<number, typeof plan.items>();
+    plan.items.forEach((item: any) => {
+      if (!itemsByDay.has(item.dayOfWeek)) {
+        itemsByDay.set(item.dayOfWeek, []);
+      }
+      itemsByDay.get(item.dayOfWeek)!.push(item);
+    });
+
+    // Process each day of the week
+    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+      const targetDate = new Date(startDate);
+      targetDate.setDate(targetDate.getDate() + dayOffset);
+      const dayOfWeek = targetDate.getDay();
+
+      const itemsForDay = itemsByDay.get(dayOfWeek) || [];
+
+      // Check if logs already exist for this date
+      if (!overwriteExisting) {
+        const existingLogs = await this.prisma.dietLog.findMany({
+          where: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+          },
+        });
+
+        if (existingLogs.length > 0) {
+          skippedLogs.push({
+            date: targetDate.toISOString().split('T')[0],
+            count: itemsForDay.length,
+          });
+          continue;
+        }
+      } else {
+        // Delete existing logs for this date
+        await this.prisma.dietLog.deleteMany({
+          where: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+          },
+        });
+      }
+
+      // Create logs for each item
+      for (const item of itemsForDay) {
+        const log = await this.prisma.dietLog.create({
+          data: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+            mealType: item.mealType,
+            foodItems: item.description,
+            calories: item.calories || null,
+            notes: item.notes || null,
+          },
+        });
+        createdLogs.push(this.mapDietLogToResponse(log));
+      }
+    }
+
+    return {
+      message: 'Diet plan applied successfully',
+      createdLogs: createdLogs.length,
+      skippedLogs: skippedLogs.length,
+      details: {
+        created: createdLogs,
+        skipped: skippedLogs,
+      },
+    };
+  }
+
+  // ============================================
+  // Exercise Plan Methods
+  // ============================================
+
+  async createExercisePlan(context: ActorContext, createDto: CreateExercisePlanDto) {
+    const plan = await this.prisma.exercisePlan.create({
+      data: {
+        userId: context.elderUserId,
+        planName: createDto.planName,
+        description: createDto.description || null,
+        isActive: true,
+        items: {
+          create: createDto.items.map((item) => ({
+            dayOfWeek: item.dayOfWeek,
+            activityType: item.activityType,
+            description: item.description,
+            durationMinutes: item.durationMinutes || null,
+            caloriesBurned: item.caloriesBurned || null,
+            intensity: item.intensity || null,
+            notes: item.notes || null,
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return this.mapExercisePlanToResponse(plan);
+  }
+
+  async findAllExercisePlans(context: ActorContext) {
+    const plans = await this.prisma.exercisePlan.findMany({
+      where: {
+        userId: context.elderUserId,
+      },
+      include: {
+        items: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return plans.map((plan) => this.mapExercisePlanToResponse(plan));
+  }
+
+  async findExercisePlanById(context: ActorContext, planId: bigint) {
+    const plan = await this.prisma.exercisePlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Exercise plan not found');
+    }
+
+    return this.mapExercisePlanToResponse(plan);
+  }
+
+  async updateExercisePlan(context: ActorContext, planId: bigint, updateDto: UpdateExercisePlanDto) {
+    const existingPlan = await this.prisma.exercisePlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+    });
+
+    if (!existingPlan) {
+      throw new NotFoundException('Exercise plan not found');
+    }
+
+    // Delete existing items if items are being updated
+    if (updateDto.items) {
+      await this.prisma.exercisePlanItem.deleteMany({
+        where: { planId },
+      });
+    }
+
+    const plan = await this.prisma.exercisePlan.update({
+      where: { planId },
+      data: {
+        ...(updateDto.planName && { planName: updateDto.planName }),
+        ...(updateDto.description !== undefined && { description: updateDto.description || null }),
+        ...(updateDto.items && {
+          items: {
+            create: updateDto.items.map((item) => ({
+              dayOfWeek: item.dayOfWeek,
+              activityType: item.activityType,
+              description: item.description,
+              durationMinutes: item.durationMinutes || null,
+              caloriesBurned: item.caloriesBurned || null,
+              intensity: item.intensity || null,
+              notes: item.notes || null,
+            })),
+          },
+        }),
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return this.mapExercisePlanToResponse(plan);
+  }
+
+  async deleteExercisePlan(context: ActorContext, planId: bigint) {
+    const plan = await this.prisma.exercisePlan.findFirst({
+      where: {
+        planId,
+        userId: context.elderUserId,
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Exercise plan not found');
+    }
+
+    await this.prisma.exercisePlan.delete({
+      where: { planId },
+    });
+
+    return { message: 'Exercise plan deleted successfully' };
+  }
+
+  async applyExercisePlan(context: ActorContext, planId: bigint, applyDto: ApplyPlanDto) {
+    const plan = await this.findExercisePlanById(context, planId);
+    const startDate = new Date(applyDto.startDate);
+    const overwriteExisting = applyDto.overwriteExisting || false;
+
+    const createdLogs = [];
+    const skippedLogs = [];
+
+    // Group items by day of week
+    const itemsByDay = new Map<number, typeof plan.items>();
+    plan.items.forEach((item: any) => {
+      if (!itemsByDay.has(item.dayOfWeek)) {
+        itemsByDay.set(item.dayOfWeek, []);
+      }
+      itemsByDay.get(item.dayOfWeek)!.push(item);
+    });
+
+    // Process each day of the week
+    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+      const targetDate = new Date(startDate);
+      targetDate.setDate(targetDate.getDate() + dayOffset);
+      const dayOfWeek = targetDate.getDay();
+
+      const itemsForDay = itemsByDay.get(dayOfWeek) || [];
+
+      // Check if logs already exist for this date
+      if (!overwriteExisting) {
+        const existingLogs = await this.prisma.exerciseLog.findMany({
+          where: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+          },
+        });
+
+        if (existingLogs.length > 0) {
+          skippedLogs.push({
+            date: targetDate.toISOString().split('T')[0],
+            count: itemsForDay.length,
+          });
+          continue;
+        }
+      } else {
+        // Delete existing logs for this date
+        await this.prisma.exerciseLog.deleteMany({
+          where: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+          },
+        });
+      }
+
+      // Create logs for each item
+      for (const item of itemsForDay) {
+        const log = await this.prisma.exerciseLog.create({
+          data: {
+            userId: context.elderUserId,
+            logDate: targetDate,
+            exerciseType: item.activityType,
+            description: item.description,
+            durationMinutes: item.durationMinutes || null,
+            caloriesBurned: item.caloriesBurned || null,
+            intensity: item.intensity || null,
+            notes: item.notes || null,
+          },
+        });
+        createdLogs.push(this.mapExerciseLogToResponse(log));
+      }
+    }
+
+    return {
+      message: 'Exercise plan applied successfully',
+      createdLogs: createdLogs.length,
+      skippedLogs: skippedLogs.length,
+      details: {
+        created: createdLogs,
+        skipped: skippedLogs,
+      },
+    };
+  }
+
+  // ============================================
+  // Plan Mappers
+  // ============================================
+
+  private mapDietPlanToResponse(plan: any) {
+    return {
+      id: plan.planId.toString(),
+      planName: plan.planName,
+      description: plan.description || '',
+      isActive: plan.isActive,
+      userId: plan.userId.toString(),
+      items: plan.items.map((item: any) => ({
+        id: item.itemId.toString(),
+        dayOfWeek: item.dayOfWeek,
+        mealType: item.mealType,
+        description: item.description,
+        calories: item.calories || 0,
+        notes: item.notes || '',
+      })),
+      createdAt: plan.createdAt.toISOString(),
+      updatedAt: plan.updatedAt.toISOString(),
+    };
+  }
+
+  private mapExercisePlanToResponse(plan: any) {
+    return {
+      id: plan.planId.toString(),
+      planName: plan.planName,
+      description: plan.description || '',
+      isActive: plan.isActive,
+      userId: plan.userId.toString(),
+      items: plan.items.map((item: any) => ({
+        id: item.itemId.toString(),
+        dayOfWeek: item.dayOfWeek,
+        activityType: item.activityType,
+        description: item.description,
+        durationMinutes: item.durationMinutes || 0,
+        caloriesBurned: item.caloriesBurned || 0,
+        intensity: item.intensity || '',
+        notes: item.notes || '',
+      })),
+      createdAt: plan.createdAt.toISOString(),
+      updatedAt: plan.updatedAt.toISOString(),
     };
   }
 }

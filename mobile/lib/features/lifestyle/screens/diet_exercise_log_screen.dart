@@ -106,25 +106,40 @@ class _MealsTab extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: 16.h),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => context.push('/lifestyle/meal/add'),
-              icon: const Icon(FIcons.plus),
-              label: const Text('Add Meal'),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/lifestyle/meal/add'),
+                icon: const Icon(FIcons.plus),
+                label: const Text('Add Meal'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.appleGreen,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/lifestyle/plans'),
+              icon: const Icon(FIcons.calendar),
+              label: const Text('Plans'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.appleGreen,
+                backgroundColor: ModernSurfaceTheme.primaryTeal,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
-          ),
+          ],
         ),
+        SizedBox(height: 16.h),
         Expanded(
           child: meals.isEmpty
               ? _buildEmptyState(
@@ -269,25 +284,40 @@ class _WorkoutsTab extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: 16.h),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => context.push('/lifestyle/workout/add'),
-              icon: const Icon(FIcons.plus),
-              label: const Text('Add Workout'),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/lifestyle/workout/add'),
+                icon: const Icon(FIcons.plus),
+                label: const Text('Add Workout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.appleGreen,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/lifestyle/plans'),
+              icon: const Icon(FIcons.calendar),
+              label: const Text('Plans'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.appleGreen,
+                backgroundColor: ModernSurfaceTheme.accentBlue,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
+                padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
-          ),
+          ],
         ),
+        SizedBox(height: 16.h),
         Expanded(
           child: workouts.isEmpty
               ? _buildEmptyState(

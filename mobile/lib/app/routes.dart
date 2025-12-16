@@ -25,6 +25,8 @@ import '../features/caregiver/screens/patient_reports_screen.dart';
 import '../features/lifestyle/screens/diet_exercise_log_screen.dart';
 import '../features/lifestyle/screens/add_meal_screen.dart';
 import '../features/lifestyle/screens/add_workout_screen.dart';
+import '../features/lifestyle/screens/weekly_plans_screen.dart';
+import '../features/lifestyle/screens/create_weekly_plan_screen.dart';
 import '../features/documents/screens/upload_document_screen.dart';
 import '../features/documents/screens/document_viewer_screen.dart';
 import '../features/profile/screens/settings_screen.dart';
@@ -228,6 +230,32 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/lifestyle/workout/add',
       builder: (context, state) => const AddWorkoutScreen(),
+    ),
+    GoRoute(
+      path: '/lifestyle/plans',
+      builder: (context, state) => const WeeklyPlansScreen(),
+    ),
+    GoRoute(
+      path: '/lifestyle/plans/diet/create',
+      builder: (context, state) => const CreateWeeklyPlanScreen(isDietPlan: true),
+    ),
+    GoRoute(
+      path: '/lifestyle/plans/diet/edit/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return CreateWeeklyPlanScreen(isDietPlan: true, planId: id);
+      },
+    ),
+    GoRoute(
+      path: '/lifestyle/plans/exercise/create',
+      builder: (context, state) => const CreateWeeklyPlanScreen(isDietPlan: false),
+    ),
+    GoRoute(
+      path: '/lifestyle/plans/exercise/edit/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return CreateWeeklyPlanScreen(isDietPlan: false, planId: id);
+      },
     ),
 
     // Document routes
