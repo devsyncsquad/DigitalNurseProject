@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../../core/models/document_model.dart';
 import '../../../core/providers/document_provider.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -29,6 +30,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
   DocumentType _documentType = DocumentType.prescription;
   DocumentVisibility _visibility = DocumentVisibility.private;
   DocumentPickerResult? _selectedFile;
+  DateTime _uploadDate = DateTime.now();
 
   @override
   void initState() {
@@ -125,6 +127,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           ? null
           : _descriptionController.text.trim(),
       elderUserId: elderUserId,
+      uploadDate: _uploadDate,
     );
 
     if (mounted) {
@@ -274,6 +277,64 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         ),
                       ),
                       SizedBox(height: 16.h),
+                      _GlassFormSection(
+                        title: 'Date & Time',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _getFormattedDateTime(),
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: AppTheme.appleGreen,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: isUploading ? null : _selectDate,
+                                    icon: const Icon(Icons.calendar_today, size: 18),
+                                    label: const Text('Change Date'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                                      backgroundColor: AppTheme.appleGreen,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: isUploading ? null : _selectTime,
+                                    icon: const Icon(Icons.access_time, size: 18),
+                                    label: const Text('Change Time'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                                      backgroundColor: AppTheme.appleGreen,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
                       _CustomTextField(
                         controller: _descriptionController,
                         label: 'Description (Optional)',
@@ -397,6 +458,52 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
       case DocumentVisibility.public:
         return 'Public (Admin visible)';
     }
+  }
+
+  Future<void> _selectDate() async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: _uploadDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+        _uploadDate = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          _uploadDate.hour,
+          _uploadDate.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_uploadDate),
+    );
+
+    if (selectedTime != null) {
+      setState(() {
+        _uploadDate = DateTime(
+          _uploadDate.year,
+          _uploadDate.month,
+          _uploadDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+      });
+    }
+  }
+
+  String _getFormattedDateTime() {
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+    return '${dateFormat.format(_uploadDate)} at ${timeFormat.format(_uploadDate)}';
   }
 }
 

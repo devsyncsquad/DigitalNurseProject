@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../../core/extensions/vital_type_extensions.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/providers/health_provider.dart';
@@ -23,7 +24,7 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
   final _notesController = TextEditingController();
 
   VitalType _selectedType = VitalType.bloodPressure;
-  final DateTime _timestamp = DateTime.now();
+  DateTime _timestamp = DateTime.now();
 
   @override
   void dispose() {
@@ -89,6 +90,52 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
     }
   }
 
+  Future<void> _selectDate() async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: _timestamp,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+    );
+
+    if (selectedDate != null) {
+      setState(() {
+        _timestamp = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          _timestamp.hour,
+          _timestamp.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_timestamp),
+    );
+
+    if (selectedTime != null) {
+      setState(() {
+        _timestamp = DateTime(
+          _timestamp.year,
+          _timestamp.month,
+          _timestamp.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+      });
+    }
+  }
+
+  String _getFormattedDateTime() {
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+    return '${dateFormat.format(_timestamp)} at ${timeFormat.format(_timestamp)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final healthProvider = context.watch<HealthProvider>();
@@ -152,6 +199,64 @@ class _AddVitalScreenState extends State<AddVitalScreen> {
                               });
                             }
                           },
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                _GlassFormSection(
+                  title: 'Date & Time',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _getFormattedDateTime(),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.appleGreen,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isSaving ? null : _selectDate,
+                              icon: const Icon(Icons.calendar_today, size: 18),
+                              label: const Text('Change Date'),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                backgroundColor: AppTheme.appleGreen,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isSaving ? null : _selectTime,
+                              icon: const Icon(Icons.access_time, size: 18),
+                              label: const Text('Change Time'),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                backgroundColor: AppTheme.appleGreen,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 16.h),

@@ -117,6 +117,7 @@ Future<List<DocumentModel>> getDocumentsByType(
     required DocumentVisibility visibility,
     String? description,
     String? elderUserId,
+    DateTime? uploadDate,
   }) async {
     _log('📤 Uploading document: $title');
     try {
@@ -136,6 +137,7 @@ Future<List<DocumentModel>> getDocumentsByType(
         'visibility': _documentVisibilityToString(visibility),
         if (description != null) 'description': description,
         if (elderUserId != null) 'elderUserId': elderUserId,
+        if (uploadDate != null) 'uploadDate': uploadDate.toIso8601String(),
       });
 
       // Use Dio directly for multipart upload

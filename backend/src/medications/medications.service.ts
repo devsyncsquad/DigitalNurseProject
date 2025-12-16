@@ -472,7 +472,7 @@ export class MedicationsService {
     const scheduleIds = medication.schedules.map((s) => s.medScheduleId);
 
     if (scheduleIds.length === 0) {
-      return { percentage: 100, total: 0, taken: 0 };
+      return { percentage: 0, total: 0, taken: 0 };
     }
 
     const cutoffDate = new Date();
@@ -490,7 +490,7 @@ export class MedicationsService {
     });
 
     if (intakes.length === 0) {
-      return { percentage: 100, total: 0, taken: 0 };
+      return { percentage: 0, total: 0, taken: 0 };
     }
 
     const taken = intakes.filter((intake: any) => intake.status === 'taken').length;
