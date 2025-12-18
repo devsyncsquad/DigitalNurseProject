@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +18,8 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -177,12 +180,34 @@ export class AuthService {
       return { user, verificationToken };
     });
 
-    // Send verification email (email is required)
-    await this.emailService.sendVerificationEmail(
-      registrationResult.user.email!,
-      registrationResult.verificationToken,
-      registrationResult.user.full_name || undefined,
+    // Send verification email asynchronously (fire-and-forget)
+    // This prevents registration from timing out if email service is slow
+    this.logger.log(
+      `Attempting to send verification email to ${registrationResult.user.email}`,
     );
+    this.emailService
+      .sendVerificationEmail(
+        registrationResult.user.email!,
+        registrationResult.verificationToken,
+        registrationResult.user.full_name || undefined,
+      )
+      .then((success) => {
+        if (!success) {
+          this.logger.error(
+            `Failed to send verification email to ${registrationResult.user.email}. Check email service logs for details.`,
+          );
+        } else {
+          this.logger.log(
+            `Verification email sent successfully to ${registrationResult.user.email}`,
+          );
+        }
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Exception while sending verification email to ${registrationResult.user.email}: ${error.message}`,
+          error.stack,
+        );
+      });
 
     return {
       message: 'Registration successful. Please verify your email.',

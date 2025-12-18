@@ -25,6 +25,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   bool _isResending = false;
   bool _isVerified = false;
   String? _error;
+  String? _successMessage;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() {
       _isVerifying = true;
       _error = null;
+      _successMessage = null;
     });
 
     try {
@@ -77,6 +79,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() {
       _isResending = true;
       _error = null;
+      _successMessage = null;
     });
 
     try {
@@ -85,15 +88,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Verification email sent successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          setState(() {
+            _successMessage = 'Verification email sent successfully';
+            _error = null;
+          });
         } else {
           setState(() {
             _error = authProvider.error ?? 'Failed to resend verification email';
+            _successMessage = null;
           });
         }
       }
@@ -101,6 +103,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       if (mounted) {
         setState(() {
           _error = e.toString().replaceAll('Exception: ', '');
+          _successMessage = null;
         });
       }
     } finally {
@@ -206,6 +209,24 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         _error!,
                         style: context.theme.typography.sm.copyWith(
                           color: Colors.red,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                  ],
+
+                  if (_successMessage != null) ...[
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _successMessage!,
+                        style: context.theme.typography.sm.copyWith(
+                          color: Colors.green,
                         ),
                         textAlign: TextAlign.center,
                       ),

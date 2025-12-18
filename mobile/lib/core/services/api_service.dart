@@ -47,8 +47,10 @@ class ApiService {
       _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
+          // Increased timeouts to handle operations that include email sending
+          // (e.g., registration) which may take longer than standard API calls
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 90),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

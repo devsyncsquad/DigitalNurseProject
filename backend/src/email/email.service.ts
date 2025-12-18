@@ -50,7 +50,7 @@ export class EmailService {
       });
 
       // Verify transporter configuration (async, non-blocking)
-      this.transporter.verify((error, success) => {
+      this.transporter.verify((error: Error | null, success?: boolean) => {
         if (error) {
           this.logger.error(
             `SMTP transporter verification failed: ${error.message}`,
@@ -87,7 +87,7 @@ export class EmailService {
     this.appName = this.configService.get<string>('APP_NAME') || 'Digital Nurse';
     this.frontendUrl =
       this.configService.get<string>('FRONTEND_URL') ||
-      'http://localhost:3000';
+      'http://100.42.177.77:3000';
   }
 
   async sendVerificationEmail(
