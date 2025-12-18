@@ -128,12 +128,26 @@ class AuthService {
     String? phone,
     String? caregiverInviteCode,
   }) async {
-    _log('📝 [AUTH] Attempting registration for: $email');
+    final trimmedPhone =
+        phone != null && phone.trim().isNotEmpty ? phone.trim() : null;
+    _log('📝 [AUTH] Attempting registration for: ${trimmedPhone ?? email}');
 
     // Client-side validation
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      _log('❌ [AUTH] Registration validation failed: All fields are required');
-      throw Exception('All fields are required');
+    if (name.isEmpty || password.isEmpty) {
+      _log('❌ [AUTH] Registration validation failed: Name and password are required');
+      throw Exception('Name and password are required');
+    }
+
+    // Phone is required by backend
+    if (trimmedPhone == null || trimmedPhone.isEmpty) {
+      _log('❌ [AUTH] Registration validation failed: Phone number is required');
+      throw Exception('Phone number is required');
+    }
+
+    // Validate phone format
+    if (!RegExp(r'^\+92\d{10}$').hasMatch(trimmedPhone)) {
+      _log('❌ [AUTH] Registration validation failed: Invalid phone format');
+      throw Exception('Phone must be in format +92XXXXXXXXXX');
     }
 
     if (password != confirmPassword) {
@@ -146,17 +160,15 @@ class AuthService {
       throw Exception('Password must be at least 8 characters');
     }
 
-    final trimmedPhone =
-        phone != null && phone.trim().isNotEmpty ? phone.trim() : null;
     final payloadRole = role == UserRole.caregiver ? 'caregiver' : 'patient';
 
     try {
       final requestBody = {
-        'email': email.trim(),
         'password': password,
         'name': name.trim(),
+        'phone': trimmedPhone,
         'roleCode': payloadRole,
-        if (trimmedPhone != null) 'phone': trimmedPhone,
+        if (email.trim().isNotEmpty) 'email': email.trim(),
         if (role == UserRole.caregiver && caregiverInviteCode != null)
           'caregiverInviteCode': caregiverInviteCode.trim(),
       };

@@ -29,7 +29,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   UserRole _selectedRole = UserRole.patient;
 
   @override
+  void initState() {
+    super.initState();
+    // Add phone number formatter
+    _phoneController.addListener(_formatPhoneInput);
+  }
+
+  @override
   void dispose() {
+    _phoneController.removeListener(_formatPhoneInput);
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -39,16 +47,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  void _formatPhoneInput() {
+    final text = _phoneController.text;
+    if (text.isEmpty) return;
+    
+    // If text doesn't start with +92, format it
+    if (!text.startsWith('+92')) {
+      final formatted = _formatPhoneNumber(text);
+      if (formatted != text) {
+        _phoneController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }
+    }
+  }
+
+  /// Format phone number to include +92 prefix if not already present
+  String _formatPhoneNumber(String phone) {
+    // Remove any whitespace
+    String cleaned = phone.trim().replaceAll(RegExp(r'\s+'), '');
+    
+    // If empty, return empty string
+    if (cleaned.isEmpty) {
+      return '';
+    }
+    
+    // If already starts with +92, return as is
+    if (cleaned.startsWith('+92')) {
+      return cleaned;
+    }
+    
+    // If starts with 92 (without +), add +
+    if (cleaned.startsWith('92')) {
+      return '+$cleaned';
+    }
+    
+    // If starts with 0, replace 0 with +92
+    if (cleaned.startsWith('0')) {
+      return '+92${cleaned.substring(1)}';
+    }
+    
+    // Otherwise, add +92 prefix
+    return '+92$cleaned';
+  }
+
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Format phone number to include +92 prefix
+    final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
+    
+    // Update the controller with formatted phone
+    if (formattedPhone != _phoneController.text) {
+      _phoneController.text = formattedPhone;
+    }
+
     // Validate phone number
-    final phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
+    if (formattedPhone.isEmpty) {
       _showErrorDialog('Phone number is required');
       return;
     }
-    if (!RegExp(r'^\+92\d{10}$').hasMatch(phone)) {
+    if (!RegExp(r'^\+92\d{10}$').hasMatch(formattedPhone)) {
       _showErrorDialog('Phone must be in format +92XXXXXXXXXX');
       return;
     }
@@ -73,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text,
       confirmPassword: _confirmPasswordController.text,
       role: _selectedRole,
-      phone: _phoneController.text.trim(),
+      phone: formattedPhone,
       caregiverInviteCode:
           _selectedRole == UserRole.caregiver ? inviteCode : null,
     );

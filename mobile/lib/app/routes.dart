@@ -60,7 +60,8 @@ final goRouter = GoRouter(
     );
 
     // If user is logged in and on a public route, redirect to dashboard
-    if (isLoggedIn && isPublicRoute) {
+    // BUT allow access to /register even when logged in (for registering new accounts)
+    if (isLoggedIn && isPublicRoute && state.matchedLocation != '/register') {
       return '/home';
     }
 
