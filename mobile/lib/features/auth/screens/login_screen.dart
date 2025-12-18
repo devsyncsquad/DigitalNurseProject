@@ -20,7 +20,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final bool _obscurePassword = true;
@@ -31,24 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkBiometricAvailability();
-    // Add phone number formatter
-    _phoneController.addListener(_formatPhoneInput);
-  }
-
-  void _formatPhoneInput() {
-    final text = _phoneController.text;
-    if (text.isEmpty) return;
-    
-    // If text doesn't start with +92, format it
-    if (!text.startsWith('+92')) {
-      final formatted = _formatPhoneNumber(text);
-      if (formatted != text) {
-        _phoneController.value = TextEditingValue(
-          text: formatted,
-          selection: TextSelection.collapsed(offset: formatted.length),
-        );
-      }
-    }
   }
 
   Future<void> _checkBiometricAvailability() async {
@@ -64,34 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _phoneController.removeListener(_formatPhoneInput);
-    _phoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  /// Format phone number to include +92 prefix if not already present
-  String _formatPhoneNumber(String phone) {
-    // Remove any whitespace
-    String cleaned = phone.trim().replaceAll(RegExp(r'\s+'), '');
-    
-    // If already starts with +92, return as is
-    if (cleaned.startsWith('+92')) {
-      return cleaned;
-    }
-    
-    // If starts with 92 (without +), add +
-    if (cleaned.startsWith('92')) {
-      return '+$cleaned';
-    }
-    
-    // If starts with 0, replace 0 with +92
-    if (cleaned.startsWith('0')) {
-      return '+92${cleaned.substring(1)}';
-    }
-    
-    // Otherwise, add +92 prefix
-    return '+92$cleaned';
   }
 
   Future<void> _handleLogin() async {
@@ -99,11 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = context.read<AuthProvider>();
     
-    // Format phone number to include +92 prefix
-    final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
+    final email = _emailController.text.trim();
     
     final success = await authProvider.login(
-      formattedPhone,
+      email,
       _passwordController.text,
     );
 
@@ -125,7 +81,14 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         context.go('/home');
       } else {
-        _showErrorSnackBar(authProvider.error ?? 'Login failed');
+        final error = authProvider.error ?? 'Login failed';
+        // Check if error is about unverified email
+        if (error.toLowerCase().contains('verify your email') || 
+            error.toLowerCase().contains('email not verified')) {
+          await _showEmailVerificationDialog();
+        } else {
+          _showErrorSnackBar(error);
+        }
       }
     }
   }
@@ -137,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final userIds = await authProvider.getUsersWithBiometricEnabled();
     
     if (userIds.isEmpty) {
-      _showErrorSnackBar('No biometric login set up. Please login with your phone and password first, then you can enable biometric login for faster access.');
+      _showErrorSnackBar('No biometric login set up. Please login with your email and password first, then you can enable biometric login for faster access.');
       return;
     }
     
@@ -166,13 +129,13 @@ class _LoginScreenState extends State<LoginScreen> {
         String userFriendlyMessage;
         
         if (errorMessage.contains('No saved credentials')) {
-          userFriendlyMessage = 'No saved credentials found for this account.\n\nPlease login with phone and password first, then enable biometric login.';
+          userFriendlyMessage = 'No saved credentials found for this account.\n\nPlease login with email and password first, then enable biometric login.';
         } else if (errorMessage.contains('not enabled')) {
-          userFriendlyMessage = 'Biometric login is not enabled for this account.\n\nPlease login with phone and password and enable biometric login.';
+          userFriendlyMessage = 'Biometric login is not enabled for this account.\n\nPlease login with email and password and enable biometric login.';
         } else if (errorMessage.contains('cancelled')) {
           userFriendlyMessage = 'Biometric authentication was cancelled.\n\nPlease try again.';
         } else if (errorMessage.contains('Invalid saved credentials')) {
-          userFriendlyMessage = 'Saved credentials are invalid.\n\nPlease login with phone and password again to update your biometric login.';
+          userFriendlyMessage = 'Saved credentials are invalid.\n\nPlease login with email and password again to update your biometric login.';
         } else {
           userFriendlyMessage = errorMessage;
         }
@@ -180,6 +143,35 @@ class _LoginScreenState extends State<LoginScreen> {
         _showErrorSnackBar(userFriendlyMessage);
       }
     }
+  }
+
+  Future<void> _showEmailVerificationDialog() async {
+    // Try to get email from user - we'll need to fetch it or ask user
+    // For now, show a dialog with option to resend
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Email Not Verified'),
+        content: const Text(
+          'Please verify your email address before logging in. Check your inbox for the verification email, or click "Resend" to send a new one.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              // Navigate to email verification screen
+              // We'll need email, but we can ask user or try to get from backend
+              context.go('/email-verification');
+            },
+            child: const Text('Resend Email'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -196,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
     
     // If message is empty or generic, use a default message
     if (errorMessage.isEmpty || errorMessage == 'Login failed') {
-      errorMessage = 'Invalid phone number or password. Please try again.';
+      errorMessage = 'Invalid email address or password. Please try again.';
     }
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -233,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (currentUser != null) {
                   final success = await authProvider.saveCredentialsForBiometric(
                     userId: userId,
-                    phone: _formatPhoneNumber(_phoneController.text.trim()),
+                    phone: _emailController.text.trim(), // Using email as identifier
                     password: _passwordController.text,
                   );
                   if (mounted && success) {
@@ -363,12 +355,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Phone field
+                      // Email field
                       FTextField(
-                        controller: _phoneController,
-                        label: Text('auth.login.phone'.tr()),
-                        hint: 'Enter phone number (e.g., 03001234567)',
-                        keyboardType: TextInputType.phone,
+                        controller: _emailController,
+                        label: Text('auth.login.email'.tr()),
+                        hint: 'auth.login.emailHint'.tr(),
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       SizedBox(height: 20.h),
 
@@ -514,13 +506,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 16.h),
                         Divider(),
                         SizedBox(height: 12.h),
-                        _buildTestCredential('Patient User', '+923001234567', 'password123'),
+                        _buildTestCredential('Patient User', 'patient@example.com', 'password123'),
                         SizedBox(height: 12.h),
-                        _buildTestCredential('Caregiver User', '+923007654321', 'password123'),
+                        _buildTestCredential('Caregiver User', 'caregiver@example.com', 'password123'),
                         SizedBox(height: 8.h),
                         TextButton(
                           onPressed: () {
-                            _phoneController.text = '+923001234567';
+                            _emailController.text = 'patient@example.com';
                             _passwordController.text = 'password123';
                             setState(() {
                               _showTestCredentials = false;
@@ -537,7 +529,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 8.h),
                         TextButton(
                           onPressed: () {
-                            _phoneController.text = '+923007654321';
+                            _emailController.text = 'caregiver@example.com';
                             _passwordController.text = 'password123';
                             setState(() {
                               _showTestCredentials = false;
@@ -591,7 +583,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTestCredential(String label, String phone, String password) {
+  Widget _buildTestCredential(String label, String email, String password) {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -609,7 +601,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           SizedBox(height: 4.h),
           Text(
-            'Phone: $phone',
+            'Email: $email',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           Text(

@@ -10,6 +10,8 @@
       "welcomeBack": "Welcome back! Login to continue",
       "phone": "Phone Number",
       "phoneHint": "Enter your phone number (+92XXXXXXXXXX)",
+      "email": "Email",
+      "emailHint": "Enter your email address",
       "password": "Password",
       "passwordHint": "Enter your password",
       "loginButton": "Login",

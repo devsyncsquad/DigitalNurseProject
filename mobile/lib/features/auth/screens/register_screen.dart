@@ -95,29 +95,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Format phone number to include +92 prefix
-    final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
-    
-    // Update the controller with formatted phone
-    if (formattedPhone != _phoneController.text) {
-      _phoneController.text = formattedPhone;
-    }
-
-    // Validate phone number
-    if (formattedPhone.isEmpty) {
-      _showErrorDialog('Phone number is required');
-      return;
-    }
-    if (!RegExp(r'^\+92\d{10}$').hasMatch(formattedPhone)) {
-      _showErrorDialog('Phone must be in format +92XXXXXXXXXX');
-      return;
-    }
-
-    // Validate email if provided
+    // Validate email (required)
     final email = _emailController.text.trim();
-    if (email.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+    if (email.isEmpty) {
+      _showErrorDialog('Email is required');
+      return;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       _showErrorDialog('Please enter a valid email address');
       return;
+    }
+
+    // Format phone number if provided (optional)
+    String? formattedPhone;
+    final phoneInput = _phoneController.text.trim();
+    if (phoneInput.isNotEmpty) {
+      formattedPhone = _formatPhoneNumber(phoneInput);
+      
+      // Update the controller with formatted phone
+      if (formattedPhone != phoneInput) {
+        _phoneController.text = formattedPhone;
+      }
+
+      // Validate phone format if provided
+      if (!RegExp(r'^\+92\d{10}$').hasMatch(formattedPhone)) {
+        _showErrorDialog('Phone must be in format +92XXXXXXXXXX');
+        return;
+      }
     }
 
     final inviteCode = _inviteCodeController.text.trim();
@@ -140,9 +144,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        // Redirect to home or appropriate screen after registration
-        // Note: Email verification flow may need to be updated for phone-based auth
-        context.go('/home');
+        // Redirect to email verification screen if email was provided
+        final email = _emailController.text.trim();
+        if (email.isNotEmpty) {
+          context.go('/email-verification?email=${Uri.encodeComponent(email)}');
+        } else {
+          // If no email, go to home (phone-only registration)
+          context.go('/home');
+        }
       } else {
         _showErrorDialog(authProvider.error ?? 'Registration failed');
       }
@@ -237,21 +246,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       SizedBox(height: 20.h),
 
-                      // Phone field (required)
-                      FTextField(
-                        controller: _phoneController,
-                        label: Text('auth.register.phone'.tr()),
-                        hint: 'auth.register.phoneHint'.tr(),
-                        keyboardType: TextInputType.phone,
-                      ),
-                      SizedBox(height: 20.h),
-
-                      // Email field (optional)
+                      // Email field (required)
                       FTextField(
                         controller: _emailController,
                         label: Text('auth.register.email'.tr()),
                         hint: 'auth.register.emailHint'.tr(),
                         keyboardType: TextInputType.emailAddress,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Phone field (optional)
+                      FTextField(
+                        controller: _phoneController,
+                        label: Text('auth.register.phone'.tr()),
+                        hint: 'auth.register.phoneHint'.tr(),
+                        keyboardType: TextInputType.phone,
                       ),
                       SizedBox(height: 24.h),
                     ],

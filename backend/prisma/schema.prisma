@@ -31,6 +31,9 @@ model User {
   username          String?   @map("username")
   medicalConditions String?   @map("medicalConditions")
   emergencyContact  String?   @map("emergencyContact")
+  emailVerified     Boolean   @default(false) @map("emailVerified")
+  verificationToken String?   @unique @map("verificationToken")
+  verificationTokenExpiresAt DateTime? @map("verificationTokenExpiresAt")
   createdAt         DateTime  @default(now()) @map("createdAt")
   updatedAt         DateTime  @default(now()) @updatedAt @map("updatedAt")
 

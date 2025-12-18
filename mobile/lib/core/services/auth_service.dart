@@ -37,13 +37,13 @@ class AuthService {
     });
   }
 
-  // Login with phone and password
-  Future<UserModel> login(String phone, String password) async {
-    _log('🔐 [AUTH] Attempting login for: $phone');
+  // Login with email and password
+  Future<UserModel> login(String email, String password) async {
+    _log('🔐 [AUTH] Attempting login for: $email');
     try {
       final response = await _apiService.post(
         '/auth/login',
-        data: {'phone': phone, 'password': password},
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 200) {
@@ -93,7 +93,7 @@ class AuthService {
           age: userData['age']?.toString(),
           medicalConditions: userData['medicalConditions']?.toString(),
           emergencyContact: userData['emergencyContact']?.toString(),
-          phone: userData['phone']?.toString() ?? phone,
+          phone: userData['phone']?.toString(),
           avatarUrl: userData['avatarUrl']?.toString().trim(),
         );
 
@@ -130,24 +130,26 @@ class AuthService {
   }) async {
     final trimmedPhone =
         phone != null && phone.trim().isNotEmpty ? phone.trim() : null;
-    _log('📝 [AUTH] Attempting registration for: ${trimmedPhone ?? email}');
+    _log('📝 [AUTH] Attempting registration for: $email');
 
     // Client-side validation
-    if (name.isEmpty || password.isEmpty) {
-      _log('❌ [AUTH] Registration validation failed: Name and password are required');
-      throw Exception('Name and password are required');
+    if (name.isEmpty || password.isEmpty || email.trim().isEmpty) {
+      _log('❌ [AUTH] Registration validation failed: Name, email and password are required');
+      throw Exception('Name, email and password are required');
     }
 
-    // Phone is required by backend
-    if (trimmedPhone == null || trimmedPhone.isEmpty) {
-      _log('❌ [AUTH] Registration validation failed: Phone number is required');
-      throw Exception('Phone number is required');
+    // Validate email format
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email.trim())) {
+      _log('❌ [AUTH] Registration validation failed: Invalid email format');
+      throw Exception('Please enter a valid email address');
     }
 
-    // Validate phone format
-    if (!RegExp(r'^\+92\d{10}$').hasMatch(trimmedPhone)) {
-      _log('❌ [AUTH] Registration validation failed: Invalid phone format');
-      throw Exception('Phone must be in format +92XXXXXXXXXX');
+    // Validate phone format if provided
+    if (trimmedPhone != null && trimmedPhone.isNotEmpty) {
+      if (!RegExp(r'^\+92\d{10}$').hasMatch(trimmedPhone)) {
+        _log('❌ [AUTH] Registration validation failed: Invalid phone format');
+        throw Exception('Phone must be in format +92XXXXXXXXXX');
+      }
     }
 
     if (password != confirmPassword) {
@@ -166,9 +168,9 @@ class AuthService {
       final requestBody = {
         'password': password,
         'name': name.trim(),
-        'phone': trimmedPhone,
+        'email': email.trim(),
         'roleCode': payloadRole,
-        if (email.trim().isNotEmpty) 'email': email.trim(),
+        if (trimmedPhone != null && trimmedPhone.isNotEmpty) 'phone': trimmedPhone,
         if (role == UserRole.caregiver && caregiverInviteCode != null)
           'caregiverInviteCode': caregiverInviteCode.trim(),
       };
@@ -234,12 +236,26 @@ class AuthService {
     }
   }
 
-  // Resend verification email (if backend supports it)
-  // Note: This might need to be a different endpoint
+  // Resend verification email
   Future<bool> resendVerificationEmail(String email) async {
-    // Backend might not have this endpoint yet
-    // For now, we'll just return true or throw
-    throw Exception('Resend verification email not implemented in backend');
+    _log('📧 [AUTH] Resending verification email to: $email');
+    try {
+      final response = await _apiService.post(
+        '/auth/resend-verification',
+        data: {'email': email},
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ [AUTH] Verification email resent successfully');
+        return true;
+      } else {
+        _log('❌ [AUTH] Failed to resend verification email: ${response.statusMessage}');
+        throw Exception('Failed to resend verification email');
+      }
+    } catch (e) {
+      _log('❌ [AUTH] Error resending verification email: $e');
+      throw Exception(e.toString());
+    }
   }
 
   // Refresh access token

@@ -8,7 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { User } from '@prisma/client';
@@ -19,6 +21,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -49,13 +52,24 @@ export class AuthService {
       );
     }
 
-    // Check if user exists by phone
+    // Check if user exists by email
     const existingUser = await this.prisma.user.findUnique({
-      where: { phone },
+      where: { email },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this phone number already exists');
+      throw new ConflictException('User with this email address already exists');
+    }
+
+    // If phone is provided, check if it's already in use
+    if (phone) {
+      const existingUserByPhone = await this.prisma.user.findUnique({
+        where: { phone },
+      });
+
+      if (existingUserByPhone) {
+        throw new ConflictException('User with this phone number already exists');
+      }
     }
 
     // Hash password
@@ -98,13 +112,26 @@ export class AuthService {
         }
       }
 
-      // Create user
+      // Generate verification token
+      const verificationToken = this.generateVerificationToken();
+      const tokenExpiry = new Date();
+      const expiryHours =
+        parseInt(
+          this.configService.get<string>('VERIFICATION_TOKEN_EXPIRY_HOURS') ||
+            '24',
+        ) || 24;
+      tokenExpiry.setHours(tokenExpiry.getHours() + expiryHours);
+
+      // Create user (email is required, phone is optional)
       const user = await tx.user.create({
         data: {
-          email,
+          email: email!,
           phone: phone || null,
           passwordHash: hashedPassword,
           full_name: name || '',
+          emailVerified: false,
+          verificationToken,
+          verificationTokenExpiresAt: tokenExpiry,
         },
       });
 
@@ -147,24 +174,35 @@ export class AuthService {
         });
       }
 
-      return user;
+      return { user, verificationToken };
     });
 
-    // TODO: Send verification email
-    // await this.sendVerificationEmail(registrationResult.email, verificationToken);
+    // Send verification email (email is required)
+    await this.emailService.sendVerificationEmail(
+      registrationResult.user.email!,
+      registrationResult.verificationToken,
+      registrationResult.user.full_name || undefined,
+    );
 
     return {
       message: 'Registration successful. Please verify your email.',
-      userId: registrationResult.userId.toString(),
+      userId: registrationResult.user.userId.toString(),
       role: this.toClientRoleCode(role.roleCode),
     };
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.phone, loginDto.password);
+    const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if email is verified (email is required)
+    if (!user.emailVerified) {
+      throw new UnauthorizedException(
+        'Please verify your email address before logging in. Check your inbox for the verification email.',
+      );
     }
 
     const activeRole = await this.resolveActiveRole(user.userId);
@@ -182,9 +220,9 @@ export class AuthService {
     };
   }
 
-  async validateUser(phone: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
-      where: { phone },
+      where: { email },
     });
 
     if (!user || !user.passwordHash) {
@@ -254,9 +292,87 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
-    // Note: verificationToken field doesn't exist in current schema
-    // This functionality needs to be implemented with a separate table or added to schema
-    throw new NotFoundException('Email verification not implemented in current schema');
+    const user = await this.prisma.user.findUnique({
+      where: { verificationToken: token },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Invalid verification token');
+    }
+
+    if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < new Date()) {
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email has already been verified');
+    }
+
+    // Update user to mark email as verified and clear token
+    await this.prisma.user.update({
+      where: { userId: user.userId },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenExpiresAt: null,
+      },
+    });
+
+    return {
+      message: 'Email verified successfully',
+      userId: user.userId.toString(),
+    };
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return {
+        message: 'If an account exists with this email, a verification email has been sent.',
+      };
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email has already been verified');
+    }
+
+    // Generate new verification token
+    const verificationToken = this.generateVerificationToken();
+    const tokenExpiry = new Date();
+    const expiryHours =
+      parseInt(
+        this.configService.get<string>('VERIFICATION_TOKEN_EXPIRY_HOURS') ||
+          '24',
+      ) || 24;
+    tokenExpiry.setHours(tokenExpiry.getHours() + expiryHours);
+
+    // Update user with new token
+    await this.prisma.user.update({
+      where: { userId: user.userId },
+      data: {
+        verificationToken,
+        verificationTokenExpiresAt: tokenExpiry,
+      },
+    });
+
+    // Send verification email
+    await this.emailService.resendVerificationEmail(
+      user.email!,
+      verificationToken,
+      user.full_name || undefined,
+    );
+
+    return {
+      message: 'Verification email sent successfully',
+    };
+  }
+
+  private generateVerificationToken(): string {
+    return randomBytes(32).toString('hex');
   }
 
   async refreshToken(refreshToken: string) {

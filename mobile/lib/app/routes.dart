@@ -103,7 +103,11 @@ final goRouter = GoRouter(
       path: '/email-verification',
       builder: (context, state) {
         final email = state.uri.queryParameters['email'] ?? '';
-        return EmailVerificationScreen(email: email);
+        final token = state.uri.queryParameters['token'];
+        return EmailVerificationScreen(
+          email: email,
+          token: token,
+        );
       },
     ),
 

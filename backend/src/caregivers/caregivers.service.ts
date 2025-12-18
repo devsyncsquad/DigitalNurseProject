@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
 export class CaregiversService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   /**
    * Generate unique invitation code
@@ -102,6 +106,11 @@ export class CaregiversService {
   async sendInvitation(userId: bigint, createDto: CreateInvitationDto) {
     const elderUserId = createDto.elderUserId ? BigInt(createDto.elderUserId) : userId;
 
+    // Validate that either phone or email is provided
+    if (!createDto.phone && !createDto.email) {
+      throw new BadRequestException('Either phone or email must be provided');
+    }
+
     // Check if elder user exists
     const elderUser = await this.prisma.user.findUnique({
       where: { userId: elderUserId },
@@ -111,25 +120,34 @@ export class CaregiversService {
       throw new NotFoundException('Elder user not found');
     }
 
-    // Check if invitation already exists for this phone
-    const existingInvitation = await this.prisma.userInvitation.findFirst({
-      where: {
-        elderUserId,
-        invitePhone: createDto.phone,
-        status: 'pending',
-        expiresAt: {
-          gt: new Date(),
-        },
+    // Check if invitation already exists
+    const whereClause: any = {
+      elderUserId,
+      status: 'pending',
+      expiresAt: {
+        gt: new Date(),
       },
+    };
+
+    if (createDto.phone) {
+      whereClause.invitePhone = createDto.phone;
+    }
+
+    const existingInvitation = await this.prisma.userInvitation.findFirst({
+      where: whereClause,
     });
 
     if (existingInvitation) {
-      throw new BadRequestException('Invitation already sent to this phone number');
+      const identifier = createDto.phone || createDto.email;
+      throw new BadRequestException(`Invitation already sent to ${identifier}`);
     }
 
     // Create invitation
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+
+    const inviteCode = this.generateInviteCode();
+    const invitePhone = createDto.phone || 'email-only'; // Placeholder for email-only invitations
 
     const invitation = await this.prisma.userInvitation.create({
       data: {
@@ -137,16 +155,27 @@ export class CaregiversService {
         elderUserId,
         targetRoleCode: 'caregiver',
         relationshipCode: createDto.relationship,
-        invitePhone: createDto.phone,
-        inviteCode: this.generateInviteCode(),
+        invitePhone,
+        inviteCode,
         status: 'pending',
         expiresAt,
       },
     });
 
+    // Send email invitation if email is provided
+    if (createDto.email) {
+      await this.emailService.sendCaregiverInvitationEmail(
+        createDto.email,
+        inviteCode,
+        elderUser.full_name,
+        createDto.relationship,
+      );
+    }
+
     return {
       id: invitation.invitationId.toString(),
       phone: invitation.invitePhone,
+      email: createDto.email,
       inviteCode: invitation.inviteCode,
       status: invitation.status,
       expiresAt: invitation.expiresAt.toISOString(),

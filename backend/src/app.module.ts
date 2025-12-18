@@ -18,6 +18,7 @@ import { LookupsModule } from './lookups/lookups.module';
 import { DevicesModule } from './devices/devices.module';
 import { AppConfigModule } from './config/config.module';
 import { AIModule } from './ai/ai.module';
+import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -41,6 +42,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     DevicesModule,
     AppConfigModule,
     AIModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [

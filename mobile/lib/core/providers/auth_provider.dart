@@ -36,13 +36,13 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Login
-  Future<bool> login(String phone, String password) async {
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _currentUser = await _authService.login(phone, password);
+      _currentUser = await _authService.login(email, password);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -80,6 +80,9 @@ class AuthProvider with ChangeNotifier {
         phone: phone,
         caregiverInviteCode: caregiverInviteCode,
       );
+      // Log out any previously logged-in user to clear their session
+      // This prevents the router from redirecting to /home and loading old user data
+      await logout();
       // Mark welcome screen as seen after successful registration
       await _authService.setWelcomeScreenSeen();
       _isLoading = false;
@@ -104,6 +107,25 @@ class AuthProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } catch (e) {
+      _error = _extractErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Resend verification email
+  Future<bool> resendVerificationEmail(String email) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final success = await _authService.resendVerificationEmail(email);
+      _isLoading = false;
+      notifyListeners();
+      return success;
     } catch (e) {
       _error = _extractErrorMessage(e);
       _isLoading = false;
