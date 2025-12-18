@@ -78,7 +78,9 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const registrationResult = await this.prisma.$transaction(async (tx) => {
+    let registrationResult;
+    try {
+      registrationResult = await this.prisma.$transaction(async (tx) => {
       // When registering as caregiver, load and validate invitation inside transaction
       let invitation: {
         invitationId: bigint;
@@ -158,6 +160,41 @@ export class AuthService {
       if (normalizedRoleCode === 'caregiver' && invitation) {
         const now = new Date();
 
+        // Check if assignment already exists (prevent duplicates)
+        const existingAssignment = await tx.elderAssignment.findFirst({
+          where: {
+            elderUserId: invitation.elderUserId,
+            caregiverUserId: user.userId,
+          },
+        });
+
+        if (existingAssignment) {
+          this.logger.warn(
+            `Elder assignment already exists for caregiver ${user.userId} and elder ${invitation.elderUserId}`,
+          );
+        } else {
+          // Validate relationshipCode is not empty
+          if (!invitation.relationshipCode || invitation.relationshipCode.trim() === '') {
+            throw new BadRequestException(
+              'Invalid invitation: relationship code is missing.',
+            );
+          }
+
+          // Normalize relationshipCode to lowercase to match lookup table
+          // The lookup table stores codes in lowercase (e.g., "friend" not "Friend")
+          const normalizedRelationshipCode = invitation.relationshipCode.trim().toLowerCase();
+
+          await tx.elderAssignment.create({
+            data: {
+              elderUserId: invitation.elderUserId,
+              caregiverUserId: user.userId,
+              relationshipCode: normalizedRelationshipCode,
+              relationshipDomain: 'relationships', // Explicitly set domain
+              isPrimary: false,
+            },
+          });
+        }
+
         await tx.userInvitation.update({
           where: { invitationId: invitation.invitationId },
           data: {
@@ -166,19 +203,47 @@ export class AuthService {
             acceptedAt: now,
           },
         });
-
-        await tx.elderAssignment.create({
-          data: {
-            elderUserId: invitation.elderUserId,
-            caregiverUserId: user.userId,
-            relationshipCode: invitation.relationshipCode,
-            isPrimary: false,
-          },
-        });
       }
 
-      return { user, verificationToken };
-    });
+        return { user, verificationToken };
+      });
+    } catch (error: any) {
+      this.logger.error(
+        `Registration transaction failed for ${email}: ${error.message}`,
+        error.stack,
+      );
+      
+      // Re-throw known exceptions
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      
+      // Log detailed error information
+      this.logger.error(
+        `Registration error details: ${JSON.stringify({
+          message: error.message,
+          code: error.code,
+          meta: error.meta,
+        })}`,
+      );
+      
+      // Provide more helpful error message
+      if (error.code === 'P2002') {
+        // Unique constraint violation
+        const target = error.meta?.target || 'unknown field';
+        throw new ConflictException(
+          `A record with this ${target} already exists.`,
+        );
+      }
+      
+      throw new BadRequestException(
+        `Registration failed: ${error.message || 'Unknown database error'}`,
+      );
+    }
 
     // Send verification email asynchronously (fire-and-forget)
     // This prevents registration from timing out if email service is slow

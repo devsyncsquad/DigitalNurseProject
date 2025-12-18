@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "My Digital Nurse",
-    "tagline": "Your Personal Health Companion",
+    "name": "HCN",
+    "tagline": "Your Health Care Nurse",
     "description": "Manage medications, track vitals, coordinate care, and take control of your health journey."
   },
   "auth": {
