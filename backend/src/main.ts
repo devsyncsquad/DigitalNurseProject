@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
+import { CaregiversService } from './caregivers/caregivers.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -51,7 +52,231 @@ async function bootstrap() {
 
   // Email verification GET endpoint (outside /api prefix)
   const authService = app.get(AuthService);
+  const caregiversService = app.get(CaregiversService);
   const expressApp = app.getHttpAdapter().getInstance();
+  
+  // Registration page endpoint (outside /api prefix) for caregiver invitations
+  expressApp.get('/register', async (req: any, res: any) => {
+    const inviteCode = req.query.inviteCode as string;
+    
+    if (!inviteCode) {
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Registration - Digital Nurse</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #333;
+            }
+            .container {
+              background: white;
+              padding: 2rem;
+              border-radius: 12px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+              max-width: 500px;
+              text-align: center;
+            }
+            h1 { color: #e74c3c; margin-top: 0; }
+            p { line-height: 1.6; color: #666; }
+            .error-icon { font-size: 48px; margin-bottom: 1rem; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="error-icon">⚠️</div>
+            <h1>Invalid Registration Link</h1>
+            <p>No invitation code was provided. Please check your email and click the registration link again.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    try {
+      const invitation = await caregiversService.getInvitationByCode(inviteCode);
+      const patientName = invitation.elderUser?.name || 'your loved one';
+      
+      return res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Caregiver Registration - Digital Nurse</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #333;
+            }
+            .container {
+              background: white;
+              padding: 2rem;
+              border-radius: 12px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+              max-width: 500px;
+              text-align: center;
+            }
+            h1 { color: #14b8a6; margin-top: 0; }
+            p { line-height: 1.6; color: #666; margin: 1rem 0; }
+            .invite-code {
+              background: #f9fafb;
+              padding: 1.5rem;
+              border-radius: 8px;
+              margin: 1.5rem 0;
+              border: 2px dashed #14b8a6;
+            }
+            .code {
+              font-size: 24px;
+              font-weight: 700;
+              color: #14b8a6;
+              font-family: monospace;
+              letter-spacing: 2px;
+              margin: 0.5rem 0;
+            }
+            .instructions {
+              background: #f0f9ff;
+              padding: 1rem;
+              border-radius: 8px;
+              margin: 1.5rem 0;
+              text-align: left;
+            }
+            .instructions ol {
+              margin: 0.5rem 0;
+              padding-left: 1.5rem;
+            }
+            .instructions li {
+              margin: 0.5rem 0;
+              color: #666;
+            }
+            .success-icon { font-size: 48px; margin-bottom: 1rem; }
+            .expiry {
+              font-size: 0.9rem;
+              color: #999;
+              margin-top: 1.5rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">👋</div>
+            <h1>You've Been Invited!</h1>
+            <p><strong>${patientName}</strong> has invited you to be their caregiver on Digital Nurse.</p>
+            <div class="invite-code">
+              <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 14px; font-weight: 600;">
+                Your Invitation Code:
+              </p>
+              <div class="code">${inviteCode}</div>
+            </div>
+            <div class="instructions">
+              <p style="margin: 0 0 0.5rem 0; color: #333; font-weight: 600;">To complete your registration:</p>
+              <ol>
+                <li>Open the Digital Nurse mobile app</li>
+                <li>Go to the registration screen</li>
+                <li>Select "Caregiver" as your role</li>
+                <li>Enter the invitation code above</li>
+                <li>Complete your registration</li>
+              </ol>
+            </div>
+            <p class="expiry">This invitation will expire in 7 days.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    } catch (error: any) {
+      // Handle NestJS exceptions (HttpException has getStatus method)
+      let statusCode = 500;
+      if (error.status) {
+        statusCode = error.status;
+      } else if (error.statusCode) {
+        statusCode = error.statusCode;
+      } else if (typeof error.getStatus === 'function') {
+        statusCode = error.getStatus();
+      }
+      
+      const message = error.message || 'An error occurred while validating the invitation';
+      const isExpired = message.includes('expired') || message.includes('Expired');
+      const isAlreadyProcessed = message.includes('already processed') || message.includes('Already processed');
+      const isNotFound = message.includes('not found') || message.includes('Not found');
+      
+      let errorTitle = 'Invalid Invitation';
+      let errorIcon = '❌';
+      let errorMessage = message;
+      
+      if (isExpired) {
+        errorTitle = 'Invitation Expired';
+        errorIcon = '⏰';
+        errorMessage = 'This invitation has expired. Please ask for a new invitation.';
+      } else if (isAlreadyProcessed) {
+        errorTitle = 'Invitation Already Used';
+        errorIcon = 'ℹ️';
+        errorMessage = 'This invitation has already been used. If you have an account, please log in.';
+      } else if (isNotFound) {
+        errorTitle = 'Invitation Not Found';
+        errorIcon = '⚠️';
+        errorMessage = 'This invitation code is invalid. Please check your email and try again.';
+      }
+
+      return res.status(statusCode).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${errorTitle} - Digital Nurse</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #333;
+            }
+            .container {
+              background: white;
+              padding: 2rem;
+              border-radius: 12px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+              max-width: 500px;
+              text-align: center;
+            }
+            h1 { 
+              color: ${isAlreadyProcessed ? '#3498db' : '#e74c3c'}; 
+              margin-top: 0; 
+            }
+            p { line-height: 1.6; color: #666; }
+            .error-icon { font-size: 48px; margin-bottom: 1rem; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="error-icon">${errorIcon}</div>
+            <h1>${errorTitle}</h1>
+            <p>${errorMessage}</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+  });
   
   expressApp.get('/email-verification', async (req: any, res: any) => {
     const token = req.query.token as string;
