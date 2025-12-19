@@ -18,6 +18,14 @@ class MedicationService {
     return errorMessage.contains('Unauthorized') || errorMessage.contains('401');
   }
 
+  // Helper method to check if error is forbidden (caregiver not assigned to elder)
+  bool _isForbiddenError(dynamic error) {
+    final errorMessage = error.toString();
+    return errorMessage.contains('Forbidden') || 
+           errorMessage.contains('403') ||
+           errorMessage.contains('not assigned to the requested elder');
+  }
+
   // Get all medicines for a user
   Future<List<MedicineModel>> getMedicines(
     String userId, {
@@ -43,6 +51,11 @@ class MedicationService {
         throw Exception('Failed to fetch medications: ${response.statusMessage}');
       }
     } catch (e) {
+      // Handle Forbidden errors gracefully (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during medications fetch (caregiver may not have access to this elder)');
+        return []; // Return empty list instead of throwing
+      }
       _log('❌ Error fetching medications: $e');
       throw Exception(e.toString());
     }
@@ -146,6 +159,11 @@ class MedicationService {
         throw Exception('Failed to delete medication: ${response.statusMessage}');
       }
     } catch (e) {
+      // Handle Forbidden errors gracefully (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during medication deletion (caregiver may not have access to this elder)');
+        return; // Complete successfully instead of throwing
+      }
       _log('❌ Error deleting medication: $e');
       throw Exception(e.toString());
     }
@@ -173,6 +191,11 @@ class MedicationService {
         return null;
       }
     } catch (e) {
+      // Handle Forbidden errors gracefully (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during medication fetch (caregiver may not have access to this elder)');
+        return null; // Return null instead of throwing
+      }
       _log('❌ Error fetching medication: $e');
       return null;
     }
@@ -215,6 +238,11 @@ class MedicationService {
         throw Exception('Failed to log intake: ${response.statusMessage}');
       }
     } catch (e) {
+      // Handle Forbidden errors with clearer message (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during intake logging (caregiver may not have access to this elder)');
+        throw Exception('You do not have permission to log intake for this patient.');
+      }
       _log('❌ Error logging intake: $e');
       throw Exception(e.toString());
     }
@@ -252,6 +280,11 @@ class MedicationService {
         _log('⚠️ Unauthorized error during intake history fetch (user may be logging out)');
         return []; // Return empty list instead of throwing
       }
+      // Handle Forbidden errors gracefully (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during intake history fetch (caregiver may not have access to this elder)');
+        return []; // Return empty list instead of throwing
+      }
       _log('❌ Error fetching intake history: $e');
       throw Exception(e.toString());
     }
@@ -286,6 +319,11 @@ class MedicationService {
         throw Exception('Failed to fetch upcoming reminders: ${response.statusMessage}');
       }
     } catch (e) {
+      // Handle Forbidden errors gracefully (caregiver not assigned to elder)
+      if (_isForbiddenError(e)) {
+        _log('⚠️ Forbidden error during upcoming reminders fetch (caregiver may not have access to this elder)');
+        return []; // Return empty list instead of throwing
+      }
       _log('❌ Error fetching upcoming reminders: $e');
       throw Exception(e.toString());
     }

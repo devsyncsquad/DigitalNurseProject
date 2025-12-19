@@ -188,6 +188,78 @@ class CaregiverService {
     }
   }
 
+  // Get pending invitations for logged-in caregiver
+  Future<List<Map<String, dynamic>>> getPendingInvitations() async {
+    _log('📋 Fetching pending invitations for caregiver');
+    try {
+      final response = await _apiService.get('/caregivers/invitations/pending');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data is List ? response.data : [];
+        final invitations = data
+            .map(
+              (json) => json is Map<String, dynamic>
+                  ? json
+                  : Map<String, dynamic>.from(json),
+            )
+            .toList();
+        _log('✅ Fetched ${invitations.length} pending invitations');
+        return invitations;
+      } else {
+        _log('❌ Failed to fetch pending invitations: ${response.statusMessage}');
+        throw Exception(
+          'Failed to fetch pending invitations: ${response.statusMessage}',
+        );
+      }
+    } catch (e) {
+      _log('❌ Error fetching pending invitations: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  // Accept invitation by code
+  Future<Map<String, dynamic>> acceptInvitationByCode(String inviteCode) async {
+    _log('✅ Accepting invitation by code: $inviteCode');
+    try {
+      final response = await _apiService.post(
+        '/caregivers/invitations/accept-by-code',
+        data: {'inviteCode': inviteCode},
+      );
+
+      if (response.statusCode == 200) {
+        _log('✅ Invitation accepted successfully by code');
+        return response.data is Map<String, dynamic>
+            ? response.data
+            : Map<String, dynamic>.from(response.data);
+      } else {
+        _log('❌ Failed to accept invitation by code: ${response.statusMessage}');
+        throw Exception(
+          'Failed to accept invitation by code: ${response.statusMessage}',
+        );
+      }
+    } catch (e) {
+      _log('❌ Error accepting invitation by code: $e');
+      // Parse error message for user-friendly messages
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('already processed') ||
+          errorString.contains('already been processed')) {
+        throw Exception(
+          'This invitation has already been accepted or declined. Please check your patient list.',
+        );
+      } else if (errorString.contains('expired')) {
+        throw Exception(
+          'This invitation has expired. Please ask for a new invitation.',
+        );
+      } else if (errorString.contains('not found') ||
+          errorString.contains('invalid')) {
+        throw Exception(
+          'Invalid invitation code. Please check the code and try again.',
+        );
+      }
+      throw Exception(e.toString());
+    }
+  }
+
   // Decline caregiver invitation
   Future<void> declineInvitation(String invitationId) async {
     _log('❌ Declining invitation: $invitationId');

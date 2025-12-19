@@ -120,7 +120,7 @@ export class CaregiversService {
       throw new NotFoundException('Elder user not found');
     }
 
-    // Check if invitation already exists
+    // Check if invitation already exists by phone or email
     const whereClause: any = {
       elderUserId,
       status: 'pending',
@@ -129,17 +129,30 @@ export class CaregiversService {
       },
     };
 
+    // Build OR condition for phone or email
+    const orConditions: any[] = [];
+    
     if (createDto.phone) {
-      whereClause.invitePhone = createDto.phone;
+      orConditions.push({ invitePhone: createDto.phone });
+    }
+    
+    if (createDto.email) {
+      orConditions.push({ inviteEmail: createDto.email });
     }
 
-    const existingInvitation = await this.prisma.userInvitation.findFirst({
-      where: whereClause,
-    });
+    if (orConditions.length > 0) {
+      whereClause.OR = orConditions;
+      
+      const existingInvitation = await this.prisma.userInvitation.findFirst({
+        where: whereClause,
+      });
 
-    if (existingInvitation) {
-      const identifier = createDto.phone || createDto.email;
-      throw new BadRequestException(`Invitation already sent to ${identifier}`);
+      if (existingInvitation) {
+        const identifier = createDto.email || createDto.phone;
+        throw new BadRequestException(
+          `Invitation already sent to ${identifier}`,
+        );
+      }
     }
 
     // Create invitation
@@ -156,6 +169,7 @@ export class CaregiversService {
         targetRoleCode: 'caregiver',
         relationshipCode: createDto.relationship,
         invitePhone,
+        inviteEmail: createDto.email || null,
         inviteCode,
         status: 'pending',
         expiresAt,
@@ -170,6 +184,46 @@ export class CaregiversService {
         elderUser.full_name,
         createDto.relationship,
       );
+
+      // Check if user already exists and create notification
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: createDto.email },
+        include: {
+          userRoles: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+
+      if (existingUser) {
+        const hasCaregiverRole = existingUser.userRoles.some(
+          (ur) => ur.role.roleCode.toLowerCase() === 'caregiver',
+        );
+
+        if (hasCaregiverRole) {
+          // Create notification for existing caregiver
+          await this.prisma.notification.create({
+            data: {
+              userId: existingUser.userId,
+              title: 'New Caregiver Invitation',
+              message: `${elderUser.full_name} has invited you to be their caregiver`,
+              notificationType: 'caregiver_invitation',
+              actionData: {
+                invitationId: invitation.invitationId.toString(),
+                inviteCode: invitation.inviteCode,
+                patientName: elderUser.full_name,
+                elderUserId: elderUserId.toString(),
+                relationship: invitation.relationshipCode,
+              },
+              isRead: false,
+              isSent: true,
+              status: 'sent',
+            },
+          });
+        }
+      }
     }
 
     return {
@@ -315,6 +369,143 @@ export class CaregiversService {
       invitedAt: invitation.createdAt.toISOString(),
       acceptedAt: invitation.acceptedAt?.toISOString() || new Date().toISOString(),
     };
+  }
+
+  /**
+   * Get pending invitations for logged-in caregiver
+   * Uses notifications table to find invitations sent to this caregiver
+   */
+  async getPendingInvitationsForCaregiver(userId: bigint) {
+    // Query notifications with type 'caregiver_invitation' for this user
+    const notifications = await this.prisma.notification.findMany({
+      where: {
+        userId,
+        notificationType: 'caregiver_invitation',
+        isRead: false,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Extract invitation IDs from actionData and fetch invitation details
+    const invitationIds = notifications
+      .map((n) => {
+        const actionData = n.actionData as any;
+        return actionData?.invitationId;
+      })
+      .filter((id) => id != null)
+      .map((id) => BigInt(id));
+
+    if (invitationIds.length === 0) {
+      return [];
+    }
+
+    // Fetch invitations and verify they're still pending
+    const invitations = await this.prisma.userInvitation.findMany({
+      where: {
+        invitationId: { in: invitationIds },
+        status: 'pending',
+        expiresAt: { gt: new Date() },
+      },
+      include: {
+        elderUser: {
+          select: {
+            userId: true,
+            full_name: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return invitations.map((inv) => ({
+      id: inv.invitationId.toString(),
+      inviteCode: inv.inviteCode,
+      patientName: inv.elderUser.full_name,
+      patientId: inv.elderUserId.toString(),
+      relationship: inv.relationshipCode,
+      expiresAt: inv.expiresAt.toISOString(),
+      createdAt: inv.createdAt.toISOString(),
+      notificationId: notifications.find(
+        (n) =>
+          (n.actionData as any)?.invitationId === inv.invitationId.toString(),
+      )?.notificationId.toString(),
+    }));
+  }
+
+  /**
+   * Accept invitation by code
+   */
+  async acceptInvitationByCode(userId: bigint, inviteCode: string) {
+    const invitation = await this.prisma.userInvitation.findUnique({
+      where: { inviteCode },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    if (invitation.status !== 'pending') {
+      throw new BadRequestException('Invitation already processed');
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      throw new BadRequestException('Invitation has expired');
+    }
+
+    // Verify user matches invitation (by email/phone)
+    const user = await this.prisma.user.findUnique({
+      where: { userId },
+      select: { email: true, phone: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if invitation was sent to this user
+    // For email invitations, invitePhone is 'email-only', so we check notifications
+    const notifications = await this.prisma.notification.findMany({
+      where: {
+        userId,
+        notificationType: 'caregiver_invitation',
+      },
+    });
+
+    // Check if any notification has this inviteCode in actionData
+    const notification = notifications.find((n) => {
+      const actionData = n.actionData as any;
+      return actionData?.inviteCode === inviteCode;
+    });
+
+    const matches =
+      user.phone === invitation.invitePhone ||
+      invitation.invitePhone === 'email-only' ||
+      notification !== undefined;
+
+    if (!matches) {
+      throw new BadRequestException(
+        'This invitation was not sent to your account',
+      );
+    }
+
+    // Use existing acceptInvitation logic
+    const result = await this.acceptInvitation(
+      userId,
+      invitation.invitationId,
+    );
+
+    // Mark related notification as read
+    if (notification) {
+      await this.prisma.notification.update({
+        where: { notificationId: notification.notificationId },
+        data: { isRead: true },
+      });
+    }
+
+    return result;
   }
 
   /**

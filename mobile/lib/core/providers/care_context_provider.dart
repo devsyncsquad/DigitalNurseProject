@@ -57,6 +57,12 @@ class CareContextProvider with ChangeNotifier {
     await loadCareRecipients();
   }
 
+  /// Force refresh the care recipients list (useful after accepting invitations)
+  Future<void> refreshCareRecipients() async {
+    _hasAttemptedLoad = false; // Reset so we can reload
+    await loadCareRecipients();
+  }
+
   Future<void> loadCareRecipients() async {
     if (_currentUserRole != UserRole.caregiver) {
       return;

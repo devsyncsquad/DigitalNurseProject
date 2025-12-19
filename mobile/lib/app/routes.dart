@@ -19,6 +19,7 @@ import '../features/health/screens/abnormal_vitals_screen.dart';
 import '../features/caregiver/screens/add_caregiver_screen.dart';
 import '../features/caregiver/screens/caregiver_list_screen.dart';
 import '../features/caregiver/screens/invitation_accept_screen.dart';
+import '../features/caregiver/screens/accept_invitation_code_screen.dart';
 import '../features/caregiver/screens/patient_detail_screen.dart';
 import '../features/caregiver/screens/medication_management_screen.dart';
 import '../features/caregiver/screens/patient_reports_screen.dart';
@@ -221,6 +222,17 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final caregiverId = state.pathParameters['caregiverId']!;
         return InvitationAcceptScreen(caregiverId: caregiverId);
+      },
+    ),
+    GoRoute(
+      path: '/caregiver/accept-invitation-code',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return AcceptInvitationCodeScreen(
+          inviteCode: extra?['inviteCode'] as String?,
+          invitation: extra?['invitation'] as Map<String, dynamic>?,
+          notificationId: extra?['notificationId'] as String?,
+        );
       },
     ),
 

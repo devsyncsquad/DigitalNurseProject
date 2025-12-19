@@ -219,6 +219,7 @@ model UserInvitation {
   relationshipDomain String    @default("relationships") @map("relationshipDomain")
   relationshipCode   String    @map("relationshipCode")
   invitePhone        String    @map("invitePhone")
+  inviteEmail        String?   @map("inviteemail")
   inviteCode         String    @unique @map("inviteCode")
   status             String    @default("pending") @map("status")
   expiresAt          DateTime  @map("expiresAt")
