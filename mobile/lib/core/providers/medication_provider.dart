@@ -165,11 +165,13 @@ class MedicationProvider with ChangeNotifier {
     String? elderUserId,
   }) async {
     try {
+      // Only pass elderUserId if explicitly provided (for caregivers)
+      // For patients, don't pass it - backend will use the authenticated user's ID
       await _medicationService.logIntake(
         medicineId: medicineId,
         scheduledTime: scheduledTime,
         status: status,
-        elderUserId: elderUserId ?? userId,
+        elderUserId: elderUserId, // Don't default to userId - let backend handle it for patients
       );
       _adherencePercentage = await _medicationService.getAdherencePercentage(
         userId,

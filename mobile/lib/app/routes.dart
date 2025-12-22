@@ -153,7 +153,21 @@ final goRouter = GoRouter(
       path: '/medicine/:id',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return MedicineDetailScreen(medicineId: id);
+        final selectedDateStr = state.uri.queryParameters['selectedDate'];
+        final reminderTimeStr = state.uri.queryParameters['reminderTime'];
+        DateTime? selectedDate;
+        if (selectedDateStr != null) {
+          try {
+            selectedDate = DateTime.parse(selectedDateStr);
+          } catch (e) {
+            // If parsing fails, use null (will default to today)
+          }
+        }
+        return MedicineDetailScreen(
+          medicineId: id,
+          selectedDate: selectedDate,
+          reminderTime: reminderTimeStr,
+        );
       },
     ),
 

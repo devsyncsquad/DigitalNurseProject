@@ -9,7 +9,7 @@ class MedicationService {
   final FCMService _fcmService = FCMService();
 
   void _log(String message) {
-    // print('🔍 [MEDICATION] $message');
+    print('🔍 [MEDICATION] $message');
   }
 
   // Helper method to check if error is unauthorized (user logging out)
@@ -208,7 +208,7 @@ class MedicationService {
     required IntakeStatus status,
     String? elderUserId,
   }) async {
-    _log('📝 Logging intake for medication: $medicineId');
+    _log('📝 Logging intake for medication: $medicineId, status: $status, elderUserId: $elderUserId');
     try {
       final intake = MedicineIntake(
         id: '', // Will be set by backend
@@ -222,6 +222,14 @@ class MedicationService {
         intake,
         elderUserId: elderUserId,
       );
+      
+      _log('📤 Sending request to: /medications/$medicineId/intakes');
+      _log('📤 Request data: $requestData');
+      _log('📤 Scheduled time (local): ${intake.scheduledTime}');
+      _log('📤 Scheduled time (UTC): ${intake.scheduledTime.toUtc()}');
+      _log('📤 Scheduled time (ISO): ${intake.scheduledTime.toUtc().toIso8601String()}');
+      _log('📤 Query params: ${elderUserId != null ? {'elderUserId': elderUserId} : null}');
+      
       final response = await _apiService.post(
         '/medications/$medicineId/intakes',
         data: requestData,
@@ -229,22 +237,47 @@ class MedicationService {
             elderUserId != null ? {'elderUserId': elderUserId} : null,
       );
 
+      _log('📥 Response status: ${response.statusCode}');
+      _log('📥 Response data: ${response.data}');
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         final loggedIntake = MedicationMapper.intakeFromApiResponse(response.data);
         _log('✅ Intake logged successfully');
         return loggedIntake;
       } else {
-        _log('❌ Failed to log intake: ${response.statusMessage}');
-        throw Exception('Failed to log intake: ${response.statusMessage}');
+        _log('❌ Failed to log intake: ${response.statusCode} - ${response.statusMessage}');
+        _log('❌ Response data: ${response.data}');
+        final errorMessage = response.data is Map 
+            ? (response.data['message'] ?? response.data['error'] ?? response.statusMessage)
+            : response.statusMessage;
+        throw Exception('Failed to log intake: $errorMessage');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _log('❌ Exception caught: $e');
+      _log('❌ Stack trace: $stackTrace');
+      
       // Handle Forbidden errors with clearer message (caregiver not assigned to elder)
       if (_isForbiddenError(e)) {
         _log('⚠️ Forbidden error during intake logging (caregiver may not have access to this elder)');
         throw Exception('You do not have permission to log intake for this patient.');
       }
-      _log('❌ Error logging intake: $e');
-      throw Exception(e.toString());
+      
+      // Extract a cleaner error message
+      String errorMessage = 'An error occurred. Please try again.';
+      final errorString = e.toString();
+      
+      if (errorString.contains('SocketException') || errorString.contains('Failed host lookup')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (errorString.contains('TimeoutException')) {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (errorString.contains('Exception: ')) {
+        errorMessage = errorString.replaceAll('Exception: ', '');
+      } else if (errorString.isNotEmpty) {
+        errorMessage = errorString;
+      }
+      
+      _log('❌ Throwing error: $errorMessage');
+      throw Exception(errorMessage);
     }
   }
 

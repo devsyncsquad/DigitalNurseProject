@@ -5,16 +5,25 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/medicine_model.dart';
+import '../../../core/models/user_model.dart';
 import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/care_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
 
 class MedicineDetailScreen extends StatefulWidget {
   final String medicineId;
+  final DateTime? selectedDate;
+  final String? reminderTime;
 
-  const MedicineDetailScreen({super.key, required this.medicineId});
+  const MedicineDetailScreen({
+    super.key,
+    required this.medicineId,
+    this.selectedDate,
+    this.reminderTime,
+  });
 
   @override
   State<MedicineDetailScreen> createState() => _MedicineDetailScreenState();
@@ -31,8 +40,20 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
   Future<void> _loadIntakeHistory() async {
     try {
-      final history = await context.read<MedicationProvider>().getIntakeHistory(
+      final authProvider = context.read<AuthProvider>();
+      final medicationProvider = context.read<MedicationProvider>();
+      final user = authProvider.currentUser;
+      
+      String? elderUserId;
+      if (user?.role == UserRole.caregiver) {
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        elderUserId = careContext.selectedElderId;
+      }
+      
+      final history = await medicationProvider.getIntakeHistory(
         widget.medicineId,
+        elderUserId: elderUserId,
       );
       if (mounted) {
         setState(() {
@@ -50,73 +71,157 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Future<void> _handleLogIntake(IntakeStatus status) async {
-    final authProvider = context.read<AuthProvider>();
-    final medicationProvider = context.read<MedicationProvider>();
-    final medicine = medicationProvider.medicines.firstWhere(
-      (m) => m.id == widget.medicineId,
-    );
-
-    // Get the most recent scheduled time that has passed (or current scheduled time)
-    DateTime scheduledTime = DateTime.now();
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // Find the most recent scheduled time for today
-    DateTime? mostRecentPastTime;
-    DateTime? nextUpcomingTime;
-
-    for (final timeStr in medicine.reminderTimes) {
-      final parts = timeStr.split(':');
-      if (parts.length != 2) continue;
+    print('🔵 [MEDICINE_DETAIL] Starting _handleLogIntake with status: $status');
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final medicationProvider = context.read<MedicationProvider>();
+      final user = authProvider.currentUser;
       
-      final hour = int.tryParse(parts[0]);
-      final minute = int.tryParse(parts[1]);
-      if (hour == null || minute == null) continue;
-
-      final scheduledDateTime = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        hour,
-        minute,
-      );
-
-      // Track the most recent past time and the next upcoming time
-      if (scheduledDateTime.isBefore(now) || scheduledDateTime.isAtSameMomentAs(now)) {
-        if (mostRecentPastTime == null || scheduledDateTime.isAfter(mostRecentPastTime)) {
-          mostRecentPastTime = scheduledDateTime;
+      print('🔵 [MEDICINE_DETAIL] User: ${user?.id}, Role: ${user?.role}');
+      
+      if (user == null) {
+        print('❌ [MEDICINE_DETAIL] User is null');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Please log in to continue'),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
         }
-      } else {
-        if (nextUpcomingTime == null || scheduledDateTime.isBefore(nextUpcomingTime)) {
-          nextUpcomingTime = scheduledDateTime;
+        return;
+      }
+      
+      // Clear any existing error in the provider to prevent it from showing on list screen
+      medicationProvider.clearError();
+      
+      final medicine = medicationProvider.medicines.firstWhere(
+        (m) => m.id == widget.medicineId,
+      );
+      
+      print('🔵 [MEDICINE_DETAIL] Medicine found: ${medicine.name}, ID: ${medicine.id}');
+      print('🔵 [MEDICINE_DETAIL] Selected date: ${widget.selectedDate}');
+      print('🔵 [MEDICINE_DETAIL] Reminder time: ${widget.reminderTime}');
+
+      // Use the selected date from calendar, or default to today
+      final targetDate = widget.selectedDate ?? DateTime.now();
+      final targetDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
+      
+      print('🔵 [MEDICINE_DETAIL] Target date: $targetDay');
+
+      // Find the scheduled time for the selected date
+      // Use the specific reminder time if provided, otherwise use the first one
+      DateTime? scheduledTime;
+      
+      String? timeToUse = widget.reminderTime;
+      if (timeToUse == null && medicine.reminderTimes.isNotEmpty) {
+        // Fallback to first reminder time if no specific time provided
+        timeToUse = medicine.reminderTimes.first;
+      }
+      
+      if (timeToUse != null) {
+        final parts = timeToUse.split(':');
+        if (parts.length == 2) {
+          final hour = int.tryParse(parts[0]);
+          final minute = int.tryParse(parts[1]);
+          if (hour != null && minute != null) {
+            scheduledTime = DateTime(
+              targetDay.year,
+              targetDay.month,
+              targetDay.day,
+              hour,
+              minute,
+            );
+            print('🔵 [MEDICINE_DETAIL] Using reminder time: $timeToUse for date: $targetDay');
+          }
         }
       }
-    }
+      
+      // Fallback to current time if no valid time found
+      scheduledTime ??= DateTime.now();
+      
+      print('🔵 [MEDICINE_DETAIL] Scheduled time: $scheduledTime');
 
-    // Use the most recent past time if available, otherwise use the next upcoming time
-    scheduledTime = mostRecentPastTime ?? nextUpcomingTime ?? DateTime.now();
+      // Handle caregiver context - get elderUserId if user is a caregiver
+      String? elderUserId;
+      if (user.role == UserRole.caregiver) {
+        print('🔵 [MEDICINE_DETAIL] User is caregiver, getting elderUserId');
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        elderUserId = careContext.selectedElderId ?? medicine.userId;
+        print('🔵 [MEDICINE_DETAIL] ElderUserId: $elderUserId');
+      } else {
+        print('🔵 [MEDICINE_DETAIL] User is patient, elderUserId will be null');
+      }
 
-    await medicationProvider.logIntake(
-      medicineId: widget.medicineId,
-      scheduledTime: scheduledTime, // Use actual scheduled time
-      status: status,
-      userId: authProvider.currentUser!.id,
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            status == IntakeStatus.taken
-                ? 'Marked as taken'
-                : 'Marked as missed',
-          ),
-          backgroundColor: status == IntakeStatus.taken
-              ? AppTheme.getSuccessColor(context)
-              : AppTheme.getWarningColor(context),
-        ),
+      print('🔵 [MEDICINE_DETAIL] Calling logIntake with: medicineId=${widget.medicineId}, status=$status, elderUserId=$elderUserId');
+      
+      final success = await medicationProvider.logIntake(
+        medicineId: widget.medicineId,
+        scheduledTime: scheduledTime, // Use actual scheduled time
+        status: status,
+        userId: user.id,
+        elderUserId: elderUserId,
       );
-      _loadIntakeHistory();
+      
+      print('🔵 [MEDICINE_DETAIL] logIntake returned: $success');
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                status == IntakeStatus.taken
+                    ? 'Marked as taken'
+                    : 'Marked as missed',
+              ),
+              backgroundColor: status == IntakeStatus.taken
+                  ? AppTheme.getSuccessColor(context)
+                  : AppTheme.getWarningColor(context),
+            ),
+          );
+          _loadIntakeHistory();
+        } else {
+          // If logIntake returned false, show error from provider
+          final errorMessage = medicationProvider.error ?? 'Failed to log intake. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          // Clear the error after displaying it
+          medicationProvider.clearError();
+        }
+      }
+    } catch (e, stackTrace) {
+      // Catch any exceptions and display them locally
+      print('❌ [MEDICINE_DETAIL] Exception in _handleLogIntake: $e');
+      print('❌ [MEDICINE_DETAIL] Stack trace: $stackTrace');
+      
+      if (mounted) {
+        String errorMessage = 'An error occurred. Please try again later.';
+        final errorString = e.toString();
+        
+        if (errorString.contains('Exception: ')) {
+          errorMessage = errorString.replaceAll('Exception: ', '');
+        } else if (errorString.isNotEmpty) {
+          errorMessage = errorString;
+        }
+        
+        print('❌ [MEDICINE_DETAIL] Displaying error: $errorMessage');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppTheme.getErrorColor(context),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        // Clear provider error to prevent it from showing on list screen
+        context.read<MedicationProvider>().clearError();
+      }
     }
   }
 
@@ -255,8 +360,11 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                                           ),
                                     ),
                                     Text(
-                                      DateFormat('MMM d, yyyy • h:mm a')
-                                          .format(intake.scheduledTime),
+                                      intake.status == IntakeStatus.taken && intake.takenTime != null
+                                          ? DateFormat('MMM d, yyyy • h:mm a')
+                                              .format(intake.takenTime!)
+                                          : DateFormat('MMM d, yyyy • h:mm a')
+                                              .format(intake.scheduledTime),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall

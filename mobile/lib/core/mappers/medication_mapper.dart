@@ -282,11 +282,15 @@ class MedicationMapper {
         status = 'pending';
     }
 
+    // Convert to UTC to ensure consistent timezone handling
+    final scheduledTimeUtc = intake.scheduledTime.toUtc();
+    final takenTimeUtc = intake.takenTime?.toUtc();
+    
     return {
-      'scheduledTime': intake.scheduledTime.toIso8601String(),
+      'scheduledTime': scheduledTimeUtc.toIso8601String(),
       'status': status,
-      if (intake.takenTime != null)
-        'takenTime': intake.takenTime!.toIso8601String(),
+      if (takenTimeUtc != null)
+        'takenTime': takenTimeUtc.toIso8601String(),
       if (elderUserId != null) 'elderUserId': elderUserId,
     };
   }

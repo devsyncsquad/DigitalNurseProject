@@ -47,7 +47,12 @@ class MedicineItemTile extends StatelessWidget {
         children: [
           Expanded(
             child: InkWell(
-              onTap: () => context.push('/medicine/${medicine.id}'),
+              onTap: () {
+                // Pass the selected date and reminder time as query parameters
+                final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                final timeStr = Uri.encodeComponent(reminderTime);
+                context.push('/medicine/${medicine.id}?selectedDate=$dateStr&reminderTime=$timeStr');
+              },
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),

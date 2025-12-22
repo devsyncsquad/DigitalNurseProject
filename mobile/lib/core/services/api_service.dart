@@ -366,9 +366,15 @@ class ApiService {
     if (error.response != null) {
       // Server responded with error
       final statusCode = error.response!.statusCode;
-      final message = error.response!.data?['message'] ??
-          error.response!.data?['error'] ??
-          'An error occurred';
+      final responseData = error.response!.data;
+      final message = responseData is Map
+          ? (responseData['message'] ?? responseData['error'] ?? 'An error occurred')
+          : (responseData?.toString() ?? 'An error occurred');
+
+      _log('❌ [API] Server error response:');
+      _log('   Status Code: $statusCode');
+      _log('   Response Data: $responseData');
+      _log('   Message: $message');
 
       switch (statusCode) {
         case 400:
@@ -383,7 +389,9 @@ class ApiService {
         case 409:
           return Exception('Conflict: $message');
         case 500:
-          return Exception('Server error: Please try again later');
+          // Include the actual error message from server if available
+          final serverMessage = message != 'An error occurred' ? message : 'Please try again later';
+          return Exception('Server error: $serverMessage');
         default:
           return Exception(message);
       }
