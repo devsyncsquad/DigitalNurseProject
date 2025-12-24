@@ -133,6 +133,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               minute,
             );
             print('🔵 [MEDICINE_DETAIL] Using reminder time: $timeToUse for date: $targetDay');
+            print('🔵 [MEDICINE_DETAIL] Calculated scheduledTime: $scheduledTime');
+            print('🔵 [MEDICINE_DETAIL] Scheduled time (UTC): ${scheduledTime.toUtc()}');
           }
         }
       }
@@ -140,7 +142,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       // Fallback to current time if no valid time found
       scheduledTime ??= DateTime.now();
       
-      print('🔵 [MEDICINE_DETAIL] Scheduled time: $scheduledTime');
+      print('🔵 [MEDICINE_DETAIL] Final scheduled time: $scheduledTime');
+      print('🔵 [MEDICINE_DETAIL] Final scheduled time (UTC): ${scheduledTime.toUtc()}');
 
       // Handle caregiver context - get elderUserId if user is a caregiver
       String? elderUserId;
