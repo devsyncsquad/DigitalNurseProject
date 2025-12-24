@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/lifestyle_provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/care_context_provider.dart';
+import '../../../core/models/user_model.dart';
 import '../../../core/extensions/meal_type_extensions.dart';
 import '../../../core/extensions/activity_type_extensions.dart';
 import '../../../core/theme/modern_surface_theme.dart';
@@ -21,17 +24,51 @@ class DietExerciseLogScreen extends StatefulWidget {
 class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadLogsForDate(_selectedDate);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadLogsForDate(DateTime date) async {
+    final lifestyleProvider = context.read<LifestyleProvider>();
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.currentUser;
+    
+    if (user != null) {
+      String? elderUserId;
+      String? targetUserId = user.id;
+      
+      if (user.role == UserRole.caregiver) {
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        if (!mounted) return;
+        targetUserId = careContext.selectedElderId ?? user.id;
+        elderUserId = targetUserId;
+      }
+      
+      await lifestyleProvider.loadAll(
+        targetUserId,
+        date: date,
+        elderUserId: elderUserId,
+      );
+    }
+  }
+
+  void _handleDateChanged(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
+    _loadLogsForDate(date);
   }
 
   @override
@@ -59,6 +96,35 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
         padding: ModernSurfaceTheme.screenPadding(),
         child: Column(
           children: [
+            // Calendar
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: ModernSurfaceTheme.glassCard(
+                context,
+                accent: ModernSurfaceTheme.primaryTeal,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select Date',
+                    style: ModernSurfaceTheme.sectionTitleStyle(context),
+                  ),
+                  SizedBox(height: 8.h),
+                  FLineCalendar(
+                    initialSelection: _selectedDate,
+                    initialScroll: _selectedDate,
+                    onChange: (date) => _handleDateChanged(date ?? DateTime.now()),
+                    toggleable: true,
+                    start: DateTime(1900),
+                    end: DateTime(2050),
+                    today: DateTime.now(),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+
             // Daily summary
             if (summary != null) ...[
               _DailySummaryCard(summary: summary),
@@ -86,7 +152,10 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: [_MealsTab(), _WorkoutsTab()],
+                children: [
+                  _MealsTab(selectedDate: _selectedDate),
+                  _WorkoutsTab(selectedDate: _selectedDate),
+                ],
               ),
             ),
           ],
@@ -97,6 +166,10 @@ class _DietExerciseLogScreenState extends State<DietExerciseLogScreen>
 }
 
 class _MealsTab extends StatelessWidget {
+  final DateTime selectedDate;
+
+  const _MealsTab({required this.selectedDate});
+
   @override
   Widget build(BuildContext context) {
     final lifestyleProvider = context.watch<LifestyleProvider>();
@@ -110,7 +183,10 @@ class _MealsTab extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => context.push('/lifestyle/meal/add'),
+                onPressed: () {
+                  final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                  context.push('/lifestyle/meal/add?selectedDate=$dateStr');
+                },
                 icon: const Icon(FIcons.plus),
                 label: const Text('Add Meal'),
                 style: ElevatedButton.styleFrom(
@@ -308,6 +384,10 @@ class _MealsTab extends StatelessWidget {
 }
 
 class _WorkoutsTab extends StatelessWidget {
+  final DateTime selectedDate;
+
+  const _WorkoutsTab({required this.selectedDate});
+
   @override
   Widget build(BuildContext context) {
     final lifestyleProvider = context.watch<LifestyleProvider>();
@@ -321,7 +401,10 @@ class _WorkoutsTab extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => context.push('/lifestyle/workout/add'),
+                onPressed: () {
+                  final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                  context.push('/lifestyle/workout/add?selectedDate=$dateStr');
+                },
                 icon: const Icon(FIcons.plus),
                 label: const Text('Add Workout'),
                 style: ElevatedButton.styleFrom(

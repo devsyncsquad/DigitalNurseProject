@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../../core/models/exercise_log_model.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -12,7 +13,9 @@ import '../../../core/widgets/modern_scaffold.dart';
 import '../../../core/services/openai_service.dart';
 
 class AddWorkoutScreen extends StatefulWidget {
-  const AddWorkoutScreen({super.key});
+  final DateTime? selectedDate;
+
+  const AddWorkoutScreen({super.key, this.selectedDate});
 
   @override
   State<AddWorkoutScreen> createState() => _AddWorkoutScreenState();
@@ -28,10 +31,17 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   ActivityType _activityType = ActivityType.walking;
   bool _isAnalyzing = false;
   String? _analysisError;
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
 
   @override
   void initState() {
     super.initState();
+    // Initialize date and time from selectedDate or use current date/time
+    final now = DateTime.now();
+    _selectedDate = widget.selectedDate ?? now;
+    _selectedTime = TimeOfDay.fromDateTime(now);
+    
     // Clear error when user types in description or duration
     _descriptionController.addListener(() {
       if (_analysisError != null && mounted) {
@@ -176,13 +186,22 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     final authProvider = context.read<AuthProvider>();
     final userId = authProvider.currentUser!.id;
 
+    // Combine selected date and time into a single DateTime
+    final timestamp = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     final workout = ExerciseLogModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       activityType: _activityType,
       description: _descriptionController.text.trim(),
       durationMinutes: duration,
       caloriesBurned: calories,
-      timestamp: DateTime.now(),
+      timestamp: timestamp,
       userId: userId,
     );
 
@@ -284,6 +303,115 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                             });
                           }
                         },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // Date and Time Selection
+                Container(
+                  decoration: ModernSurfaceTheme.glassCard(
+                    context,
+                    accent: ModernSurfaceTheme.accentBlue,
+                  ),
+                  padding: ModernSurfaceTheme.cardPadding(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Date & Time',
+                        style: ModernSurfaceTheme.sectionTitleStyle(context),
+                      ),
+                      SizedBox(height: 12.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate,
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null && mounted) {
+                                  setState(() {
+                                    _selectedDate = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      DateFormat('MMM d, yyyy').format(_selectedDate),
+                                      style: textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    Icon(
+                                      FIcons.calendar,
+                                      color: colorScheme.onSurfaceVariant,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: _selectedTime,
+                                );
+                                if (picked != null && mounted) {
+                                  setState(() {
+                                    _selectedTime = picked;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 12.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _selectedTime.format(context),
+                                      style: textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    Icon(
+                                      FIcons.clock,
+                                      color: colorScheme.onSurfaceVariant,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

@@ -257,11 +257,33 @@ final goRouter = GoRouter(
     ),
     GoRoute(
       path: '/lifestyle/meal/add',
-      builder: (context, state) => const AddMealScreen(),
+      builder: (context, state) {
+        final selectedDateStr = state.uri.queryParameters['selectedDate'];
+        DateTime? selectedDate;
+        if (selectedDateStr != null) {
+          try {
+            selectedDate = DateTime.parse(selectedDateStr);
+          } catch (e) {
+            // If parsing fails, use null (will default to today)
+          }
+        }
+        return AddMealScreen(selectedDate: selectedDate);
+      },
     ),
     GoRoute(
       path: '/lifestyle/workout/add',
-      builder: (context, state) => const AddWorkoutScreen(),
+      builder: (context, state) {
+        final selectedDateStr = state.uri.queryParameters['selectedDate'];
+        DateTime? selectedDate;
+        if (selectedDateStr != null) {
+          try {
+            selectedDate = DateTime.parse(selectedDateStr);
+          } catch (e) {
+            // If parsing fails, use null (will default to today)
+          }
+        }
+        return AddWorkoutScreen(selectedDate: selectedDate);
+      },
     ),
     GoRoute(
       path: '/lifestyle/plans',
