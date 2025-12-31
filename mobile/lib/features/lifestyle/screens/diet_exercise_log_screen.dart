@@ -170,6 +170,80 @@ class _MealsTab extends StatelessWidget {
 
   const _MealsTab({required this.selectedDate});
 
+  Future<void> _handleDeleteMeal(BuildContext context, String mealId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Meal'),
+        content: const Text('Are you sure you want to delete this meal?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.getErrorColor(context),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user == null) {
+        return;
+      }
+
+      // Handle caregiver context
+      String? elderUserId;
+      String? targetUserId = user.id;
+      if (user.role == UserRole.caregiver) {
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        targetUserId = careContext.selectedElderId ?? user.id;
+        elderUserId = targetUserId;
+      }
+
+      final lifestyleProvider = context.read<LifestyleProvider>();
+      final success = await lifestyleProvider.deleteDietLog(
+        mealId,
+        targetUserId,
+        elderUserId: elderUserId,
+      );
+
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Meal deleted successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          // Reload logs for the selected date
+          await lifestyleProvider.loadAll(
+            targetUserId,
+            date: selectedDate,
+            elderUserId: elderUserId,
+          );
+        } else {
+          final errorMessage = lifestyleProvider.error ?? 'Failed to delete meal. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lifestyleProvider = context.watch<LifestyleProvider>();
@@ -331,6 +405,15 @@ class _MealsTab extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            SizedBox(width: 8.w),
+                            IconButton(
+                              onPressed: () => _handleDeleteMeal(context, meal.id),
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: AppTheme.getErrorColor(context),
+                              ),
+                              tooltip: 'Delete meal',
+                            ),
                           ],
                         ),
                       ),
@@ -387,6 +470,80 @@ class _WorkoutsTab extends StatelessWidget {
   final DateTime selectedDate;
 
   const _WorkoutsTab({required this.selectedDate});
+
+  Future<void> _handleDeleteWorkout(BuildContext context, String workoutId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Workout'),
+        content: const Text('Are you sure you want to delete this workout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.getErrorColor(context),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user == null) {
+        return;
+      }
+
+      // Handle caregiver context
+      String? elderUserId;
+      String? targetUserId = user.id;
+      if (user.role == UserRole.caregiver) {
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        targetUserId = careContext.selectedElderId ?? user.id;
+        elderUserId = targetUserId;
+      }
+
+      final lifestyleProvider = context.read<LifestyleProvider>();
+      final success = await lifestyleProvider.deleteExerciseLog(
+        workoutId,
+        targetUserId,
+        elderUserId: elderUserId,
+      );
+
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Workout deleted successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          // Reload logs for the selected date
+          await lifestyleProvider.loadAll(
+            targetUserId,
+            date: selectedDate,
+            elderUserId: elderUserId,
+          );
+        } else {
+          final errorMessage = lifestyleProvider.error ?? 'Failed to delete workout. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -548,6 +705,15 @@ class _WorkoutsTab extends StatelessWidget {
                                       ),
                                 ),
                               ],
+                            ),
+                            SizedBox(width: 8.w),
+                            IconButton(
+                              onPressed: () => _handleDeleteWorkout(context, workout.id),
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: AppTheme.getErrorColor(context),
+                              ),
+                              tooltip: 'Delete workout',
                             ),
                           ],
                         ),

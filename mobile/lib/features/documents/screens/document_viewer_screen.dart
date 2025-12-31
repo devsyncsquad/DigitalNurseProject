@@ -9,7 +9,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../core/providers/document_provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/document_model.dart';
+import '../../../core/models/user_model.dart';
 import '../../../core/services/document_service.dart';
 import '../../../core/services/token_service.dart';
 import '../../../core/config/app_config.dart';
@@ -46,7 +49,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(
-              foregroundColor: context.theme.colors.destructive,
+              foregroundColor: AppTheme.getErrorColor(context),
             ),
             child: const Text('Delete'),
           ),
@@ -55,11 +58,44 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
     );
 
     if (confirm == true && context.mounted) {
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user == null) {
+        return;
+      }
+
+      // Handle caregiver context - get elderUserId if user is a caregiver
+      String? elderUserId;
+      if (user.role == UserRole.caregiver) {
+        final documentProvider = context.read<DocumentProvider>();
+        final document = documentProvider.documents.firstWhere(
+          (d) => d.id == widget.documentId,
+          orElse: () => throw Exception('Document not found'),
+        );
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        elderUserId = careContext.selectedElderId ?? document.userId;
+      }
+
       final success = await context.read<DocumentProvider>().deleteDocument(
         widget.documentId,
+        elderUserId: elderUserId,
       );
-      if (context.mounted && success) {
-        context.pop();
+      
+      if (context.mounted) {
+        if (success) {
+          context.pop();
+        } else {
+          final errorMessage = context.read<DocumentProvider>().error ?? 
+              'Failed to delete document. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
       }
     }
   }
@@ -393,7 +429,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
         actions: [
           IconButton(
             onPressed: () => _handleDelete(context),
-            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
           ),
         ],
       ),

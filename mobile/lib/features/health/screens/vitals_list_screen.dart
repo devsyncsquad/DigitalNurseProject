@@ -74,6 +74,62 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     });
   }
 
+  Future<void> _handleDeleteVital(
+    String vitalId,
+    bool isCaregiver,
+    String? selectedElderId,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Vital Measurement'),
+        content: const Text('Are you sure you want to delete this vital measurement?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.getErrorColor(context),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final healthProvider = context.read<HealthProvider>();
+      final success = await healthProvider.deleteVital(
+        vitalId,
+        elderUserId: isCaregiver ? selectedElderId : null,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Vital measurement deleted successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          // Reload vitals to refresh the list
+          await _reloadVitals();
+        } else {
+          final errorMessage = healthProvider.error ?? 'Failed to delete vital measurement';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -131,6 +187,7 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
         healthProvider: healthProvider,
         vitals: vitals,
         error: error,
+        selectedElderId: selectedElderId,
       ),
     );
   }
@@ -145,6 +202,7 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     required HealthProvider healthProvider,
     required List<VitalMeasurementModel> vitals,
     required String? error,
+    required String? selectedElderId,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -317,6 +375,19 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
                                   const SizedBox(height: 4),
                                   VitalStatusBadge(status: healthStatus),
                                 ],
+                              ),
+                              SizedBox(width: 8.w),
+                              IconButton(
+                                onPressed: () => _handleDeleteVital(
+                                  vital.id,
+                                  isCaregiver,
+                                  selectedElderId,
+                                ),
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: AppTheme.getErrorColor(context),
+                                ),
+                                tooltip: 'Delete vital measurement',
                               ),
                             ],
                           ),

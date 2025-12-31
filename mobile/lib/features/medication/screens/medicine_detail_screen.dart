@@ -241,6 +241,9 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.getErrorColor(context),
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -249,14 +252,43 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
     if (confirm == true && mounted) {
       final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user == null) {
+        return;
+      }
+
+      // Handle caregiver context - get elderUserId if user is a caregiver
+      String? elderUserId;
+      if (user.role == UserRole.caregiver) {
+        final medicationProvider = context.read<MedicationProvider>();
+        final medicine = medicationProvider.medicines.firstWhere(
+          (m) => m.id == widget.medicineId,
+          orElse: () => throw Exception('Medicine not found'),
+        );
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        elderUserId = careContext.selectedElderId ?? medicine.userId;
+      }
+
       final success = await context.read<MedicationProvider>().deleteMedicine(
         widget.medicineId,
-        authProvider.currentUser!.id,
+        user.id,
+        elderUserId: elderUserId,
       );
 
       if (mounted) {
         if (success) {
           context.pop();
+        } else {
+          final errorMessage = context.read<MedicationProvider>().error ?? 
+              'Failed to delete medicine. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
         }
       }
     }
@@ -284,7 +316,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         actions: [
           IconButton(
             onPressed: _handleDelete,
-            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
           ),
         ],
       ),

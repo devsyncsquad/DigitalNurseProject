@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/care_context_provider.dart';
 import '../../../core/models/diet_plan_model.dart';
 import '../../../core/models/exercise_plan_model.dart';
+import '../../../core/models/user_model.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
@@ -200,8 +202,26 @@ class _DietPlansTab extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              final authProvider = context.read<AuthProvider>();
+              final user = authProvider.currentUser;
+              
+              if (user == null) {
+                return;
+              }
+
+              // Handle caregiver context
+              String? elderUserId;
+              if (user.role == UserRole.caregiver) {
+                final careContext = context.read<CareContextProvider>();
+                await careContext.ensureLoaded();
+                elderUserId = careContext.selectedElderId;
+              }
+
               final lifestyleProvider = context.read<LifestyleProvider>();
-              final success = await lifestyleProvider.deleteDietPlan(planId);
+              final success = await lifestyleProvider.deleteDietPlan(
+                planId,
+                elderUserId: elderUserId,
+              );
               if (context.mounted) {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -213,14 +233,14 @@ class _DietPlansTab extends StatelessWidget {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to delete plan: ${lifestyleProvider.error}'),
+                      content: Text('Failed to delete plan: ${lifestyleProvider.error ?? 'Unknown error'}'),
                       backgroundColor: AppTheme.getErrorColor(context),
                     ),
                   );
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: AppTheme.getErrorColor(context))),
           ),
         ],
       ),
@@ -361,8 +381,26 @@ class _ExercisePlansTab extends StatelessWidget {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              final authProvider = context.read<AuthProvider>();
+              final user = authProvider.currentUser;
+              
+              if (user == null) {
+                return;
+              }
+
+              // Handle caregiver context
+              String? elderUserId;
+              if (user.role == UserRole.caregiver) {
+                final careContext = context.read<CareContextProvider>();
+                await careContext.ensureLoaded();
+                elderUserId = careContext.selectedElderId;
+              }
+
               final lifestyleProvider = context.read<LifestyleProvider>();
-              final success = await lifestyleProvider.deleteExercisePlan(planId);
+              final success = await lifestyleProvider.deleteExercisePlan(
+                planId,
+                elderUserId: elderUserId,
+              );
               if (context.mounted) {
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -374,14 +412,14 @@ class _ExercisePlansTab extends StatelessWidget {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to delete plan: ${lifestyleProvider.error}'),
+                      content: Text('Failed to delete plan: ${lifestyleProvider.error ?? 'Unknown error'}'),
                       backgroundColor: AppTheme.getErrorColor(context),
                     ),
                   );
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: AppTheme.getErrorColor(context))),
           ),
         ],
       ),
@@ -538,7 +576,7 @@ class _PlanCard extends StatelessWidget {
                   onPressed: onDelete,
                   icon: const Icon(FIcons.trash, size: 16),
                   label: const Text('Delete'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  style: TextButton.styleFrom(foregroundColor: AppTheme.getErrorColor(context)),
                 ),
               ],
             ),
