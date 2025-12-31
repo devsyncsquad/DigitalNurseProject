@@ -3,14 +3,13 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
-import '../../../core/utils/avatar_util.dart';
+import '../../../core/widgets/professional_avatar.dart';
 
 class ProfileViewScreen extends StatelessWidget {
   const ProfileViewScreen({super.key});
@@ -63,34 +62,11 @@ class ProfileViewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ClipOval(
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      color: onPrimary.withValues(alpha: 0.15),
-                      child: CachedNetworkImage(
-                        imageUrl: AvatarUtil.getRandomAvatarUrl(user.id.isNotEmpty ? user.id : user.name),
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(
-                          child: CircularProgressIndicator(
-                            color: onPrimary,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                        errorWidget: (context, url, error) {
-                          debugPrint('Avatar image error: $error for URL: $url');
-                          return Center(
-                            child: Text(
-                              user.name[0].toUpperCase(),
-                              style: textTheme.headlineMedium?.copyWith(
-                                    color: onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                  ProfessionalAvatar(
+                    name: user.name,
+                    userId: user.id.isNotEmpty ? user.id : null,
+                    avatarUrl: user.avatarUrl,
+                    size: 96,
                   ),
                   SizedBox(height: 16.h),
                   Text(

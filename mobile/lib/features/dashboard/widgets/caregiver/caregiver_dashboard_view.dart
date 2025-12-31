@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/providers/care_context_provider.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/services/caregiver_service.dart';
-import '../../../../core/utils/avatar_util.dart';
+import '../../../../core/widgets/professional_avatar.dart';
 import '../dashboard_theme.dart';
 import 'patient_cards_grid.dart';
 import '../../../../features/ai/widgets/ai_insights_dashboard_widget.dart';
@@ -180,29 +179,10 @@ class _WelcomeMessage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48.w,
-            height: 48.w,
-            decoration: CaregiverDashboardTheme.iconBadge(
-              context,
-              CaregiverDashboardTheme.primaryTeal,
-            ),
-            child: ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: AvatarUtil.getRandomAvatarUrl(caregiverId),
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                ),
-                errorWidget: (context, url, error) {
-                  debugPrint('Avatar image error: $error for URL: $url');
-                  return _buildPlaceholderIcon(context);
-                },
-              ),
-            ),
+          ProfessionalAvatar(
+            name: caregiverName,
+            userId: caregiverId,
+            size: 48.w,
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -233,15 +213,6 @@ class _WelcomeMessage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderIcon(BuildContext context) {
-    return const Center(
-      child: Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 24,
-      ),
-    );
-  }
 }
 
 

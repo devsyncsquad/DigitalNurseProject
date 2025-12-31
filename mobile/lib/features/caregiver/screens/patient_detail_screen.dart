@@ -8,6 +8,7 @@ import '../../../core/providers/medication_provider.dart';
 import '../../../core/providers/lifestyle_provider.dart';
 import '../../../core/models/care_recipient_model.dart';
 import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/widgets/professional_avatar.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../widgets/vitals_summary_card.dart';
 import '../widgets/medication_status_card.dart';
@@ -186,27 +187,11 @@ class _PatientHeader extends StatelessWidget {
       child: Row(
         children: [
           // Patient photo
-          Container(
-            width: 80.w,
-            height: 80.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: ModernSurfaceTheme.primaryTeal.withOpacity(0.1),
-              border: Border.all(
-                color: ModernSurfaceTheme.primaryTeal.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: patient.avatarUrl != null && patient.avatarUrl!.isNotEmpty
-                ? ClipOval(
-                    child: Image.network(
-                      patient.avatarUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildPlaceholderAvatar(context),
-                    ),
-                  )
-                : _buildPlaceholderAvatar(context),
+          ProfessionalAvatar(
+            name: patient.name,
+            userId: patient.elderId,
+            avatarUrl: patient.avatarUrl,
+            size: 80.w,
           ),
           SizedBox(width: 16.w),
           // Patient info
@@ -268,27 +253,6 @@ class _PatientHeader extends StatelessWidget {
   }
 
   bool get isStable => patient.status == PatientStatus.stable;
-
-  Widget _buildPlaceholderAvatar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ModernSurfaceTheme.primaryTeal,
-            ModernSurfaceTheme.primaryTeal.withOpacity(0.7),
-          ],
-        ),
-      ),
-      child: Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 40.w,
-      ),
-    );
-  }
 }
 
 class _QuickActionsSection extends StatelessWidget {

@@ -357,7 +357,7 @@ class AuthService {
       if (name != null) data['name'] = name;
       if (phoneNumber != null) {
         data['phoneNumber'] = phoneNumber;
-        data['phone'] = phoneNumber;
+        // Note: Backend only accepts 'phoneNumber', not 'phone'
       }
       if (dateOfBirth != null) data['dateOfBirth'] = dateOfBirth;
       if (address != null) data['address'] = address;
@@ -366,7 +366,7 @@ class AuthService {
       if (medicalConditions != null)
         data['medicalConditions'] = medicalConditions;
       if (emergencyContact != null) data['emergencyContact'] = emergencyContact;
-      if (age != null) data['age'] = age;
+      // Note: Backend doesn't accept 'age' field - age is calculated from dateOfBirth if needed
 
       final response = await _apiService.patch('/users/profile', data: data);
 

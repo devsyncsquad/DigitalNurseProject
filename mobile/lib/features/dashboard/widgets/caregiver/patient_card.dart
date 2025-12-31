@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:forui/forui.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/models/care_recipient_model.dart';
+import '../../../../core/widgets/professional_avatar.dart';
 import '../dashboard_theme.dart';
 
 class PatientCard extends StatelessWidget {
@@ -57,29 +56,13 @@ class PatientCard extends StatelessWidget {
           decoration: CaregiverDashboardTheme.tintedCard(context, accentColor),
           child: Row(
             children: [
-              // Colored Icon Badge
-              Container(
-                width: 48.w,
-                height: 48.w,
-                decoration: CaregiverDashboardTheme.iconBadge(context, accentColor),
-                child: patient.avatarUrl != null && patient.avatarUrl!.isNotEmpty
-                    ? ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: patient.avatarUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) {
-                            debugPrint('Patient avatar image error: $error for URL: $url');
-                            return _buildPlaceholderIcon(context, accentColor);
-                          },
-                        ),
-                      )
-                    : _buildPlaceholderIcon(context, accentColor),
+              // Professional Avatar
+              ProfessionalAvatar(
+                name: patient.name,
+                userId: patient.elderId,
+                avatarUrl: patient.avatarUrl,
+                size: 48.w,
+                backgroundColor: accentColor,
               ),
               SizedBox(width: 16.w),
               // Patient Info
@@ -159,13 +142,4 @@ class PatientCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderIcon(BuildContext context, Color accentColor) {
-    return Center(
-      child: Icon(
-        FIcons.user,
-        color: Colors.white,
-        size: 24.w,
-      ),
-    );
-  }
 }

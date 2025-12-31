@@ -31,7 +31,7 @@ class MedicineDetailScreen extends StatefulWidget {
 
 class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   List<MedicineIntake>? _intakeHistory;
-  bool _isLogging = false;
+  IntakeStatus? _loggingStatus; // Track which status is being logged
   bool _isDeleting = false;
 
   @override
@@ -73,12 +73,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Future<void> _handleLogIntake(IntakeStatus status) async {
-    if (_isLogging) return;
+    if (_loggingStatus != null) return; // Already logging
 
     print('🔵 [MEDICINE_DETAIL] Starting _handleLogIntake with status: $status');
     
     setState(() {
-      _isLogging = true;
+      _loggingStatus = status; // Track which status is being logged
     });
 
     try {
@@ -237,7 +237,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLogging = false;
+          _loggingStatus = null; // Clear the logging status
         });
       }
     }
@@ -368,7 +368,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           children: [
             _MedicineInfoCard(medicine: medicine),
             SizedBox(height: 20.h),
-            _QuickActions(onLog: _handleLogIntake, isLoading: _isLogging),
+            _QuickActions(onLog: _handleLogIntake, loggingStatus: _loggingStatus),
             SizedBox(height: 24.h),
             Text(
               'Intake History',
@@ -586,20 +586,24 @@ class _MedicineInfoCard extends StatelessWidget {
 
 class _QuickActions extends StatelessWidget {
   final Future<void> Function(IntakeStatus status) onLog;
-  final bool isLoading;
+  final IntakeStatus? loggingStatus; // Track which specific status is being logged
 
   const _QuickActions({
     required this.onLog,
-    this.isLoading = false,
+    this.loggingStatus,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isLoggingTaken = loggingStatus == IntakeStatus.taken;
+    final isLoggingMissed = loggingStatus == IntakeStatus.missed;
+    final isAnyLogging = loggingStatus != null;
+
     return Row(
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: isLoading ? null : () => onLog(IntakeStatus.taken),
+            onPressed: isAnyLogging ? null : () => onLog(IntakeStatus.taken),
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 14.h),
               shape: RoundedRectangleBorder(
@@ -608,7 +612,7 @@ class _QuickActions extends StatelessWidget {
               backgroundColor: AppTheme.appleGreen,
               foregroundColor: Colors.white,
             ),
-            child: isLoading
+            child: isLoggingTaken
                 ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -623,7 +627,7 @@ class _QuickActions extends StatelessWidget {
         SizedBox(width: 12.w),
         Expanded(
           child: OutlinedButton(
-            onPressed: isLoading ? null : () => onLog(IntakeStatus.missed),
+            onPressed: isAnyLogging ? null : () => onLog(IntakeStatus.missed),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 14.h),
               side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.4)),
@@ -632,7 +636,7 @@ class _QuickActions extends StatelessWidget {
               ),
               foregroundColor: ModernSurfaceTheme.deepTeal,
             ),
-            child: isLoading
+            child: isLoggingMissed
                 ? const SizedBox(
                     width: 20,
                     height: 20,
