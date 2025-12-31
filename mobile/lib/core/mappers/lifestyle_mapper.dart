@@ -1,5 +1,6 @@
 import '../models/diet_log_model.dart';
 import '../models/exercise_log_model.dart';
+import '../utils/timezone_util.dart';
 
 /// Maps backend lifestyle response to Flutter models
 class LifestyleMapper {
@@ -90,7 +91,12 @@ class LifestyleMapper {
     }
 
     // Format date as YYYY-MM-DD (date only, not datetime)
-    final logDate = '${diet.timestamp.year}-${diet.timestamp.month.toString().padLeft(2, '0')}-${diet.timestamp.day.toString().padLeft(2, '0')}';
+    // Convert to Pakistan timezone first to ensure correct date extraction
+    // The timestamp from user input should be interpreted as Pakistan local time
+    // Extract date components ensuring we use Pakistan timezone perspective
+    final pakistanTime = TimezoneUtil.toPakistanTime(diet.timestamp);
+    // TZDateTime has year, month, day properties we can use directly
+    final logDate = '${pakistanTime.year}-${pakistanTime.month.toString().padLeft(2, '0')}-${pakistanTime.day.toString().padLeft(2, '0')}';
     
     return {
       'mealType': mealType,
@@ -212,7 +218,12 @@ class LifestyleMapper {
     }
 
     // Format date as YYYY-MM-DD (date only, not datetime)
-    final logDate = '${exercise.timestamp.year}-${exercise.timestamp.month.toString().padLeft(2, '0')}-${exercise.timestamp.day.toString().padLeft(2, '0')}';
+    // Convert to Pakistan timezone first to ensure correct date extraction
+    // The timestamp from user input should be interpreted as Pakistan local time
+    // Extract date components ensuring we use Pakistan timezone perspective
+    final pakistanTime = TimezoneUtil.toPakistanTime(exercise.timestamp);
+    // TZDateTime has year, month, day properties we can use directly
+    final logDate = '${pakistanTime.year}-${pakistanTime.month.toString().padLeft(2, '0')}-${pakistanTime.day.toString().padLeft(2, '0')}';
     
     return {
       'activityType': activityType,

@@ -72,6 +72,62 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     }
   }
 
+  /// Checks if there's an existing intake record for the specified scheduled time
+  /// Returns the existing intake if found, null otherwise
+  MedicineIntake? _hasExistingIntakeForTime(DateTime scheduledTime) {
+    if (_intakeHistory == null || _intakeHistory!.isEmpty) {
+      return null;
+    }
+
+    // Check for existing intake with same date and time (hour, minute)
+    final targetDate = DateTime(
+      scheduledTime.year,
+      scheduledTime.month,
+      scheduledTime.day,
+    );
+    final targetHour = scheduledTime.hour;
+    final targetMinute = scheduledTime.minute;
+
+    for (final intake in _intakeHistory!) {
+      final intakeDate = DateTime(
+        intake.scheduledTime.year,
+        intake.scheduledTime.month,
+        intake.scheduledTime.day,
+      );
+      final intakeHour = intake.scheduledTime.hour;
+      final intakeMinute = intake.scheduledTime.minute;
+
+      // Check if same date and time, and status is taken or missed (not pending)
+      if (intakeDate.year == targetDate.year &&
+          intakeDate.month == targetDate.month &&
+          intakeDate.day == targetDate.day &&
+          intakeHour == targetHour &&
+          intakeMinute == targetMinute &&
+          (intake.status == IntakeStatus.taken || intake.status == IntakeStatus.missed)) {
+        return intake;
+      }
+    }
+
+    return null;
+  }
+
+  /// Gets the time of day label (Morning, Afternoon, Evening) from a time string
+  String _getTimeOfDayLabel(String timeStr) {
+    final parts = timeStr.split(':');
+    if (parts.length != 2) return timeStr;
+
+    final hour = int.tryParse(parts[0]);
+    if (hour == null) return timeStr;
+
+    if (hour < 12) {
+      return 'Morning';
+    } else if (hour < 17) {
+      return 'Afternoon';
+    } else {
+      return 'Evening';
+    }
+  }
+
   Future<void> _handleLogIntake(IntakeStatus status) async {
     if (_loggingStatus != null) return; // Already logging
 
@@ -153,6 +209,40 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       
       print('🔵 [MEDICINE_DETAIL] Final scheduled time: $scheduledTime');
       print('🔵 [MEDICINE_DETAIL] Final scheduled time (UTC): ${scheduledTime.toUtc()}');
+
+      // Check for existing intake record for this specific timing
+      final existingIntake = _hasExistingIntakeForTime(scheduledTime);
+      if (existingIntake != null) {
+        // Determine time of day label
+        final timeLabel = timeToUse != null 
+            ? _getTimeOfDayLabel(timeToUse)
+            : 'this time';
+        
+        // Show toast message indicating duplicate
+        if (mounted) {
+          final statusLabel = existingIntake.status == IntakeStatus.taken 
+              ? 'taken' 
+              : 'missed';
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'This medicine is already marked as $statusLabel for $timeLabel',
+              ),
+              backgroundColor: AppTheme.getWarningColor(context),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        
+        // Clear logging status and return early
+        if (mounted) {
+          setState(() {
+            _loggingStatus = null;
+          });
+        }
+        return;
+      }
 
       // Handle caregiver context - get elderUserId if user is a caregiver
       String? elderUserId;
@@ -366,7 +456,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _MedicineInfoCard(medicine: medicine),
+            _MedicineInfoCard(
+              medicine: medicine,
+              reminderTime: widget.reminderTime,
+            ),
             SizedBox(height: 20.h),
             _QuickActions(onLog: _handleLogIntake, loggingStatus: _loggingStatus),
             SizedBox(height: 24.h),
@@ -503,8 +596,29 @@ class _InfoRow extends StatelessWidget {
 
 class _MedicineInfoCard extends StatelessWidget {
   final MedicineModel medicine;
+  final String? reminderTime;
 
-  const _MedicineInfoCard({required this.medicine});
+  const _MedicineInfoCard({
+    required this.medicine,
+    this.reminderTime,
+  });
+
+  /// Gets the time of day label (Morning, Afternoon, Evening) from a time string
+  String _getTimeOfDayLabel(String timeStr) {
+    final parts = timeStr.split(':');
+    if (parts.length != 2) return timeStr;
+
+    final hour = int.tryParse(parts[0]);
+    if (hour == null) return timeStr;
+
+    if (hour < 12) {
+      return 'Morning';
+    } else if (hour < 17) {
+      return 'Afternoon';
+    } else {
+      return 'Evening';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -539,12 +653,35 @@ class _MedicineInfoCard extends StatelessWidget {
                             color: ModernSurfaceTheme.deepTeal,
                           ),
                     ),
+                    SizedBox(height: 4.h),
                     Text(
                       medicine.dosage,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: ModernSurfaceTheme.deepTeal.withOpacity(0.7),
                           ),
                     ),
+                    if (reminderTime != null) ...[
+                      SizedBox(height: 8.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: ModernSurfaceTheme.primaryTeal.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: ModernSurfaceTheme.primaryTeal.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          _getTimeOfDayLabel(reminderTime!),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: ModernSurfaceTheme.primaryTeal,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.sp,
+                              ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

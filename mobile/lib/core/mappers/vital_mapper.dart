@@ -1,4 +1,5 @@
 import '../models/vital_measurement_model.dart';
+import '../utils/timezone_util.dart';
 
 /// Maps backend vital response to Flutter VitalMeasurementModel
 class VitalMapper {
@@ -112,7 +113,7 @@ class VitalMapper {
     Map<String, dynamic> request = {
       'type': type,
       'value': vital.value.toString(), // Ensure it's always a string
-      'timestamp': vital.timestamp.toIso8601String(),
+      'timestamp': TimezoneUtil.toPakistanTimeIso8601(vital.timestamp),
     };
 
     if (vital.notes != null) {
