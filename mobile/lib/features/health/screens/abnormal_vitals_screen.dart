@@ -8,6 +8,7 @@ import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/extensions/vital_type_extensions.dart';
+import '../../../core/extensions/vital_status_extensions.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/models/user_model.dart';
@@ -296,81 +297,86 @@ class _AbnormalVitalsScreenState extends State<AbnormalVitalsScreen> {
                             child: FCard(
                               child: Padding(
                                 padding: EdgeInsets.all(16.w),
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusBackgroundColor(
-                                          healthStatus,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        FIcons.activity,
-                                        color: _getStatusColor(healthStatus),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            vital.type.displayName,
-                                            style: context.theme.typography.base
-                                                .copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            DateFormat('h:mm a').format(
-                                              vital.timestamp,
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: _getStatusBackgroundColor(
+                                              healthStatus,
                                             ),
-                                            style:
-                                                context.theme.typography.sm,
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
-                                          if (vital.notes != null) ...[
-                                            SizedBox(height: 4),
+                                          child: Icon(
+                                            FIcons.activity,
+                                            color: _getStatusColor(healthStatus),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                vital.type.displayName,
+                                                style: context.theme.typography.base
+                                                    .copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                DateFormat('h:mm a').format(
+                                                  vital.timestamp,
+                                                ),
+                                                style:
+                                                    context.theme.typography.sm,
+                                              ),
+                                              if (vital.notes != null) ...[
+                                                SizedBox(height: 4),
+                                                Text(
+                                                  vital.notes!,
+                                                  style: context.theme.typography.xs
+                                                      .copyWith(
+                                                        color: context
+                                                            .theme
+                                                            .colors
+                                                            .mutedForeground,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
                                             Text(
-                                              vital.notes!,
-                                              style: context.theme.typography.xs
+                                              vital.value,
+                                              style: context.theme.typography.lg
                                                   .copyWith(
-                                                    color: context
-                                                        .theme
-                                                        .colors
-                                                        .mutedForeground,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        _getStatusColor(healthStatus),
                                                   ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              vital.type.unit,
+                                              style: context.theme.typography.xs,
                                             ),
                                           ],
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          vital.value,
-                                          style: context.theme.typography.lg
-                                              .copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    _getStatusColor(healthStatus),
-                                              ),
                                         ),
-                                        Text(
-                                          vital.type.unit,
-                                          style: context.theme.typography.xs,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        VitalStatusBadge(status: healthStatus),
                                       ],
                                     ),
+                                    const SizedBox(height: 12),
+                                    VitalStatusBadge(status: healthStatus, vital: vital),
                                   ],
                                 ),
                               ),
@@ -419,25 +425,11 @@ class _AbnormalVitalsScreenState extends State<AbnormalVitalsScreen> {
   }
 
   Color _getStatusColor(VitalHealthStatus status) {
-    switch (status) {
-      case VitalHealthStatus.normal:
-        return AppTheme.getSuccessColor(context);
-      case VitalHealthStatus.warning:
-        return AppTheme.getWarningColor(context);
-      case VitalHealthStatus.danger:
-        return AppTheme.getErrorColor(context);
-    }
+    return status.getStatusColor(context);
   }
 
   Color _getStatusBackgroundColor(VitalHealthStatus status) {
-    switch (status) {
-      case VitalHealthStatus.normal:
-        return AppTheme.getSuccessColor(context).withOpacity(0.1);
-      case VitalHealthStatus.warning:
-        return AppTheme.getWarningColor(context).withOpacity(0.1);
-      case VitalHealthStatus.danger:
-        return AppTheme.getErrorColor(context).withOpacity(0.1);
-    }
+    return status.getStatusColor(context).withValues(alpha: 0.1);
   }
 
   Widget _buildCaregiverNotice(

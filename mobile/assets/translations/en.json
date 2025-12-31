@@ -218,6 +218,30 @@
     "exercise": "Exercise",
     "comingSoon": "{action} coming soon",
     "caregiverDashboard": "Caregiver Dashboard"
+  },
+  "vitals": {
+    "status": {
+      "normal": {
+        "label": "Normal",
+        "message": "Blood pressure is normal."
+      },
+      "warning": {
+        "label": "Warning",
+        "message": "Blood pressure slightly high. Please monitor."
+      },
+      "danger": {
+        "label": "Danger",
+        "message": "Blood pressure is high. Doctor consultation advised."
+      },
+      "emergency": {
+        "label": "Emergency",
+        "message": "Very high blood pressure. Seek help immediately."
+      },
+      "lowBP": {
+        "label": "Low BP",
+        "message": "Blood pressure is low. Take care."
+      }
+    }
   }
 }
 

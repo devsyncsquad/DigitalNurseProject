@@ -29,6 +29,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   MealType _mealType = MealType.breakfast;
   bool _isAnalyzing = false;
+  bool _isSaving = false;
   String? _analysisError;
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
@@ -112,6 +113,8 @@ class _AddMealScreenState extends State<AddMealScreen> {
   }
 
   Future<void> _handleSave() async {
+    if (_isSaving) return;
+
     // Validate calories
     final caloriesText = _caloriesController.text.trim();
     if (caloriesText.isEmpty) {
@@ -135,38 +138,50 @@ class _AddMealScreenState extends State<AddMealScreen> {
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser!.id;
+    setState(() {
+      _isSaving = true;
+    });
 
-    // Combine selected date and time into a single DateTime
-    final timestamp = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final userId = authProvider.currentUser!.id;
 
-    final meal = DietLogModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      mealType: _mealType,
-      description: _descriptionController.text.trim(),
-      calories: calories,
-      timestamp: timestamp,
-      userId: userId,
-    );
+      // Combine selected date and time into a single DateTime
+      final timestamp = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
 
-    final success = await context.read<LifestyleProvider>().addDietLog(meal);
+      final meal = DietLogModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        mealType: _mealType,
+        description: _descriptionController.text.trim(),
+        calories: calories,
+        timestamp: timestamp,
+        userId: userId,
+      );
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Meal logged successfully'),
-            backgroundColor: AppTheme.getSuccessColor(context),
-          ),
-        );
-        context.pop();
+      final success = await context.read<LifestyleProvider>().addDietLog(meal);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Meal logged successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          context.pop();
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }
@@ -468,7 +483,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _handleSave,
+                    onPressed: _isSaving ? null : _handleSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ModernSurfaceTheme.primaryTeal,
                       foregroundColor: Colors.white,
@@ -477,13 +492,22 @@ class _AddMealScreenState extends State<AddMealScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: Text(
-                      'Save Meal',
-                      style: textTheme.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Save Meal',
+                            style: textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
-                    ),
                   ),
                 ),
               ],

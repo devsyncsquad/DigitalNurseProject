@@ -8,6 +8,7 @@ import '../../../core/providers/health_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/care_context_provider.dart';
 import '../../../core/extensions/vital_type_extensions.dart';
+import '../../../core/extensions/vital_status_extensions.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/modern_surface_theme.dart';
@@ -318,77 +319,82 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
                         child: Container(
                           decoration: ModernSurfaceTheme.glassCard(context, accent: accent),
                           padding: EdgeInsets.all(16.w),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: ModernSurfaceTheme.iconBadge(context, accent),
-                                child: Icon(FIcons.activity, color: onPrimary),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      vital.type.displayName,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: onSurface,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: ModernSurfaceTheme.iconBadge(context, accent),
+                                    child: Icon(FIcons.activity, color: onPrimary),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          vital.type.displayName,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: onSurface,
+                                              ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          DateFormat('MMM d, yyyy - h:mm a').format(vital.timestamp),
+                                          style: textTheme.bodySmall?.copyWith(
+                                                color: muted,
+                                              ),
+                                        ),
+                                        if (vital.notes != null) ...[
+                                          SizedBox(height: 4),
+                                          Text(
+                                            vital.notes!,
+                                            style: textTheme.bodySmall?.copyWith(
+                                                  color: muted,
+                                                ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
+                                        ],
+                                      ],
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      DateFormat('MMM d, yyyy - h:mm a').format(vital.timestamp),
-                                      style: textTheme.bodySmall?.copyWith(
-                                            color: muted,
-                                          ),
-                                    ),
-                                    if (vital.notes != null) ...[
-                                      SizedBox(height: 4),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
                                       Text(
-                                        vital.notes!,
-                                        style: textTheme.bodySmall?.copyWith(
-                                              color: muted,
+                                        vital.value,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: accent,
                                             ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        vital.type.unit,
+                                        style: Theme.of(context).textTheme.bodySmall,
                                       ),
                                     ],
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    vital.value,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: accent,
-                                        ),
                                   ),
-                                  Text(
-                                    vital.type.unit,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                  SizedBox(width: 8.w),
+                                  IconButton(
+                                    onPressed: () => _handleDeleteVital(
+                                      vital.id,
+                                      isCaregiver,
+                                      selectedElderId,
+                                    ),
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      color: AppTheme.getErrorColor(context),
+                                    ),
+                                    tooltip: 'Delete vital measurement',
                                   ),
-                                  const SizedBox(height: 4),
-                                  VitalStatusBadge(status: healthStatus),
                                 ],
                               ),
-                              SizedBox(width: 8.w),
-                              IconButton(
-                                onPressed: () => _handleDeleteVital(
-                                  vital.id,
-                                  isCaregiver,
-                                  selectedElderId,
-                                ),
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  color: AppTheme.getErrorColor(context),
-                                ),
-                                tooltip: 'Delete vital measurement',
-                              ),
+                              const SizedBox(height: 12),
+                              VitalStatusBadge(status: healthStatus, vital: vital),
                             ],
                           ),
                         ),
@@ -511,14 +517,7 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
   }
 
   Color _getStatusColor(VitalHealthStatus status) {
-    switch (status) {
-      case VitalHealthStatus.normal:
-        return AppTheme.getSuccessColor(context);
-      case VitalHealthStatus.warning:
-        return AppTheme.getWarningColor(context);
-      case VitalHealthStatus.danger:
-        return AppTheme.getErrorColor(context);
-    }
+    return status.getStatusColor(context);
   }
 
   Widget _buildCaregiverNotice(

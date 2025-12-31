@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/models/vital_measurement_model.dart';
+import '../../../../core/extensions/vital_status_extensions.dart';
 import '../../../../core/providers/health_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../dashboard_theme.dart';
@@ -87,13 +88,9 @@ class PatientVitalsCard extends StatelessWidget {
                   final vital = entry.value;
                   final isAbnormal = vital.isAbnormal();
                   final status = vital.getHealthStatus();
-                  final statusColor = switch (status) {
-                    VitalHealthStatus.danger =>
-                      AppTheme.getErrorColor(context),
-                    VitalHealthStatus.warning =>
-                      AppTheme.getWarningColor(context),
-                    _ => CaregiverDashboardTheme.primaryTeal,
-                  };
+                  final statusColor = status == VitalHealthStatus.normal
+                      ? CaregiverDashboardTheme.primaryTeal
+                      : status.getStatusColor(context);
                   final isLast = index == recentVitals.length - 1;
                   return Padding(
                     padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),

@@ -153,8 +153,12 @@ class EmergencyAlertsSection extends StatelessWidget {
   AlertSeverity _getSeverityFromVital(VitalMeasurementModel vital) {
     final status = vital.getHealthStatus();
     switch (status) {
+      case VitalHealthStatus.emergency:
+        return AlertSeverity.critical;
       case VitalHealthStatus.danger:
         return AlertSeverity.critical;
+      case VitalHealthStatus.lowBP:
+        return AlertSeverity.high;
       case VitalHealthStatus.warning:
         return AlertSeverity.high;
       case VitalHealthStatus.normal:

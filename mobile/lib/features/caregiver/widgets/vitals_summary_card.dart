@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/health_provider.dart';
 import '../../../core/models/vital_measurement_model.dart';
 import '../../../core/extensions/vital_type_extensions.dart';
+import '../../../core/extensions/vital_status_extensions.dart';
 import '../../../core/theme/modern_surface_theme.dart';
-import '../../../core/theme/app_theme.dart';
 
 class VitalsSummaryCard extends StatelessWidget {
   final String elderId;
@@ -92,27 +92,9 @@ class _VitalItem extends StatelessWidget {
     final status = vital.getHealthStatus();
     final isAbnormal = vital.isAbnormal();
     
-    Color statusColor;
-    IconData statusIcon;
-    String statusText;
-
-    switch (status) {
-      case VitalHealthStatus.normal:
-        statusColor = AppTheme.getSuccessColor(context);
-        statusIcon = Icons.check_circle;
-        statusText = 'Normal';
-        break;
-      case VitalHealthStatus.warning:
-        statusColor = AppTheme.getWarningColor(context);
-        statusIcon = Icons.warning_amber_rounded;
-        statusText = 'Warning';
-        break;
-      case VitalHealthStatus.danger:
-        statusColor = AppTheme.getErrorColor(context);
-        statusIcon = Icons.error;
-        statusText = 'Danger';
-        break;
-    }
+    final statusColor = status.getStatusColor(context);
+    final statusIcon = status.getStatusIcon();
+    final statusText = vital.getStatusMessage(context);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),

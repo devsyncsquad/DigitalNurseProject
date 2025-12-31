@@ -30,6 +30,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
 
   ActivityType _activityType = ActivityType.walking;
   bool _isAnalyzing = false;
+  bool _isSaving = false;
   String? _analysisError;
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
@@ -137,6 +138,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   }
 
   Future<void> _handleSave() async {
+    if (_isSaving) return;
+
     // Validate duration
     final durationText = _durationController.text.trim();
     if (durationText.isEmpty) {
@@ -183,39 +186,51 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();
-    final userId = authProvider.currentUser!.id;
+    setState(() {
+      _isSaving = true;
+    });
 
-    // Combine selected date and time into a single DateTime
-    final timestamp = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final userId = authProvider.currentUser!.id;
 
-    final workout = ExerciseLogModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      activityType: _activityType,
-      description: _descriptionController.text.trim(),
-      durationMinutes: duration,
-      caloriesBurned: calories,
-      timestamp: timestamp,
-      userId: userId,
-    );
+      // Combine selected date and time into a single DateTime
+      final timestamp = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
 
-    final success = await context.read<LifestyleProvider>().addExerciseLog(workout);
+      final workout = ExerciseLogModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        activityType: _activityType,
+        description: _descriptionController.text.trim(),
+        durationMinutes: duration,
+        caloriesBurned: calories,
+        timestamp: timestamp,
+        userId: userId,
+      );
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Workout logged successfully'),
-            backgroundColor: AppTheme.getSuccessColor(context),
-          ),
-        );
-        context.pop();
+      final success = await context.read<LifestyleProvider>().addExerciseLog(workout);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Workout logged successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          context.pop();
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }
@@ -521,7 +536,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _handleSave,
+                    onPressed: _isSaving ? null : _handleSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ModernSurfaceTheme.accentBlue,
                       foregroundColor: Colors.white,
@@ -530,13 +545,22 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: Text(
-                      'Save Workout',
-                      style: textTheme.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Save Workout',
+                            style: textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
-                    ),
                   ),
                 ),
               ],

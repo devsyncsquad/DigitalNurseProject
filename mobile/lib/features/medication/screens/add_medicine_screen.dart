@@ -25,6 +25,8 @@ class AddMedicineScreen extends StatefulWidget {
 }
 
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
+  bool _isSaving = false;
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -156,9 +158,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             if (!formProvider.isFirstStep) SizedBox(width: 12.w),
             Expanded(
               child: ElevatedButton(
-                onPressed: formProvider.isLastStep
-                    ? () => _handleSave(context, formProvider)
-                    : () => formProvider.nextStep(),
+                onPressed: (_isSaving && formProvider.isLastStep)
+                    ? null
+                    : (formProvider.isLastStep
+                        ? () => _handleSave(context, formProvider)
+                        : () => formProvider.nextStep()),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   shape: RoundedRectangleBorder(
@@ -167,9 +171,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   backgroundColor: AppTheme.appleGreen,
                   foregroundColor: Colors.white,
                 ),
-                child: Text(
-                  formProvider.isLastStep ? 'Save Medicine' : 'Next',
-                ),
+                child: (_isSaving && formProvider.isLastStep)
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        formProvider.isLastStep ? 'Save Medicine' : 'Next',
+                      ),
               ),
             ),
           ],
@@ -190,6 +203,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     BuildContext context,
     MedicineFormProvider formProvider,
   ) async {
+    if (_isSaving) return;
+
     if (!formProvider.validateCurrentStep()) return;
 
     final authProvider = context.read<AuthProvider>();
@@ -216,26 +231,38 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       return;
     }
 
-    final success = await context.read<MedicationProvider>().addMedicine(
-      medicine,
-    );
+    setState(() {
+      _isSaving = true;
+    });
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Medicine added successfully!'),
-            backgroundColor: AppTheme.getSuccessColor(context),
-          ),
-        );
-        context.pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to add medicine'),
-            backgroundColor: AppTheme.getErrorColor(context),
-          ),
-        );
+    try {
+      final success = await context.read<MedicationProvider>().addMedicine(
+        medicine,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Medicine added successfully!'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+          context.pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Failed to add medicine'),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }
