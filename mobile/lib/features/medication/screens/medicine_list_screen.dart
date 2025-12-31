@@ -210,10 +210,12 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final medicinesForDate = medicationProvider.getMedicinesForDate(_selectedDate);
+    
     return Column(
       children: [
         _HeroSummary(
-          medicinesCount: medicines.length,
+          medicinesCount: medicinesForDate.length,
           isCaregiver: isCaregiver,
           selectedDate: _selectedDate,
         ),
@@ -234,7 +236,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
         Expanded(
           child: medicines.isEmpty
               ? _buildEmptyState(context, isCaregiver: isCaregiver)
-              : _buildMedicineSchedule(context, medicationProvider),
+              : _buildMedicineSchedule(context, medicationProvider, medicinesForDate),
         ),
       ],
     );
@@ -307,10 +309,8 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   Widget _buildMedicineSchedule(
     BuildContext context,
     MedicationProvider medicationProvider,
+    List<MedicineModel> medicinesForDate,
   ) {
-    final medicinesForDate = medicationProvider.getMedicinesForDate(
-      _selectedDate,
-    );
     final categorized = medicationProvider.categorizeMedicinesByTimeOfDay(
       medicinesForDate,
     );

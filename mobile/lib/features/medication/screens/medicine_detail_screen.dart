@@ -12,6 +12,7 @@ import '../../../core/providers/care_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/modern_surface_theme.dart';
 import '../../../core/widgets/modern_scaffold.dart';
+import '../../../core/utils/timezone_util.dart';
 
 class MedicineDetailScreen extends StatefulWidget {
   final String medicineId;
@@ -529,11 +530,26 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                                           ),
                                     ),
                                     Text(
-                                      intake.status == IntakeStatus.taken && intake.takenTime != null
-                                          ? DateFormat('MMM d, yyyy • h:mm a')
-                                              .format(intake.takenTime!)
-                                          : DateFormat('MMM d, yyyy • h:mm a')
-                                              .format(intake.scheduledTime),
+                                      () {
+                                        // Convert UTC time to Pakistan time for display
+                                        final timeToDisplay = intake.status == IntakeStatus.taken && intake.takenTime != null
+                                            ? intake.takenTime!
+                                            : intake.scheduledTime;
+                                        
+                                        // Convert UTC DateTime to Pakistan timezone
+                                        final pakistanTime = TimezoneUtil.toPakistanTime(timeToDisplay);
+                                        
+                                        // Create a DateTime with Pakistan time components for formatting
+                                        final displayDateTime = DateTime(
+                                          pakistanTime.year,
+                                          pakistanTime.month,
+                                          pakistanTime.day,
+                                          pakistanTime.hour,
+                                          pakistanTime.minute,
+                                        );
+                                        
+                                        return DateFormat('MMM d, yyyy • h:mm a').format(displayDateTime);
+                                      }(),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
