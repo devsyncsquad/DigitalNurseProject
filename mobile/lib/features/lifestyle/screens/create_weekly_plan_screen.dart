@@ -277,45 +277,55 @@ class _CreateWeeklyPlanScreenState extends State<CreateWeeklyPlanScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Plan name and description
-                      TextFormField(
-                        controller: _planNameController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+                      Container(
+                        margin: EdgeInsets.only(bottom: 16.h),
+                        decoration: ModernSurfaceTheme.glassCard(context),
+                        padding: ModernSurfaceTheme.cardPadding(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: _planNameController,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Plan Name',
+                                labelStyle: const TextStyle(color: Colors.black54),
+                                hintText: 'e.g., Weekly Weight Loss Plan',
+                                hintStyle: const TextStyle(color: Colors.black38),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter a plan name';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 16.h),
+                            TextFormField(
+                              controller: _descriptionController,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Description (Optional)',
+                                labelStyle: const TextStyle(color: Colors.black54),
+                                hintText: 'Describe your plan',
+                                hintStyle: const TextStyle(color: Colors.black38),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              maxLines: 2,
+                            ),
+                          ],
                         ),
-                        decoration: InputDecoration(
-                          labelText: 'Plan Name',
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          hintText: 'e.g., Weekly Weight Loss Plan',
-                          hintStyle: const TextStyle(color: Colors.white70),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a plan name';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16.h),
-                      TextFormField(
-                        controller: _descriptionController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Description (Optional)',
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          hintText: 'Describe your plan',
-                          hintStyle: const TextStyle(color: Colors.white70),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        maxLines: 2,
                       ),
                       SizedBox(height: 24.h),
 
