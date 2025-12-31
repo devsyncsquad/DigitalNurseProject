@@ -31,6 +31,8 @@ class MedicineDetailScreen extends StatefulWidget {
 
 class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   List<MedicineIntake>? _intakeHistory;
+  bool _isLogging = false;
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -71,7 +73,14 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Future<void> _handleLogIntake(IntakeStatus status) async {
+    if (_isLogging) return;
+
     print('🔵 [MEDICINE_DETAIL] Starting _handleLogIntake with status: $status');
+    
+    setState(() {
+      _isLogging = true;
+    });
+
     try {
       final authProvider = context.read<AuthProvider>();
       final medicationProvider = context.read<MedicationProvider>();
@@ -225,10 +234,18 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         // Clear provider error to prevent it from showing on list screen
         context.read<MedicationProvider>().clearError();
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLogging = false;
+        });
+      }
     }
   }
 
   Future<void> _handleDelete() async {
+    if (_isDeleting) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -251,6 +268,11 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
 
     if (confirm == true && mounted) {
+      setState(() {
+        _isDeleting = true;
+      });
+
+      try {
       final authProvider = context.read<AuthProvider>();
       final user = authProvider.currentUser;
       
@@ -271,24 +293,31 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         elderUserId = careContext.selectedElderId ?? medicine.userId;
       }
 
-      final success = await context.read<MedicationProvider>().deleteMedicine(
-        widget.medicineId,
-        user.id,
-        elderUserId: elderUserId,
-      );
+        final success = await context.read<MedicationProvider>().deleteMedicine(
+          widget.medicineId,
+          user.id,
+          elderUserId: elderUserId,
+        );
 
-      if (mounted) {
-        if (success) {
-          context.pop();
-        } else {
-          final errorMessage = context.read<MedicationProvider>().error ?? 
-              'Failed to delete medicine. Please try again.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: AppTheme.getErrorColor(context),
-            ),
-          );
+        if (mounted) {
+          if (success) {
+            context.pop();
+          } else {
+            final errorMessage = context.read<MedicationProvider>().error ?? 
+                'Failed to delete medicine. Please try again.';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: AppTheme.getErrorColor(context),
+              ),
+            );
+          }
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isDeleting = false;
+          });
         }
       }
     }
@@ -314,10 +343,22 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: _handleDelete,
-            icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
-          ),
+          _isDeleting
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: _isDeleting ? null : _handleDelete,
+                  icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
+                ),
         ],
       ),
       body: SingleChildScrollView(
@@ -327,7 +368,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           children: [
             _MedicineInfoCard(medicine: medicine),
             SizedBox(height: 20.h),
-            _QuickActions(onLog: _handleLogIntake),
+            _QuickActions(onLog: _handleLogIntake, isLoading: _isLogging),
             SizedBox(height: 24.h),
             Text(
               'Intake History',
@@ -545,8 +586,12 @@ class _MedicineInfoCard extends StatelessWidget {
 
 class _QuickActions extends StatelessWidget {
   final Future<void> Function(IntakeStatus status) onLog;
+  final bool isLoading;
 
-  const _QuickActions({required this.onLog});
+  const _QuickActions({
+    required this.onLog,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -554,7 +599,7 @@ class _QuickActions extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () => onLog(IntakeStatus.taken),
+            onPressed: isLoading ? null : () => onLog(IntakeStatus.taken),
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 14.h),
               shape: RoundedRectangleBorder(
@@ -563,13 +608,22 @@ class _QuickActions extends StatelessWidget {
               backgroundColor: AppTheme.appleGreen,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Mark as Taken'),
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Mark as Taken'),
           ),
         ),
         SizedBox(width: 12.w),
         Expanded(
           child: OutlinedButton(
-            onPressed: () => onLog(IntakeStatus.missed),
+            onPressed: isLoading ? null : () => onLog(IntakeStatus.missed),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 14.h),
               side: BorderSide(color: ModernSurfaceTheme.deepTeal.withOpacity(0.4)),
@@ -578,7 +632,16 @@ class _QuickActions extends StatelessWidget {
               ),
               foregroundColor: ModernSurfaceTheme.deepTeal,
             ),
-            child: const Text('Mark as Missed'),
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: ModernSurfaceTheme.deepTeal,
+                    ),
+                  )
+                : const Text('Mark as Missed'),
           ),
         ),
       ],

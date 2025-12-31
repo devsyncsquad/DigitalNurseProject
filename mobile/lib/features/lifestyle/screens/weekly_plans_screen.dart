@@ -370,58 +370,10 @@ class _ExercisePlansTab extends StatelessWidget {
   void _showDeleteDialog(BuildContext context, String planId, String planName, bool isDietPlan) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Plan'),
-        content: Text('Are you sure you want to delete "$planName"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final authProvider = context.read<AuthProvider>();
-              final user = authProvider.currentUser;
-              
-              if (user == null) {
-                return;
-              }
-
-              // Handle caregiver context
-              String? elderUserId;
-              if (user.role == UserRole.caregiver) {
-                final careContext = context.read<CareContextProvider>();
-                await careContext.ensureLoaded();
-                elderUserId = careContext.selectedElderId;
-              }
-
-              final lifestyleProvider = context.read<LifestyleProvider>();
-              final success = await lifestyleProvider.deleteExercisePlan(
-                planId,
-                elderUserId: elderUserId,
-              );
-              if (context.mounted) {
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Plan deleted successfully'),
-                      backgroundColor: AppTheme.getSuccessColor(context),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete plan: ${lifestyleProvider.error ?? 'Unknown error'}'),
-                      backgroundColor: AppTheme.getErrorColor(context),
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text('Delete', style: TextStyle(color: AppTheme.getErrorColor(context))),
-          ),
-        ],
+      builder: (context) => _DeletePlanDialog(
+        planId: planId,
+        planName: planName,
+        isDietPlan: isDietPlan,
       ),
     );
   }
@@ -583,6 +535,115 @@ class _PlanCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _DeletePlanDialog extends StatefulWidget {
+  final String planId;
+  final String planName;
+  final bool isDietPlan;
+
+  const _DeletePlanDialog({
+    required this.planId,
+    required this.planName,
+    required this.isDietPlan,
+  });
+
+  @override
+  State<_DeletePlanDialog> createState() => _DeletePlanDialogState();
+}
+
+class _DeletePlanDialogState extends State<_DeletePlanDialog> {
+  bool _isDeleting = false;
+
+  Future<void> _handleDelete() async {
+    if (_isDeleting) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      Navigator.pop(context);
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
+      
+      if (user == null) {
+        return;
+      }
+
+      // Handle caregiver context
+      String? elderUserId;
+      if (user.role == UserRole.caregiver) {
+        final careContext = context.read<CareContextProvider>();
+        await careContext.ensureLoaded();
+        elderUserId = careContext.selectedElderId;
+      }
+
+      final lifestyleProvider = context.read<LifestyleProvider>();
+      final success = widget.isDietPlan
+          ? await lifestyleProvider.deleteDietPlan(
+              widget.planId,
+              elderUserId: elderUserId,
+            )
+          : await lifestyleProvider.deleteExercisePlan(
+              widget.planId,
+              elderUserId: elderUserId,
+            );
+
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Plan deleted successfully'),
+              backgroundColor: AppTheme.getSuccessColor(context),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete plan: ${lifestyleProvider.error ?? 'Unknown error'}'),
+              backgroundColor: AppTheme.getErrorColor(context),
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete Plan'),
+      content: Text('Are you sure you want to delete "${widget.planName}"?'),
+      actions: [
+        TextButton(
+          onPressed: _isDeleting ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _isDeleting ? null : _handleDelete,
+          style: TextButton.styleFrom(
+            foregroundColor: AppTheme.getErrorColor(context),
+          ),
+          child: _isDeleting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                )
+              : Text('Delete', style: TextStyle(color: AppTheme.getErrorColor(context))),
+        ),
+      ],
     );
   }
 }

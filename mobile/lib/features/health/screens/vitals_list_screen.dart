@@ -27,6 +27,7 @@ class VitalsListScreen extends StatefulWidget {
 class _VitalsListScreenState extends State<VitalsListScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _lastContextKey;
+  String? _deletingVitalId;
 
   Future<void> _reloadVitals() async {
     final authProvider = context.read<AuthProvider>();
@@ -80,6 +81,8 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     bool isCaregiver,
     String? selectedElderId,
   ) async {
+    if (_deletingVitalId != null) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -102,30 +105,42 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
     );
 
     if (confirm == true && mounted) {
-      final healthProvider = context.read<HealthProvider>();
-      final success = await healthProvider.deleteVital(
-        vitalId,
-        elderUserId: isCaregiver ? selectedElderId : null,
-      );
+      setState(() {
+        _deletingVitalId = vitalId;
+      });
 
-      if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Vital measurement deleted successfully'),
-              backgroundColor: AppTheme.getSuccessColor(context),
-            ),
-          );
-          // Reload vitals to refresh the list
-          await _reloadVitals();
-        } else {
-          final errorMessage = healthProvider.error ?? 'Failed to delete vital measurement';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: AppTheme.getErrorColor(context),
-            ),
-          );
+      try {
+        final healthProvider = context.read<HealthProvider>();
+        final success = await healthProvider.deleteVital(
+          vitalId,
+          elderUserId: isCaregiver ? selectedElderId : null,
+        );
+
+        if (mounted) {
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Vital measurement deleted successfully'),
+                backgroundColor: AppTheme.getSuccessColor(context),
+              ),
+            );
+            // Reload vitals to refresh the list
+            await _reloadVitals();
+          } else {
+            final errorMessage = healthProvider.error ?? 'Failed to delete vital measurement';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: AppTheme.getErrorColor(context),
+              ),
+            );
+          }
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _deletingVitalId = null;
+          });
         }
       }
     }
@@ -379,18 +394,31 @@ class _VitalsListScreenState extends State<VitalsListScreen> {
                                     ],
                                   ),
                                   SizedBox(width: 8.w),
-                                  IconButton(
-                                    onPressed: () => _handleDeleteVital(
-                                      vital.id,
-                                      isCaregiver,
-                                      selectedElderId,
-                                    ),
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      color: AppTheme.getErrorColor(context),
-                                    ),
-                                    tooltip: 'Delete vital measurement',
-                                  ),
+                                  _deletingVitalId == vital.id
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(8.0),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        )
+                                      : IconButton(
+                                          onPressed: _deletingVitalId != null
+                                              ? null
+                                              : () => _handleDeleteVital(
+                                                    vital.id,
+                                                    isCaregiver,
+                                                    selectedElderId,
+                                                  ),
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            color: AppTheme.getErrorColor(context),
+                                          ),
+                                          tooltip: 'Delete vital measurement',
+                                        ),
                                 ],
                               ),
                               const SizedBox(height: 12),

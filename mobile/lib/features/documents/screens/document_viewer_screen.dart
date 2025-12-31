@@ -34,8 +34,11 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   final DocumentService _documentService = DocumentService();
   final TokenService _tokenService = TokenService();
   bool _isDownloading = false;
+  bool _isDeleting = false;
 
   Future<void> _handleDelete(BuildContext context) async {
+    if (_isDeleting) return;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -58,43 +61,55 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
     );
 
     if (confirm == true && context.mounted) {
-      final authProvider = context.read<AuthProvider>();
-      final user = authProvider.currentUser;
-      
-      if (user == null) {
-        return;
-      }
+      setState(() {
+        _isDeleting = true;
+      });
 
-      // Handle caregiver context - get elderUserId if user is a caregiver
-      String? elderUserId;
-      if (user.role == UserRole.caregiver) {
-        final documentProvider = context.read<DocumentProvider>();
-        final document = documentProvider.documents.firstWhere(
-          (d) => d.id == widget.documentId,
-          orElse: () => throw Exception('Document not found'),
-        );
-        final careContext = context.read<CareContextProvider>();
-        await careContext.ensureLoaded();
-        elderUserId = careContext.selectedElderId ?? document.userId;
-      }
+      try {
+        final authProvider = context.read<AuthProvider>();
+        final user = authProvider.currentUser;
+        
+        if (user == null) {
+          return;
+        }
 
-      final success = await context.read<DocumentProvider>().deleteDocument(
-        widget.documentId,
-        elderUserId: elderUserId,
-      );
-      
-      if (context.mounted) {
-        if (success) {
-          context.pop();
-        } else {
-          final errorMessage = context.read<DocumentProvider>().error ?? 
-              'Failed to delete document. Please try again.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: AppTheme.getErrorColor(context),
-            ),
+        // Handle caregiver context - get elderUserId if user is a caregiver
+        String? elderUserId;
+        if (user.role == UserRole.caregiver) {
+          final documentProvider = context.read<DocumentProvider>();
+          final document = documentProvider.documents.firstWhere(
+            (d) => d.id == widget.documentId,
+            orElse: () => throw Exception('Document not found'),
           );
+          final careContext = context.read<CareContextProvider>();
+          await careContext.ensureLoaded();
+          elderUserId = careContext.selectedElderId ?? document.userId;
+        }
+
+        final success = await context.read<DocumentProvider>().deleteDocument(
+          widget.documentId,
+          elderUserId: elderUserId,
+        );
+        
+        if (context.mounted) {
+          if (success) {
+            context.pop();
+          } else {
+            final errorMessage = context.read<DocumentProvider>().error ?? 
+                'Failed to delete document. Please try again.';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: AppTheme.getErrorColor(context),
+              ),
+            );
+          }
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isDeleting = false;
+          });
         }
       }
     }
@@ -427,10 +442,22 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         actions: [
-          IconButton(
-            onPressed: () => _handleDelete(context),
-            icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
-          ),
+          _isDeleting
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: _isDeleting ? null : () => _handleDelete(context),
+                  icon: Icon(Icons.delete_outline, color: AppTheme.getErrorColor(context)),
+                ),
         ],
       ),
       body: SingleChildScrollView(
