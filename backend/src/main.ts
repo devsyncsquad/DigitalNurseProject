@@ -10,10 +10,71 @@ async function bootstrap() {
     rawBody: true, // Required for Stripe webhooks
   });
 
-  // Enable CORS for Flutter app
+  // Enable CORS for multiple origins (web portal, mobile app, etc.)
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+    : []; // Default: empty, will be determined by logic below
+
+  // Determine if we're in development mode (allow more permissive CORS)
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const allowWildcard = allowedOrigins.includes('*');
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (origin: string | undefined, callback: (err: Error | null, origin?: string | boolean) => void) => {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+
+      // Always allow localhost/127.0.0.1 origins (for local development, even when backend is remote)
+      // This enables scenarios where frontend runs locally but backend is deployed remotely
+      if (
+        origin.startsWith('http://localhost:') ||
+        origin.startsWith('http://127.0.0.1:') ||
+        origin.startsWith('https://localhost:') ||
+        origin.startsWith('https://127.0.0.1:')
+      ) {
+        return callback(null, origin);
+      }
+
+      // Check against allowed origins from environment variable FIRST
+      // This takes precedence over automatic rules
+      if (allowWildcard) {
+        // Wildcard allows all origins (useful for development/testing)
+        return callback(null, origin);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, origin);
+      }
+
+      // In development mode: Allow IP-based origins (same host with different ports)
+      // This handles scenarios like backend on :3000, frontend on :92, same IP
+      // Example: http://100.42.177.77:3000 (backend) allowing http://100.42.177.77:92 (frontend)
+      if (isDevelopment) {
+        try {
+          const originUrl = new URL(origin);
+          const originHost = originUrl.hostname;
+          
+          // Allow any numeric IP address format in development (allows same-host, different ports)
+          // Matches patterns like: 100.42.177.77, 192.168.1.1, 10.0.0.1, etc.
+          const isIPAddress = /^\d+\.\d+\.\d+\.\d+$/.test(originHost);
+          
+          if (isIPAddress) {
+            return callback(null, origin);
+          }
+        } catch (e) {
+          // Invalid URL format, will be rejected below
+        }
+      }
+
+      // Origin not allowed
+      console.warn(`[CORS] Rejected origin: ${origin}. Allowed: ${allowedOrigins.join(', ') || (isDevelopment ? 'development mode (same-host allowed)' : 'none')}`);
+      callback(new Error(`CORS: Origin '${origin}' is not allowed. Allowed origins: ${allowedOrigins.join(', ') || 'none'}`));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    exposedHeaders: ['Authorization'],
+    maxAge: 86400, // 24 hours - cache preflight requests
   });
 
   // Global validation pipe

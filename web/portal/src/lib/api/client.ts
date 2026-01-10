@@ -42,11 +42,11 @@ export async function apiRequest<T>(
     ? endpoint
     : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
-  // Prepare headers
-  const requestHeaders: HeadersInit = {
+  // Prepare headers as a record to allow dynamic assignment
+  const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    ...headers,
+    ...(headers as Record<string, string>),
   };
 
   // Add authorization token if required
