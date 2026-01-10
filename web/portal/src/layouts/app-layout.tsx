@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useNavigate } from "react-router-dom"
 import {
   SidebarInset,
   SidebarProvider,
@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Bell, Languages, UserCog } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/contexts/auth-context"
 
 export function AppLayout() {
   return (
@@ -64,6 +65,23 @@ export function AppLayout() {
 }
 
 function UserProfileMenu() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate("/login")
+  }
+
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "U"
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -73,11 +91,11 @@ function UserProfileMenu() {
           className="flex items-center gap-2 px-2 text-left"
         >
           <Avatar className="size-8">
-            <AvatarFallback>AC</AvatarFallback>
+            <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
           <div className="hidden text-xs md:flex md:flex-col">
-            <span className="font-medium">Hamd</span>
-            <span className="text-muted-foreground">Clinical Admin</span>
+            <span className="font-medium">{user?.name || "User"}</span>
+            <span className="text-muted-foreground">{user?.role || "Role"}</span>
           </div>
           <UserCog className="hidden size-4 text-muted-foreground md:block" />
         </Button>
@@ -85,7 +103,7 @@ function UserProfileMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Signed in as</DropdownMenuLabel>
         <div className="px-2 pb-2 text-sm text-muted-foreground">
-          hamd@digitalnurse.app
+          {user?.email || "user@example.com"}
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
@@ -94,7 +112,7 @@ function UserProfileMenu() {
           {/* <DropdownMenuItem>Security Settings</DropdownMenuItem> */}
         </DropdownMenuGroup>
         {/* <DropdownMenuSeparator /> */}
-        <DropdownMenuItem className="text-destructive">
+        <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
