@@ -1,4 +1,4 @@
-import { Fragment } from "react"
+import { Fragment, useState } from "react"
 import {
   dashboardMetrics,
   patientRoster,
@@ -27,6 +27,8 @@ const riskTone = {
 } as const
 
 export default function DashboardPage() {
+  const [timeframe, setTimeframe] = useState<"7" | "30" | "90">("30")
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -37,19 +39,19 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select defaultValue="30">
+          <Select value={timeframe} onValueChange={(value) => setTimeframe(value as "7" | "30" | "90")}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Timeframe" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="7">Last 7 days</SelectItem>
               <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last quarter</SelectItem>
+              {/* <SelectItem value="90">Last quarter</SelectItem> */}
             </SelectContent>
           </Select>
-          <Button variant="outline" className="gap-2">
+          {/* <Button variant="outline" className="gap-2">
             Export Insights
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -72,6 +74,8 @@ export default function DashboardPage() {
         <PatientsGrowthCard
           data7Days={patientGrowth7Days}
           data30Days={patientGrowth30Days}
+          timeframe={timeframe}
+          onTimeframeChange={(value) => setTimeframe(value)}
         />
         <SubscriptionBreakdownCard data={subscriptionBreakdown} />
       </div>

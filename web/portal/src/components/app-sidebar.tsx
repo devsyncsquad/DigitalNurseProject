@@ -52,17 +52,17 @@ const mainNav: NavItem[] = [
     icon: HeartPulse,
     to: "/caregivers",
   },
-  {
-    title: "Notifications",
-    icon: Bell,
-    to: "/notifications",
-    badge: "12",
-  },
-  {
-    title: "Documents",
-    icon: FileText,
-    to: "/documents",
-  },
+  // {
+  //   title: "Notifications",
+  //   icon: Bell,
+  //   to: "/notifications",
+  //   badge: "12",
+  // },
+  // {
+  //   title: "Documents",
+  //   icon: FileText,
+  //   to: "/documents",
+  // },
 ]
 
 const operationsNav: NavItem[] = [
@@ -71,21 +71,21 @@ const operationsNav: NavItem[] = [
     icon: ClipboardList,
     to: "/subscriptions",
   },
-  {
-    title: "Reports",
-    icon: FileBarChart,
-    to: "/reports",
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    to: "/settings",
-  },
-  {
-    title: "Audit Trail",
-    icon: Shield,
-    to: "/audit",
-  },
+  // {
+  //   title: "Reports",
+  //   icon: FileBarChart,
+  //   to: "/reports",
+  // },
+  // {
+  //   title: "Settings",
+  //   icon: Settings,
+  //   to: "/settings",
+  // },
+  // {
+  //   title: "Audit Trail",
+  //   icon: Shield,
+  //   to: "/audit",
+  // },
 ]
 
 export function AppSidebar() {
@@ -192,12 +192,12 @@ export function AppSidebar() {
         >
           <Avatar className="size-10 rounded-2xl group-data-[collapsible=icon]/sidebar:size-12">
             <AvatarFallback className="rounded-2xl bg-sidebar-primary/20 text-white">
-              AC
+              H
             </AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-1 flex-col text-xs group-data-[collapsible=icon]/sidebar:hidden">
             <span className="truncate font-medium text-white">
-              Ayesha Chaudhry
+              Hamd
             </span>
             <span className="truncate text-white">
               Clinical Admin · Care Portal
